@@ -1,0 +1,132 @@
+S-IB DESIGN REDO: THE OWNER'S REVIEW AND THE PLAN
+Recorded 2026-10-14. This is the first thing to do when work resumes. It replaces the "Almanac" look.
+
+------------------------------------------------------------------------
+DECISIONS MADE 2026-10-14 (the owner chose these when asked)
+  Typeface: Sora (SIL Open Font License). Permission was given to download that one font file.
+  Mood: night-first deep violet and coral; light theme follows the same design.
+
+------------------------------------------------------------------------
+1. WHAT THE OWNER SAID (kept word for word so nothing is lost)
+
+"the ui design needed to be felt like no magazine or newspaper kind of slop. it needs cool buttons on home pages and
+not a lots of paragraphs in a single page. empty spaces are very important as it makes the pages less crowded and
+aesthetic and etc. and also the selection for titles of buttons and etc writing needs to be carefully selected and also
+the app needs to be multi layered not everything needs to be on the same page or something. similar kind of thing can be
+shown after a button clicking and the font size font style and font color needs to be non ai slop the dim color font is
+full ai potentials. visuals are not cool at all i reviewed the dashboard needs to be very cool to look at and color
+grading is missing too. fix these when token gets restored"
+
+Earlier, on the same subject: "the visual and ui design and all features has to be very cool", and "there has to be very
+cool animated smoothly intro".
+
+------------------------------------------------------------------------
+2. WHAT THAT MEANS, POINT BY POINT
+
+A. Not editorial. The current build reads like a printed almanac: cream paper, a book serif for every heading, hairline
+   rules, tiny spaced capitals for section titles, long text blocks. Drop all of it. The new look is an app, not a page:
+   solid shapes, depth, motion, big touch targets.
+B. Cool buttons on the home page. Home gets a few large, tactile actions (Add, Paste, Scan, Photo), designed as shaped
+   tiles with an icon drawn in code, a colour of their own, a pressed state, a spring on tap and a light haptic. No flat
+   rectangles with a plain word in them.
+C. Far fewer words per screen. At most one short line under a heading. Anything that explains goes one layer deeper
+   (a bottom sheet or its own screen reached by a button such as "How this works"). A screen should be glanceable.
+D. Empty space is a feature. Generous padding (24 dp sides, 32 dp between groups), one idea per block, nothing packed
+   edge to edge.
+E. Careful wording. Every title and button label is chosen, short and active. See section 5.
+F. Multi-layered. Home shows the headline and the actions. Tapping a block opens the next layer with the detail. Do not
+   stack Progress, Steps, Pause, Receipts, Evidence and History on one scroll. Use a summary card with tabs or sheets.
+G. Type and colour that do not look machine-made. No pale grey secondary text anywhere (that is the "dim font" the owner
+   named). Secondary text must still be dark and clear (contrast 7:1 or better on its surface). Pick a typeface with
+   character instead of a default sans or a book serif. No all-caps spaced micro-labels.
+H. The dashboard must be striking, and colour grading is missing. Add a real palette with graded surfaces: deep base,
+   a lighter layer, a vivid accent, gradient states from calm to urgent, so the screen has depth and mood instead of one
+   flat tone. The Today hero should be the coolest thing in the app.
+
+------------------------------------------------------------------------
+3. DIRECTION TO BUILD (a proposal; change it if the screenshots say so)
+
+Mood: night-first, confident, a little playful. Think a calm instrument panel, not a document.
+Base: deep ink blue-black (about 0B1020) with a raised layer (about 151B33) and a glass layer. A light theme exists but
+  is the same design inverted, not a cream page.
+Accent grading: one signature gradient from electric violet to coral for the primary action and the hero; state colours
+  graded along one path: mint (calm) to amber (soon) to coral (today) to hot pink-red (overdue). Close ones keeps its own
+  graded rose-to-plum, already contrast-checked.
+Surfaces: large rounded cards (24 dp), soft inner highlight, a faint grain or glow behind the hero. No hairline rules.
+Hero on Today: one big animated ring or arc showing the next deadline with the days left as a large number, the title
+  under it, and a single primary button. Everything else is one layer down.
+Buttons: pill and tile shapes with gradient fills, icon plus a two or three letter-word label, spring on press.
+Motion: shared-element style opens between a card and its detail, staggered entrance of tiles, number count-up. All of it
+  respects Reduce motion (LocalReduceMotion and rememberMotionEnabled already exist).
+Typeface: a distinctive geometric or grotesque display face for numbers and headings plus a clean readable body face.
+  Candidates, all open source (SIL OFL): Sora, Outfit, Plus Jakarta Sans, Manrope, Bricolage Grotesque, Space Grotesk.
+  Fonts must be downloaded and checksummed. THE OWNER GAVE PERMISSION ONLY FOR THE NEWSREADER DOWNLOAD IN AN EARLIER
+  SESSION, SO ASK AGAIN BEFORE DOWNLOADING A NEW FONT (state the file name, the source and the size).
+Accessibility stays: every text pair at WCAG AA or better, urgency still carried by shape and word as well as colour,
+  large text supported. Recompute contrast ratios for the new palette (the script approach is in this session's history:
+  relative luminance of each pair).
+
+------------------------------------------------------------------------
+4. WHAT TO CHANGE, SCREEN BY SCREEN
+
+Intro (ui\Intro.kt): keep the idea (axis, deadline dot, start marker, arc, name), recolour and restyle to the new palette
+  and typeface; add a soft glow and a particle-free, smooth ease. Plays only on a cold start; tap skips.
+Today (ui\Home.kt TodayScreen): hero ring card + four action tiles (Add, Paste, Scan, Photo) + "Close ones" tile. The
+  list of deadlines moves to a second layer ("Everything" opens a full list). At most two short lines of text on screen.
+Plan: a single bold chart on top, one sentence of state, and the options (more time, later date, less work) as three
+  tiles that open a sheet. No long explanations on the page.
+Review: one suggestion at a time as a swipeable card with Keep and Skip; "Why this date" opens a sheet with the reading.
+Deadline detail (ui\Detail.kt): header with the ring and the date; a segmented switch for Plan, Steps, History instead of
+  one long scroll. Proof of finishing and evidence live behind "More".
+Add (ui\Add.kt): the one-line box first; everything else appears only after a date is understood (progressive).
+Close ones (ui\Close.kt): already its own space; apply the same rules: fewer words, tile actions, hero ring kept.
+Settings: a grid or list of icon tiles, each opening a short page; move every explanatory paragraph into an
+  "About this" sheet. Security, Privacy and Backup pages currently carry long paragraphs and must be cut hard.
+Onboarding (ui\Onboarding.kt): four pages, one sentence each, big visuals.
+Notifications and widget: keep wording short; widget picks up the new palette.
+
+------------------------------------------------------------------------
+5. WORDING RULES FOR TITLES AND BUTTONS
+
+- Buttons are verbs of one or two words: Add, Paste, Scan, Photo, Keep, Skip, Done, Snooze, Share, Start, Plan, Edit.
+- No sentence-case explanations on buttons ("Not now, remind me in 3 days" becomes "Later").
+- Headings are plain nouns or short questions, never slogans: Today, Plan, Review, Close ones.
+- A screen has at most one sentence of body text. Reasons go behind a "Why" button.
+- No exclamation marks, no emoji, no filler such as "Simply" or "Easily". No em dashes (the owner's standing rule).
+- Numbers carry meaning: "3 days" is a large figure, not a phrase inside a paragraph.
+
+------------------------------------------------------------------------
+6. HOW TO WORK IT
+
+1. Ask permission, then download the chosen typeface into .toolchain\dl-font (checksum it).
+2. Replace the tokens in ui\Theme.kt (SibColors, SibType) first; most screens recolour automatically.
+3. Build the new components in ui\Components.kt: ActionTile, GradientButton, HeroRing, Sheet, SegmentedTabs.
+4. Rebuild Today first and render it with a Roborazzi test (app\src\test\kotlin\com\hsib\sib\ui, run with
+   -Precord=true, images appear in app\build\shots). LOOK at the images before moving on. Repeat per screen.
+5. Cut copy as each screen is rebuilt; keep a list of removed paragraphs and move the useful ones into sheets.
+6. Re-run the contrast check, tools\hygiene.py and tools\offline-pipeline.ps1. Then take the Play screenshots from the
+   same tests.
+
+------------------------------------------------------------------------
+7. PROGRESS LOG
+
+2026-10-14 (second session), later: the owner asked for four themes and a calmer Done button.
+  Themes: Light, Twilight (the violet night theme the owner called magical), Black (true black and white) and Neon
+  (near black with cyan and magenta); each has a Close ones variant; "Follow my phone" switches Light and Twilight;
+  the choice is remembered in plain preferences so the intro already wears it. The Done button is now solid green.
+  The Load chart now shows each week as its own rounded panel.
+
+2026-10-14 (second session): the redesign was started and the foundation is built.
+  Done: Sora typeface installed (res/font/sora.ttf, licence in assets/licenses); night palette with graded colour and
+  contrast checked in all four palettes (ui/Theme.kt); new building blocks in ui/Kit.kt (bounceClick, ActionTile,
+  HeroRing, StatPill, GlowButton, More, TileGlyph); shared components restyled (pill buttons, filled fields, segmented
+  Choice, card rows, floating tab bar); Today rebuilt as a hero ring plus action tiles with the list moved to a second
+  screen (All deadlines); Plan split into Week, Runway and Load views; Review as one decision per card with Details
+  hidden; Deadline detail split into Overview, Steps and History with an Adjust option; Add shows only the essentials
+  until More options; onboarding cut to four short pages; Close ones restyled in plum and rose with the same rules;
+  every explanatory paragraph in Settings is now an expandable row; the Load chart shows each week as its own panel;
+  launcher icon and widget recoloured; intro restyled. Screenshot tests render nearly every screen
+  (ScreenShotTest, ReadyShotTest, IntroShotTest; run with -Precord=true; images in app/build/shots).
+  Still to check by eye: Settings sub-pages other than Security and About, Backup and Restore screens, Health screen,
+  Privacy screen, dialogs, the date picker colours, light theme on every screen, large text sizes, and the real intro
+  timing on a phone.

@@ -1,0 +1,79 @@
+S-IB: PROJECT SUMMARY
+
+1. OVERVIEW
+
+S-IB is an Android phone app that helps people stop missing deadlines. Most of us hear about dates in a notice, a
+group chat or a screenshot, and by the time a date matters it is buried. S-IB lets you share or paste that message,
+finds the dates in it, and shows you what it found and why, so you stay in charge. Nothing is saved as a deadline
+until you say yes.
+
+For each deadline it works out the latest day you can start and still finish comfortably, spreads the work over the
+days you actually have, and tells you plainly if it does not fit. Then it sends only a few reminders, at sensible
+times and never in your quiet hours.
+
+It also has a private space called Close ones for the dates that matter to the people closest to you, such as
+anniversaries, birthdays and date nights. It reminds you early enough to plan something, keeps the details off your
+lock screen, and keeps them out of everything else the app shows.
+
+Your information stays on your phone. The app has no permission to use the internet, and backups are locked with a
+key only you hold.
+
+The name is pronounced "sib". It stands for Start It Before, it is the closing sound of the maker's name, Hasib
+(which can mean one who counts), and it is also the word for a brother or sister, which is the spirit of Close ones.
+
+2. COMPLEXITY LEVEL
+
+Stack: Kotlin, Jetpack Compose (Material 3 with a custom design system), Room with SQLCipher, WorkManager,
+AlarmManager, Glance widget, Quick Settings tile, Android Keystore, Google Tink, ML Kit (on-device text recognition),
+Gradle with three modules. About 13,000 non-blank lines of Kotlin in 76 files.
+
+Architecture (checklist items 1 and 2): the hard logic lives in a pure JVM module that is forbidden, by a build rule, to
+import anything from Android, so it is tested without a phone. A separate command-line module generates training
+data, trains the date-role model and reports accuracy. The Android module only displays state and talks to the system.
+
+Algorithmic depth (item 1):
+- Scheduling as a flow problem: Dinic max-flow with preemptive deadlines, a minimal-peak levelling pass, latest safe
+  start by binary search over re-solves, and a min-cut explanation of any shortfall with concrete remedies. Checked
+  against an independent Hall-condition oracle.
+- A rule-based temporal tagger with explicit ambiguity flags, a calibrated softmax classifier that decides whether a
+  date is a deadline, an event, a start date, a publication date or history, and relation linking that recognises
+  updates, cancellations and duplicates.
+- A reminder planner with an attention budget, quiet hours and hysteresis on urgency states.
+- Repeating dates computed from the original date so they never drift (31st of a month, 29 February).
+
+Security engineering: a key hierarchy (Keystore-wrapped master, HKDF-derived keys per purpose), an encrypted database,
+end-to-end encrypted backups in a bounded, chunked XChaCha20-Poly1305 container with a recovery key and a snapshot
+chain, a tamper-evident HMAC hash chain over each deadline's history, no network permission (checked on every
+build), and Android Auto Backup switched off.
+
+Testing (item 4): 218 tests with no failures: 180 unit tests on the core, including adversarial tests that alter every byte of
+a backup, truncate, reorder and splice it, and 38 app tests (33 UI render tests that draw the main screens in all four themes on a
+simulated Android and write images for visual review and check that each screen composes, not pixel differences, plus 5 tests of hostile input to the store, importer and deep links); an evaluation harness for the date reader (95.8% role accuracy and no
+false prompts on a held-out set of 71 mentions, from a same-author gold set so the figure is optimistic); lint and a
+build pipeline script that checks the merged manifest, signing and style rules. Store and reminder logic in the app layer
+still needs its own tests.
+
+Documented problem solving (item 5): the evaluation harness exposed three date-reading bugs ("Rent for November" read as
+a month window, "Black Friday" read as a weekday, a weekday that did not match its date); lint caught a crash on
+Android 8 caused by a StrongBox call that needs Android 9; a library had quietly added the INTERNET permission, which
+contradicted the privacy claim and is now removed explicitly.
+
+Honest limits: the app layer has not been run on a physical phone. Reminder delivery depends on each phone maker's
+battery rules and needs real-device testing. The date reader understands English text only.
+
+3. FUTURE SCOPE AND UPGRADE OPPORTUNITIES
+
+Realistic next steps, in a sensible order:
+- Version 1.1: real-device test pass on two or three phone brands; screenshot tests; localisation of the interface
+  (dates already follow the phone's language, wording does not); a second language for the date reader, starting with
+  the languages ML Kit text recognition supports.
+- Wear OS or notification actions for completing a task from a watch.
+- Smarter planning: learn the user's real working hours from logged progress, and offer to split a task around a
+  fixed commitment such as a lecture or a shift.
+- Calendar read-only import (with the user's consent) to see free time when planning.
+- Version 2, which needs a server and is why it was left out of version 1: friends and groups with shared
+  repeating deadlines, in-app chat, and GIF replies. This requires a network permission, in-app reporting and
+  blocking and moderation to meet Google Play's user-generated-content rules, and a GIF provider (Tenor's API closed in
+  June 2026, so GIPHY or KLIPY). Privacy would be kept by end-to-end encrypting group content.
+- Optional, user-triggered smart reading of long documents with a small on-device language model, kept off by default.
+- An open, documented export format for the encrypted backup so other tools can read it with the user's key.

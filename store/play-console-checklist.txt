@@ -1,0 +1,51 @@
+PLAY CONSOLE CHECKLIST FOR S-IB
+Things only you can do are marked YOU. Everything else is prepared in this project.
+
+BEFORE YOU START
+[YOU] Choose the account type.
+      Personal account: needs identity verification, and a new personal account must run a closed test with at least 12
+      testers opted in for 14 continuous days before it can apply for production access.
+      Organisation account: needs a legally registered organisation and a D-U-N-S number. It is exempt from the 12 tester
+      rule. A name like "H-sib" can only be an organisation account if the business really exists; do not invent one.
+[YOU] Pay the one-time registration fee and finish verification (can take days). Do this first because it is the slowest step.
+[YOU] Turn on GitHub Pages for the repository H-sib/s-ib and publish the contents of site\ so that
+      https://h-sib.github.io/s-ib/privacy.html loads. Open it on your phone and check it.
+
+BUILD
+[x] Run tools\offline-pipeline.ps1. Read offline-report.txt. Fix anything marked FAIL.
+[x] The upload bundle is release\s-ib-release.aab, signed with release\upload-keystore.p12.
+[YOU] Back up release\upload-keystore.p12 and release\keystore.properties somewhere safe and separate (password manager
+      or an encrypted drive). Never commit them. Enrol in Play App Signing when asked, which lets Google hold the real
+      signing key so a lost upload key can be reset.
+
+CREATE THE APP
+[YOU] Create app: name "S-IB: Deadline Planner", default language English, App, Free. (Free cannot later become paid.)
+[YOU] Declarations: contains ads No; target audience 18 and over; privacy policy URL; data safety (store\data-safety-and-policy-answers.txt);
+      content rating questionnaire; app access: no restrictions; news app No; government No; financial features None.
+[YOU] Main store listing: paste from store\listing.txt. Add your support email (Play requires one), the icon 512 x 512,
+      the feature graphic 1024 x 500 and at least two phone screenshots.
+
+TEST
+[YOU] Internal testing first: upload the .aab, add yourself, install from the Play link on a real phone.
+[YOU] On at least two phone brands, check the following. This is the part no script can do:
+        1. Add a deadline due in 10 minutes and one due tomorrow; lock the phone; confirm the reminders arrive.
+        2. Restart the phone; confirm reminders still arrive.
+        3. Settings > Reminder health check: follow its advice on a brand with aggressive battery saving.
+        4. Share a screenshot of a notice from the gallery to S-IB; confirm it appears in Review.
+        5. Turn on backup to a folder, make a change, restore on a second phone or after clearing the app's data.
+        6. Close ones: add an anniversary 3 days away; confirm the lock screen only says "A reminder".
+        7. Turn on app lock; switch away for over 30 seconds and back.
+        8. Turn the phone to dark theme and to the largest text size; look for clipped text.
+[YOU] Closed testing (personal accounts): recruit at least 12 testers, ask them to opt in, and keep it running 14 days.
+      Collect feedback, fix, upload a new build with a higher versionCode (app\build.gradle.kts).
+
+LAUNCH
+[YOU] Apply for production access (personal accounts), then create the production release with the same bundle.
+[YOU] Staged rollout starting at 20 percent is sensible for a first release.
+[YOU] After launch: watch Android vitals (crashes and ANRs) in Play Console, and answer reviews.
+
+KNOWN RISKS TO KEEP IN MIND
+- The name S-IB is close to bank abbreviations. The store title "S-IB: Deadline Planner" helps; check trademarks.
+- Reminder reliability differs by phone maker and cannot be fully guaranteed. The in-app health check exists for that reason.
+- Google Play services provides the document scanner; on phones without it, Scan shows a message and Photo still works.
+- The app is English only in version 1.

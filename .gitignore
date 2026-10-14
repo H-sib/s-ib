@@ -1,0 +1,29 @@
+# Local toolchain and machine specific files
+.toolchain/
+local.properties
+.gradle/
+build/
+*.iml
+.idea/
+
+# Secrets and signing material must never be committed
+.env
+.env.*
+*.pem
+*.key
+*.jks
+*.keystore
+*.p12
+*.pfx
+keystore.properties
+secrets.properties
+google-services.json
+release/
+
+# Build outputs and logs
+*.aab
+*.apk
+build-log.txt
+build-exit.txt
+offline-logs/
+offline-report.txt

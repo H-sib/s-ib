@@ -1,0 +1,43 @@
+DATA SAFETY, CONTENT RATING AND POLICY ANSWERS FOR PLAY CONSOLE
+Prepared 2026-10-14 for S-IB version 1.0.0. Check each answer against the build you upload; the build is the truth.
+
+DATA SAFETY FORM
+Does your app collect or share any of the required user data types?   NO
+  Reason: the app has no INTERNET permission (checked in the merged manifest on every build, see offline-report.txt),
+  has no accounts, analytics, ads or crash reporting, and nothing leaves the phone except what the user explicitly
+  shares through the system share sheet or saves to a folder they choose.
+Is all of the user data collected by your app encrypted in transit?   Not applicable (nothing is collected).
+Do you provide a way for users to request that their data is deleted?   Not applicable. For completeness: Settings >
+  Privacy and data > erase everything, and uninstalling removes all data.
+Third-party components to be aware of when answering:
+  - ML Kit text recognition is the bundled model and runs fully on the device.
+  - The Scan button uses Google's document scanner from Google Play services, which runs on the device. Google's
+    documentation for ML Kit describes on-device processing; re-read it on the day you submit, because Google may change it.
+Privacy policy URL:   https://h-sib.github.io/s-ib/privacy.html   (publish site\ with GitHub Pages first)
+
+APP CONTENT
+Ads:                         No ads.
+App access:                  All functionality is available without a login or special access.
+Target audience:             18 and over. Reason: Close ones covers partner relationships; choosing adults avoids the
+                             Families policy obligations. Not designed for children.
+News app / COVID / health / government / financial features / gambling:   No to all.
+User-generated content:      None in version 1 (no chat, no public sharing, no accounts).
+Data deletion / account deletion URL:   Not applicable, there are no accounts.
+Advertising ID:              The app does not use it. Declare "No".
+
+PERMISSIONS DECLARATIONS
+Declared in the release build:   POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, USE_BIOMETRIC, USE_FINGERPRINT (from the
+  biometric library), WAKE_LOCK (from WorkManager).
+Not used and not declared:   INTERNET, SCHEDULE_EXACT_ALARM, USE_EXACT_ALARM, any foreground service permission,
+  READ_EXTERNAL_STORAGE and other storage permissions, camera, location, contacts, SMS, notification listener, accessibility.
+No sensitive-permission declaration form is needed for this set.
+
+CONTENT RATING QUESTIONNAIRE (IARC)
+Answer No to violence, fear, sexual content, language, controlled substances, gambling, user interaction (no chat),
+location sharing, and purchases. Expected result: Everyone / PEGI 3 / equivalent. Category for the questionnaire:
+"Utility, productivity, communication or other". If the questionnaire asks whether the app shares user-generated
+content or allows users to interact, the answer is No in version 1.
+
+TARGET API AND TECHNICAL REQUIREMENTS (verified when written)
+New apps must target Android 16 (API 36) or higher from 31 August 2026; S-IB targets API 36. 64-bit and 16 KB page size support are required;
+the pipeline checks zip alignment for 16 KB and the bundle uses uncompressed native libraries. Upload an Android App Bundle.

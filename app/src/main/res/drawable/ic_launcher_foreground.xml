@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A dial in the signature gradient: the ring is the day, the bright marker is a deadline sitting on its edge. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillType="evenOdd"
+        android:pathData="M54,25a29,29 0,1 0,0.01 0zM54,34.5a19.5,19.5 0,1 1,-0.01 0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="26"
+                android:startY="26"
+                android:endX="84"
+                android:endY="84"
+                android:type="linear">
+                <item android:color="#9B86FF" android:offset="0" />
+                <item android:color="#FF8A70" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#F7F4FF" android:pathData="M52.5,40h3v14.5l9,5.2l-1.5,2.6l-10.5,-6.1z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M72,36.5a6.5,6.5 0,1 0,0.01 0z" />
+</vector>

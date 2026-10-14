@@ -1,0 +1,209 @@
+# Part 2: Visual Design and the Notification Experience
+
+Covers sections 7 and 8. Tags: [V] verified, [S] secondary source, [K] background knowledge, [?] unresolved.
+
+---
+
+## 7. Visual design proposal
+
+### 7.1 Design brief in four sentences
+
+The screen will be read by someone who is worried, short of time, and possibly outdoors. So it must be legible at a glance, calm in tone, and honest about uncertainty. It should look like it was designed for this problem, not assembled from a dashboard kit. Every mark on screen must answer a question the user actually has: *what is due, when must I start, am I on track, what collides.*
+
+### 7.2 What I am deliberately avoiding
+
+Oversized hero headings, rows of identical gradient cards, frosted-glass panels stacked on each other, decorative charts, rainbow category colors, confetti and streak flames, and generic "welcome back" illustrations. When a chart does not change a decision, it does not ship.
+
+### 7.3 Three art directions
+
+Font names below are suggestions I believe are open-licence (SIL OFL) [K]; confirm licence and script coverage before adopting. Always declare a Noto fallback so that unsupported scripts never show missing-glyph boxes. Contrast ratios in the palettes were computed on 2026-10-14 against the stated background.
+
+#### Direction A: "Almanac"
+
+A printed reference book for time: paper, ink, ruled lines, tick marks.
+
+- **Typography:** a text serif with real character for titles and dates (for example Newsreader or Fraunces), a quiet sans for interface text, and a tabular monospace for numerals and countdowns (for example IBM Plex Mono). Dates are set large and in the serif, like entries in a ledger.
+- **Palette (light):** paper `#F4EFE6`, ink `#1B1F2A` (14.4:1), secondary `#555B6B` (5.9:1), vermilion signal `#B03A20` (5.3:1), ochre `#7A5500` (5.9:1), verdigris `#1D6A63` (5.6:1).
+- **Palette (dark, "night vellum"):** background `#14161C`, text `#E9E3D6` (14.1:1), secondary `#A9AEBB` (8.2:1), vermilion `#FF8466` (7.5:1), ochre `#E3B552` (9.5:1), verdigris `#62C7BA` (9.0:1).
+- **Iconography:** drawn on a 24 px grid with a 1.75 px stroke and slightly angled terminals, like a draughtsman's pen. Motifs: ruler ticks, a dial of 12 or 24 ticks, a corner fold for "new."
+- **Dashboard:** a **Runway** across the top (section 7.5), then a **Today folio** laid out like a page with hairline rules and marginal notes. No cards with shadows; sections are separated by rules and whitespace.
+- **Motion:** page-turn style slides, 160 to 220 ms, ease-out. State changes "settle" like ink: stroke weight and fill change over about 400 ms, not only hue.
+- **Strengths:** distinctive, calm, excellent for large readable dates, pairs naturally with the name Computus.
+- **Weaknesses:** can slide into a vintage pastiche if over-ornamented; serif choice must be tested at small sizes and in all supported scripts; less dense by default.
+
+#### Direction B: "Horizon"
+
+Time as the arc of a day. Each deadline is a disc travelling toward a horizon line.
+
+- **Typography:** a clean humanist or grotesque sans (for example Instrument Sans or Schibsted Grotesk) with tabular figures.
+- **Palette (light/dark):** deep indigo base with ochre and coral accents. Use flat bands of color, not smooth sky gradients, to avoid the stock "sunset gradient" look.
+- **Iconography:** circles and arcs only; a single horizon line recurs everywhere.
+- **Dashboard:** a half-circle sky at the top where each deadline sits at an angle that encodes time remaining; "due today" touches the horizon, "overdue" sits just below it in outline.
+- **Motion:** discs glide along the arc as time passes; the horizon line is fixed.
+- **Strengths:** a memorable metaphor and instant "how close is it" reading for a handful of items.
+- **Weaknesses:** the metaphor breaks down beyond roughly 8 items; arcs are hard to label and hard to make accessible; many items on a small phone become clutter; risks becoming a gimmick that fails the "readable under stress" requirement.
+
+#### Direction C: "Instrument"
+
+A quiet technical panel: Swiss grid, tabular numerals, one signal color.
+
+- **Typography:** a precise grotesque (for example Inter Tight or Geist) and a matching monospace for numbers.
+- **Palette (light):** off-white `#F7F7F5`, ink `#16181D` (16.6:1), secondary `#575C68` (6.2:1), signal orange `#B84A00` (4.9:1), blue `#1F5FBF` (5.7:1), green `#1A6B45` (6.1:1).
+- **Palette (dark):** background `#101215`, text `#ECEDEF` (16.0:1), secondary `#A4A8B3` (7.9:1), signal orange `#FF9147` (8.4:1), blue `#7DB1FF` (8.6:1), green `#5FCB93` (9.3:1).
+- **Iconography:** geometric, 2 px stroke, square caps.
+- **Dashboard:** small-multiple rows. Each deadline is one row with a bullet-style pressure bar, the latest safe start marked as a tick, and the due moment as an end cap.
+- **Motion:** minimal. State changes snap in about 120 ms with a brief highlight.
+- **Strengths:** highest legibility under stress, easiest to test for accessibility, cheapest to build, scales to many items.
+- **Weaknesses:** the "generic dashboard" look you want to avoid unless the typographic and spacing details are excellent; less emotional warmth.
+
+### 7.4 Recommendation
+
+**Use Almanac as the identity and Instrument as the information discipline.**
+
+- From Almanac: the serif-for-dates typography, paper and ink tones, ruled-line structure, tick-mark motif, and the Runway.
+- From Instrument: tabular numerals everywhere, small-multiple rows for dense lists, exactly one signal color per screen, and minimal motion in stress states.
+- From Horizon: borrow only the single **"now" line** that runs through the Runway.
+
+Reject Horizon as the primary direction. It is the most memorable but the least readable when the user needs it most.
+
+### 7.5 Visualizations that earn their place
+
+Each one answers a specific question and replaces something a list cannot do.
+
+| # | View | Question it answers | What it shows | Why a list or standard chart is worse |
+|---|---|---|---|---|
+| 1 | **Runway** | What is coming and when must I start? | A horizontal time axis from now. Deadlines are end caps. A band behind each shows its planned preparation window. The scale is non-linear: near time is stretched, far time is compressed, with explicit tick labels. | A calendar shows dates but not lead time; a list hides spacing. |
+| 2 | **Load horizon** | Will I run out of time? | Per-day stacked workload against the capacity line. Shortfall shaded with a hatch pattern plus text ("9 h short, days 0 to 6"). Directly renders the planner's solution (part 1, section 6.4). | A task list cannot show collisions; a generic bar chart does not name the cause. |
+| 3 | **Pressure row** | How tight is this one task? | The bullet-style bar: work remaining vs time remaining, with the latest safe start tick. | A progress bar mixes progress and time, which are different. |
+| 4 | **Today folio** | What is the one next action? | A short list: the single next step, what is due today, and what needs attention soon, with counts. | A full calendar day view drowns the next action. |
+| 5 | **Candidate preview** | What happens if I accept this suggestion? | A dashed-outline marker for each unconfirmed candidate drawn **on the Runway and Load horizon** before confirmation, so the user sees the collision it would cause. | A separate inbox forces a decision without context. |
+| 6 | **Seven-day strip** | What is this week like? | Seven narrow columns with only meaningful events and a load tint. | A month grid shows every date identically. |
+| 7 | **Status summary** | What have I completed, postponed, or let slip? | A quiet text summary with counts and a list, no gamification. | Pie charts add nothing here. |
+
+Not included: pie charts, streak flames, "productivity score," and any animation that does not convey a state change.
+
+### 7.6 The urgency visual system
+
+Color is a supporting signal only. Every state has a **label**, a **glyph shape**, a **position rule**, and then a color.
+
+| State | Label | Glyph | Color role | Motion | Haptic | Sound |
+|---|---|---|---|---|---|---|
+| Newly discovered | Review | dashed ring | neutral | none | none | none |
+| Confirmed, distant | Planned | open ring | neutral | none | none | none |
+| Start window | Start soon | half-filled ring | ochre | 400 ms settle | none | none |
+| Active preparation | In progress | arc proportional to progress | verdigris | progress ease | light tick on step done | none |
+| Approaching | Approaching | filled arc | ochre | 400 ms settle | none | soft |
+| Due soon | Due soon | ring with tick | vermilion | 400 ms settle | click | default |
+| Due today | Due today | solid disc | vermilion | none | click | default |
+| Overdue | Overdue | broken ring | vermilion, outlined not filled | none | none | calm, once a day |
+| Completed | Done | tick | verdigris | tick draws in 200 ms | confirm | none |
+| Postponed | Moved | arrow ring | neutral | slide | none | none |
+
+Implementation notes [K]: use the platform's predefined vibration effects (tick, click, heavy click) and the confirm/reject haptic constants so patterns respect the user's system haptic settings. Offer a "reduce motion" switch and honour the system animation-scale setting.
+
+### 7.7 Accessibility
+
+- Meet WCAG 2.2 AA minimums: text 4.5:1, large text 3:1, non-text indicators 3:1.
+- Support font scaling to at least 200% without clipped text; use scalable units.
+- Test glyph and label distinctions with color-blindness simulation; no meaning lives in color alone.
+- Screen-reader order follows task logic (next action first). Charts expose a text equivalent ("9 hours short between day 0 and day 6").
+- Touch targets at least 48 dp.
+- Right-to-left layout and mirrored directional icons supported from the start, because a global product will need them.
+- Numerals follow the user's locale setting; date display follows locale, but the **stored** value is always an instant plus zone.
+
+### 7.8 First launch: show, don't tell
+
+The first minute should demonstrate value with **synthetic data only**, never the user's messages.
+
+1. **Screen 1: the problem.** One line: "Dates get lost in the middle." A short, quiet animation shows a deadline sinking out of sight among others, then being caught.
+2. **Screen 2: try it.** A sample notice (clearly labelled "example") sits on screen. The user taps "Find the deadline." Date candidates are highlighted with small marks, and each shows a one-line reason: *accepted: follows "last date to submit"* or *ignored: this is the publication date.* This is both the demo and the trust-builder.
+3. **Screen 3: your plan.** The accepted deadline appears on the Runway with a suggested plan. The user can drag the effort slider and see the plan change, and see what happens when a second example deadline collides.
+4. **Screen 4: privacy, in plain words.** What stays on the device, what is encrypted, and that nothing is read from other apps unless the user turns on a specific source. Optional sources appear as a list the user can skip. **No permission prompt appears before its purpose has been explained in context.**
+5. **Done.** The user lands on a real, empty Runway with one clear "Add or share a deadline" action.
+
+Notification permission is requested when the user first confirms a real deadline, with a one-sentence explanation, not at launch [K].
+
+### 7.9 Empty, loading, error, and recovery states
+
+| Situation | Treatment |
+|---|---|
+| Empty Runway | A drawn horizon line with a single sentence and the two fastest ways to add. No mascot. |
+| OCR running | Inline progress on the specific image, cancelable, no full-screen blocker. |
+| Nothing found | "No dates found in this." with the option to add one manually and see what was ignored. |
+| Ambiguous date order | Both readings shown side by side with source context; user picks. |
+| Backup failed | Plain explanation, what is safe locally, retry, and never a scary red wall. |
+| Restore with a wrong recovery phrase | One specific message: it is wrong, not "something went wrong." Explain that there is no way to bypass it, by design. |
+| Success | A short tick animation and a line of text. No confetti. |
+
+### 7.10 Settings information architecture
+
+A short top level with progressive depth, so nothing is one long page.
+
+1. **Appearance and accessibility:** theme, text size, motion, haptics, language and locale (weekend, week start, date order, calendar).
+2. **Reminders:** defaults per category, advance notice, daily budget, quiet hours, weekend and holiday behaviour, snooze rules, sounds and vibration.
+3. **Notification privacy:** lock-screen detail level, preview content, widget and tile visibility.
+4. **Sources:** one row per source with a switch, what it can see, the last use, a "revoke access" button, and a "what is stored from this source" link.
+5. **Understanding (machine learning):** thresholds, what the app has learned locally, reset learning.
+6. **Backup and sync:** status, destination, recovery key management, devices, version history, restore, delete cloud copy.
+7. **Privacy and data:** what is stored (an inspectable list), retention rules, export, delete everything.
+8. **Security:** app lock, security status summary, plain-language limits.
+9. **Diagnostics:** reminder health check, optional crash reports (off by default).
+10. **About:** open-source licences, version, evaluation results.
+
+---
+
+## 8. The Android notification experience
+
+### 8.1 The honest answer first
+
+You asked for a persistent dashboard in the notification shade. **Android does not offer an interactive dashboard surface there.** Notifications are rendered by the system from fixed templates. What you can build is the closest practical combination below.
+
+The most tempting route, **Live Updates** (promoted ongoing notifications with the status-bar chip), is explicitly not allowed for this use. Android's guidance lists these as inappropriate: upcoming calendar events, ambient information about upcoming events, alerts, chat messages, and notifications using custom `RemoteViews`. It requires a Live Update to be a user-initiated, ongoing, time-sensitive activity with a defined start and end, such as navigation, a workout, or a delivery [V]. A list of deadlines is none of those.
+
+### 8.2 What is possible
+
+| Surface | What it can show | Key APIs and rules | Caveats |
+|---|---|---|---|
+| **Ongoing "Today" notification** | Collapsed: a one-line summary ("1 due tomorrow, 2 to prepare, 1 overdue"). Expanded: up to a handful of lines in an inbox-style list, with up to three action buttons (Done step, Snooze, Open). | Standard notification, ongoing flag, low-importance channel, silent, update only when state changes. Use public/private versions for lock-screen privacy. | The user can switch it off. On recent Android versions users can swipe away ongoing notifications from ordinary apps [K], so respect that and do not repost it aggressively. Do not use a foreground service just for this. |
+| **Live countdown for one item** | A system-rendered ticking countdown to the next due moment, without waking the app every second. | Notification chronometer set to count down [K]. | Only one time source per notification. Good for "due in 02:13:45", not for lists. |
+| **Quick Settings tile** | A tile in the quick-settings panel with a label and subtitle, for example "Next: Report, 2d 4h." Tap opens the Runway. | `TileService`. Subtitle supported on Android 10 and later [K]. Apps can prompt the user to add the tile on Android 13 and later [K]. | The user must add the tile. Text is short. This is the nearest thing to a persistent glance surface in the shade. |
+| **Home-screen widget** | The Runway as a small widget, or a list of the next three items with a tap-to-complete action. | Jetpack Glance or app widgets [K]. | Visible to anyone who sees the home screen. Provide a privacy setting that redacts titles. |
+| **Grouped notifications by urgency** | One group per urgency class, each with a summary. | Notification channels and grouping. | Newer Android versions bundle notifications automatically and may generate summaries of long threads [S]. Do not depend on your grouping surviving unchanged. |
+| **Focus session as a Live Update** | While the user is actively working on a prep step, a promoted notification shows time left and progress through the step. | `ProgressStyle`, `POST_PROMOTED_NOTIFICATIONS`, request promotion, ongoing, no custom view [V]. Android 16 or later [S]. | Valid only because the user starts it and it has a clear start and end. It must not be auto-started by the app. Users can demote it. Falls back to an ordinary ongoing notification on older versions [S]. |
+
+### 8.3 Sketch of the "Today" notification
+
+```
+Sibra                                             now
+1 due tomorrow, 2 to prepare, 1 overdue
+-----------------------------------------------------
+[!]  Overdue       Library fine (2 days ago)
+[ ]  Due tomorrow  Report, 9:00   9 h left, start today
+[~]  Start soon    Application form, 4 d
+[~]  Start soon    Quiz 3 revision, 3 d
+[ Done step ]   [ Snooze 1 h ]   [ Open ]
+```
+
+(The bracket marks stand for the same glyph shapes used in the app. Titles are hidden on the lock screen by default and shown after unlock.)
+
+### 8.4 Android version and policy matrix
+
+| Topic | Rule | Tag |
+|---|---|---|
+| Notification permission | Runtime permission on Android 13 and later; request after the user has confirmed a real deadline | [K] |
+| Notification channels | Required from Android 8; one channel per urgency class so users can mute classes independently | [K] |
+| Exact alarms | Denied by default for new installs on Android 13 and later and after a backup restore onto Android 14; needs a settings flow | [V] |
+| Reboot | Alarms are cleared on reboot; reschedule from a boot receiver; the receiver works only after the first app launch | [V] |
+| Doze and standby | Use inexact alarms or WorkManager for most reminders; exact alarms only where needed | [V] |
+| Custom notification layouts | Avoid; promoted notifications forbid them [V], and Android 17 adds stricter memory checks for custom-view notifications | [V], [S] |
+| Target API | New apps and updates must target Android 16 (API 36) from 2026-08-31 | [S] |
+| Sensitive content | Android 15 redacts OTP content from untrusted listeners; not relevant to your own notifications, but relevant to any notification-access source | [S] |
+| Lock-screen privacy | Use a private notification with a redacted public version; make detail level a setting | [K] |
+
+### 8.5 Design rules for the shade
+
+1. **Everything here is opt-in and adjustable:** off, minimal (one line), or full.
+2. **Never dozens of persistent notifications.** One ongoing item at most, plus transient reminders.
+3. **No update loops.** The "Today" notification updates at state changes, at local midnight, and on user actions, not every minute.
+4. **No unusual tricks:** no full-screen intents for ordinary deadlines, no attempts to bypass do-not-disturb, no repeated reposting after the user dismisses.
+5. **Be honest in the store listing and the settings screen** about what the shade surfaces can and cannot do.

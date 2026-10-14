@@ -1,0 +1,53 @@
+GOOGLE PLAY STORE LISTING FOR S-IB
+Paste each block into Play Console, Main store listing. Character limits are Play's own; the counts are checked by tools\store-check.py.
+
+APP NAME (max 30)
+S-IB: Deadline Planner
+
+SHORT DESCRIPTION (max 80)
+Finds your deadlines, plans when to start, and reminds you calmly. Private.
+
+FULL DESCRIPTION (max 4000)
+Dates get lost in the middle. You hear about a deadline in a notice, a group chat or a screenshot, and weeks later it arrives as a surprise.
+
+S-IB (say it "sib") helps you start before it is late.
+
+FIND THE DATE
+Type one line, paste a message, take a photo, scan a page, or share a PDF, a Word or Excel file, a calendar file or a chat export from any app. S-IB reads it on your phone, picks out the dates, and shows you the exact sentence and the reason for each one. Publication dates, history and sale offers are ignored. Nothing becomes a deadline until you confirm it.
+
+KNOW WHEN TO START
+Tell S-IB roughly how much work something is and how much time you have each day. It works backwards from the date to show the latest day you can start and still finish comfortably, spreads the work across the days you have, and learns from how long your past jobs really took. When it does not fit, it says by how much and offers real options: more time per day, a later date, or less to do.
+
+REMINDERS THAT EARN THEIR PLACE
+A few reminders, placed with care. Never inside your quiet hours. A daily limit so nothing nags. Done and Snooze right in the notification, a daily summary, a home-screen widget, a Quick Settings tile, and a built-in check that your phone is really letting reminders through.
+
+CLOSE ONES
+A private space with its own rose and plum look for the dates that matter to the people closest to you: anniversaries, birthdays, date nights, gifts and trips. Dates repeat without drifting, remind you early enough to plan something, and never show a name or a title on your lock screen. They are kept out of the widget, the summary, calendar export and sharing.
+
+SHARE WITHOUT AN ACCOUNT
+Send a deadline, or a whole weekly or monthly series, to friends as a calendar file with a readable list. No sign-up for anyone.
+
+PRIVATE BY DESIGN
+No account. No ads. No analytics. S-IB has no permission to use the internet, so it cannot send what you enter anywhere. Your data is stored in an encrypted database on your phone. Backups are end-to-end encrypted with a recovery key that only you hold, and are saved to any folder you choose, including a cloud drive. Every change to a deadline is chained to the one before it, so an unrecorded edit can be detected.
+
+DESIGNED TO BE CLEAR
+Urgency is shown with a word and a shape as well as a colour. Dates, times and clocks follow your phone's language and format. Four themes: Light, Twilight, Black and Neon. Large text is supported.
+
+WHY "S-IB"?
+It stands for Start It Before, which is the whole idea. It is also the closing sound of its maker's name, Hasib, which can mean one who counts, and counting the days is what the app does. And in English a sib is a brother or sister, someone close, which is the spirit of the Close ones space.
+
+A NOTE ON RELIABILITY
+Android phone makers differ in how strictly they limit background apps. If reminders arrive late, open Settings, then Reminder health check, and S-IB will show you what to change on your phone.
+
+Made by H-sib.
+
+TAGS / CATEGORY
+Category: Productivity. Suggested tags: To-do list, Reminder, Planner, Productivity, Calendar.
+
+WHAT'S NEW (first release, max 500)
+First release. Find deadlines in what you already receive, see the latest safe day to start, get a few calm reminders, and keep personal dates private in Close ones. No account and no internet permission.
+
+GRAPHICS TO UPLOAD
+App icon 512 x 512 PNG (under 1 MB). Feature graphic 1024 x 500 PNG or JPEG. Phone screenshots: at least 2, up to 8,
+16:9 or 9:16, each side 320 to 3840 px. Suggested order: Today, Review with the reason shown, Plan with the load chart,
+a deadline with the latest safe start, Close ones, Backup and privacy.

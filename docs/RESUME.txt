@@ -1,0 +1,61 @@
+S-IB: WHERE THINGS STAND AND WHAT IS LEFT
+Written 2026-10-14 so work can continue after a pause. Plain text on purpose (no .md files).
+
+RUN THIS FIRST, NO AI NEEDED
+  powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1
+It runs the core tests, the debug build, the app tests, lint, creates the upload key once, builds the signed release
+bundle, checks the merged manifest for the INTERNET permission, checks 16 KB alignment and scans for em dashes and
+unused imports. Read offline-report.txt afterwards. Full Gradle logs are in offline-logs\.
+To build by hand: & .\tools\gw.ps1 <gradle arguments>   (the log lands in build-log.txt)
+
+DONE AND COMPILING
+  core (pure JVM): dates, planner, urgency, reminders, backup format, seal, Close ones reminders, repeats
+  eval: generator, trainer, evaluation harness
+  app: database, store, engine, notifications, widget, tile, backup, import, every screen, navigation,
+       app lock, share receiver, Close ones (home, detail, editor, theme), repeating series, share with friends,
+       Why S-IB in About, Close ones settings page
+  Last confirmed: :core:test passes, :app:compileDebugKotlin passes with no warnings.
+
+ALSO DONE (2026-10-14, later the same day)
+  Lint errors fixed (StrongBox crash on Android 8, theme attributes, locale, tile). INTERNET, ACCESS_NETWORK_STATE and the
+  foreground service permission are removed in app\src\main\AndroidManifest.xml and confirmed absent from the merged
+  release manifest. A signed release bundle was built (about 29 MB). Written: store\listing.txt,
+  store\data-safety-and-policy-answers.txt, store\play-console-checklist.txt, store\CV_AND_PORTFOLIO_DESCRIPTION.txt,
+  site\privacy.html, PROJECT_SUMMARY.txt. tools\store-check.py checks the listing limits, tools\hygiene.py the style rules.
+
+INTRO AND SCREENSHOT TESTS (added later on 2026-10-14)
+  ui\Intro.kt plays on a cold start (axis draws, deadline lands, start marker travels, dashed arc, S-IB resolves, a tap
+  skips; it is skipped when opened from a notification and respects Reduce motion). app\src	est\...\IntroShotTest.kt
+  renders it at six moments in light and dark: gradlew :app:testDebugUnitTest -Precord=true writes appuild\shots\*.png.
+  The motion and layout work, but the look (cream paper, book serif, thin lines) is the old editorial style the owner
+  rejected, so restyle it as part of the redesign. The screenshot setup is ready to reuse for every other screen.
+
+STILL TO DO, IN ORDER
+  0. (Mostly done, see section 7 of docs\DESIGN_REDO.txt) The owner rejected the first visual design. Read docs\DESIGN_REDO.txt and rebuild the UI to it
+     (bold tiles, little text, whitespace, layered screens, graded colour, no pale grey text, a distinctive
+     typeface, a very cool animated intro). Ask before downloading any font. This outranks everything below.
+  1. Read offline-report.txt (the 16 KB alignment line and the release APK step were still running when this was written).
+     Re-run the pipeline after any code change. Run lint again: the earlier lint run predates the fixes.
+  2. (Ready now takes its database and tests build one in memory, see app\src	est\...\TestReady.kt.) Write the
+     Robolectric logic tests: Store (seal chain, repeats advance, rollRepeats,
+     snapshot round trip with the new Close ones fields), Engine (Close ones kept out of the plan), SettingsCodec,
+     DocText limits. Update the test count in PROJECT_SUMMARY.txt and store\CV_AND_PORTFOLIO_DESCRIPTION.txt afterwards.
+  3. Roborazzi screenshots of Today, Plan, Review, Close ones home, Close ones detail, Detail, Onboarding in light
+     and dark. Look at them and fix layout problems. These become the Play screenshots.
+  4. App icon check at 512 px, feature graphic 1024 x 500.
+  5. Add site\index.html (a one-page landing for GitHub Pages) if wanted.
+  6. Final honest report to the owner: what was verified by tests, what was never run on a phone.
+
+THINGS ONLY THE OWNER CAN DO
+  - Create the Google Play Console developer account and pay the one time fee.
+  - Publish the privacy policy page (GitHub repository H-sib/s-ib, Pages on).
+  - Closed test: 12 testers for 14 days before production access on a personal account.
+  - Test reminders on a real phone, ideally from two different brands, and with the phone idle overnight.
+  - Keep a safe copy of release\upload-keystore.p12 and release\keystore.properties. With Play App Signing the
+    upload key can be reset, but only through Play support.
+  - Check the name "S-IB" against trademarks in the countries you care about, and register a domain if wanted.
+    Note that SIB is also the abbreviation of several banks, which is why the store title is "S-IB: Deadline Planner".
+
+DELIBERATELY NOT IN VERSION 1
+  Friends, groups, in-app chat and GIFs (need a server and Play's user generated content rules), Gmail or
+  notification reading, exact alarms, any network permission.

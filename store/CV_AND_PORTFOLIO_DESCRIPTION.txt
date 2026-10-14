@@ -1,0 +1,118 @@
+S-IB: DESCRIPTION FOR YOUR CV AND PORTFOLIO
+Written for H-sib (Chowdhury Hasibur Rahaman). Every number below was measured from this project on 2026-10-14.
+Copy what you need. Section 7 says what to be careful about when you speak about it.
+
+------------------------------------------------------------------------
+1. THE ONE LINE
+S-IB is a privacy-first Android app that finds deadlines in the things you already receive, works out the latest day
+you can safely start, and reminds you early and calmly, all on the phone with no internet permission.
+
+------------------------------------------------------------------------
+2. PORTFOLIO PARAGRAPH (about 90 words)
+Deadlines get lost in the middle: a date is announced, weeks pass, and it arrives as a surprise. S-IB reads a pasted
+message, a screenshot, a PDF or a shared file on the phone, suggests the dates it finds and explains why, and only
+adds what you confirm. It plans the work backwards from each date using a scheduling model, says exactly how short
+you are when something cannot fit, and sends a small number of well-timed reminders. It also has a private space,
+Close ones, for anniversaries and birthdays. Nothing leaves the phone, and backups are end-to-end encrypted.
+
+------------------------------------------------------------------------
+3. CV BULLETS (pick four to six)
+- Designed, built and prepared for release a Kotlin and Jetpack Compose Android app (S-IB) as a solo developer:
+  about 13,000 lines of Kotlin across a pure-JVM core engine, an evaluation tool and the app, with 218 automated
+  tests (180 on the core engine, 33 UI render tests and 5 hostile-input tests).
+- Built a deadline planner that models work as a flow network (Dinic max-flow) to spread effort across days, find the
+  latest safe start by binary search, and explain a shortfall with a minimum cut plus concrete remedies; verified
+  against an independent Hall-condition oracle in tests.
+- Wrote a rule-based multi-format date reader with ambiguity flags (day/month order, midnight, missing year, AM/PM)
+  and a small softmax model, trained on generated data, that decides whether a date is a deadline, an event, a start
+  date, a publication date or history; temperature-calibrated, and measured with an evaluation harness
+  (95.8% role accuracy and zero false prompts on a 71-mention held-out set, with the caveat in section 7).
+- Engineered a privacy-first security design: no network permission, an encrypted database (SQLCipher) keyed through
+  the Android Keystore, per-purpose keys derived with HKDF, and end-to-end encrypted backups using chunked
+  XChaCha20-Poly1305 with a 256-bit recovery key; the backup parser is tested against tampering of every byte,
+  truncation, reordering and splicing.
+- Added a tamper-evident history (an HMAC hash chain, "Provenance Seal") so any unrecorded change to a deadline can
+  be detected.
+- Built reminders that respect attention: a daily budget, quiet hours, lock-screen privacy, recovery after reboot and
+  time-zone change, and an in-app reminder health check; plus a home-screen widget (Glance), a Quick Settings tile
+  and a share target that accepts text, images, PDFs, calendar files, chat exports, Word and Excel files.
+- Created a distinctive, accessible interface (four themes (Light, Twilight, Black and Neon) with graded colour, the Sora typeface, shape-coded urgency so colour is
+  never the only signal, all text contrast pairs at WCAG AA or better) and a second themed space for personal dates.
+
+------------------------------------------------------------------------
+4. THE LONGER DESCRIPTION
+
+The problem
+People are told dates in notices, group chats, emails and screenshots. By the time a date matters, it has been buried.
+Calendar apps need you to type everything in, and most "smart" apps want your inbox and send your data to a server.
+
+What S-IB does
+- Capture without typing: type one line, paste, share from any app, take a photo, scan a page, or hand over a PDF, a
+  Word or Excel file, a calendar file or a chat export. Everything is read on the phone (on-device text recognition).
+- Suggest, never assume: found dates wait in a Review inbox with the sentence they came from, the reason each date
+  was taken or ignored, and a warning when a reading is uncertain. Publication dates, history and sale offers are
+  ignored. Nothing becomes a deadline until the user confirms it.
+- Plan backwards: each deadline has an effort estimate (three-point, learned from how long the user's past jobs took).
+  The planner spreads work over the days the user has, shows the latest safe start, and when the load does not fit it
+  says by how much and offers three remedies: more time per day, a later deadline, or less scope.
+- Remind with restraint: few reminders, each placed with care, never in quiet hours, with Done and Snooze built in.
+- Close ones: a private space with its own rose-and-plum theme for anniversaries, birthdays, date nights and gifts.
+  Occasions repeat without drifting, remind early enough to plan, and never show names or titles on the lock screen.
+  They are left out of the widget, summary, calendar export and sharing.
+- Share without a server: a deadline or a whole repeating series can be sent to friends as a standard calendar file
+  plus a readable list; no account is needed.
+- Safe by design: encrypted storage, encrypted backup to any folder the user chooses (including a cloud drive), and a
+  tamper-evident history.
+
+Architecture
+- Three Gradle modules. ":core" is pure Kotlin on the JVM and a build rule forbids Android imports in it, which keeps
+  the hard logic testable without a phone. ":eval" is a command-line tool that generates training data, trains the
+  model and reports accuracy. ":app" is Android: Compose UI, Room with SQLCipher, WorkManager, AlarmManager, Glance.
+- Time is treated carefully: a deadline stores the local time and the zone it was stated in, not a bare instant, and
+  repeating dates are always computed from the original date so the 31st or 29 February never drifts.
+
+Engineering decisions worth discussing
+- No INTERNET permission on purpose, removed explicitly from the merged manifest, so the privacy claim can be checked
+  by anyone reading the manifest.
+- Argon2 was avoided for passphrase exports because of a library conflict on Android; PBKDF2-HMAC-SHA256 at 600,000
+  iterations is used instead and the choice is documented.
+- Android's Auto Backup is switched off so private data cannot leave through a path the user does not control.
+- Reminders use inexact allow-while-idle alarms and a health check rather than the exact-alarm permission, which Play
+  restricts; the trade-off is explained to the user in the app.
+
+------------------------------------------------------------------------
+5. TECH STACK
+Kotlin 2.4, Jetpack Compose with Material 3 (custom design system), Navigation Compose, Room 2.8 with SQLCipher,
+WorkManager, AlarmManager, Glance app widget, Quick Settings TileService, Android Keystore, Google Tink
+(XChaCha20-Poly1305, HKDF), kotlinx.serialization and coroutines, ML Kit text recognition and document scanner,
+AndroidX Biometric, Gradle 9 with Android Gradle Plugin 9, KSP, JUnit, Robolectric and Roborazzi for UI tests.
+
+------------------------------------------------------------------------
+6. THE NAME
+Say it as "sib". It is the closing sound of Hasib, a name that can mean one who counts or reckons, and counting the days
+is what the app does. It also stands for Start It Before, the whole idea of the product. In English a sib is a
+brother or sister, which is the spirit of the Close ones space and the sharing features planned for a later version.
+Before using the name publicly, check trademarks in your markets: SIB is also the abbreviation of several banks,
+which is why the store title is "S-IB: Deadline Planner".
+
+------------------------------------------------------------------------
+7. BE CAREFUL ABOUT THESE (so you can answer any interviewer honestly)
+- The accuracy figures come from a test set of 133 lines written by the same person who wrote the training data
+  generator, scored on a held-out half (71 date mentions). They show the reader behaves as designed; they are not a
+  claim about real-world messages.
+- The core engine is thoroughly tested by machine (180 tests). The app layer has been compiled, linted and rendered on a
+  simulated Android in tests (33), but, as of this writing, has not been run on a physical phone. Reminder delivery depends on the phone maker's
+  battery rules and must be tested on real devices before you claim it works everywhere.
+- Groups, chat and GIFs were designed but deliberately left for version 2: they need a server, a network permission
+  and Play's user-generated-content rules. Do not describe them as shipped.
+- Say "designed and built solo with an AI coding assistant" if asked how it was built; the design decisions, scope and
+  review were yours.
+- Do not say it is "unbreakable" or "military grade". Say what it does: encrypted at rest, end-to-end encrypted
+  backups, no network permission, tamper-evident history, and the limits stated in the app's Security screen.
+
+------------------------------------------------------------------------
+8. NUMBERS AT A GLANCE
+Kotlin files: 76 (core 24, core tests 9, eval 4, app 34, app tests 5). Non-blank Kotlin lines: about 13,000.
+Tests: 218, no failures (180 core unit tests, 33 UI render tests, 5 hostile-input tests). Gold evaluation set: 133 lines. Model: about 2,000 features.
+Planning proposal document: about 21,000 words in five files (docs/proposal).
+Permissions in the release build: notifications and boot completion, plus biometric and wake lock from libraries.

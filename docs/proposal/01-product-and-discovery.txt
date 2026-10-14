@@ -1,0 +1,459 @@
+# Part 1: Product, Discovery, Machine Learning, Reminder Intelligence
+
+Covers sections 1 to 6 of your list. Tags: [V] verified, [S] secondary source, [K] background knowledge, [?] unresolved. See `00-README.txt`.
+
+Working names used below: product **Sibra**, engine library **Computus**. Both are placeholders until you decide.
+
+---
+
+## 1. Product identity
+
+### Positioning statement
+
+For people who juggle many obligations that were announced long before they are due, **Sibra** is a private, on-device deadline reckoner. It finds the dates hiding in the documents and messages you already receive, works out when you actually need to start, and tells you early and calmly. Unlike a calendar or a to-do list, it does not wait for you to remember to type things in. Unlike cloud AI planners, it does not need to read your messages on a server.
+
+### Founder story (global, no region)
+
+You prepared well for a major admission test, then lost the date among months of other exams and obligations. That is the whole product thesis: **the failure is not ignorance of the date at the start, it is the date sinking out of attention in the middle.** Everything in this proposal is aimed at the middle of the timeline.
+
+### What makes it different from calendar and reminder apps
+
+| Conventional apps | Sibra |
+|---|---|
+| You must remember to enter the event. | Dates can be found in what you already received (share sheet, documents, photos, opt-in sources), then confirmed in one tap. |
+| A reminder fires at a fixed offset (a day before). | The deadline and the preparation are separate objects. The app works out the **latest safe start**, not just the due moment. |
+| Overlapping deadlines look like unrelated events. | Collisions are computed. If you cannot finish everything, it says exactly which days are short and by how many hours. |
+| Every date looks equally urgent, or urgency is a manual flag. | Urgency is derived from time left versus work left. Importance is kept separate. |
+| Privacy is a policy page. | Privacy is architecture: local processing, minimal retention, no server in v1, end-to-end encrypted backup. |
+
+### Product principles (these become tests)
+
+1. **A confirmed deadline never changes silently.** Ambiguous messages produce a suggestion, never an edit.
+2. **A suggestion never looks like a deadline.** Different shape, different label, different place on screen.
+3. **Interruptions are budgeted.** A global daily limit on sound-making notifications, spent on the most valuable reminders.
+4. **Say less, store less.** Raw messages and documents are discarded after extraction unless the user keeps an excerpt on purpose.
+5. **No guilt.** No streak counters, no shaming copy, no manufactured urgency.
+6. **Honest feasibility.** If the plan is no longer achievable, the app says so and offers a realistic compressed plan.
+7. **Locale-neutral by construction.** No hard-coded weekend, calendar, date order, or language.
+
+---
+
+## 2. Core innovation
+
+I rank differentiators by how genuinely novel the combination is, and I say plainly when something is well-established but under-executed.
+
+| # | Differentiator | Established pieces | What is genuinely new in the combination | Verdict |
+|---|---|---|---|---|
+| 1 | **Deadline vs preparation, with an explainable shortfall.** Preparation is generated, editable, and visibly distinct from real deadlines. When the load is infeasible, the app names the bottleneck interval and the hours missing. | Backward scheduling, critical ratio, auto-scheduling (Motion and Shovel [S], Reclaim [K]). | The shortfall explanation (a flow/cut result, section 6), and a **preview** of what accepting an unconfirmed candidate does to the next weeks. | Strongest. Algorithmically deep, verifiable, visible to users. |
+| 2 | **Privacy as architecture.** Local-first processing, minimal retention, end-to-end encrypted backup through an untrusted blob store, with rollback and tamper detection. | Client-side encryption (password managers, encrypted notes apps). Tink, Keystore. | Applying it to a deadline-intelligence product with a documented threat model, adversarial tests, and a reproducible evaluation. | Strong for credibility. This is excellent engineering, not a research breakthrough. Say so. |
+| 3 | **Context-aware extraction with change linking.** Distinguishes deadline vs event vs history vs tentative, and links "extended to the 15th" to the existing task. | Date parsing, classification. Gmail and Gemini suggest calendar events [S]. | On-device, locale-aware, with a hard rule that confirmed items are never silently edited, and calibrated confidence driving a review tray. | Medium novelty. Execution-heavy. The value is in the false-positive discipline. |
+| 4 | **Pressure-based urgency plus an attention budget.** Urgency from time-left vs work-left; importance separate; interruptions drawn from a daily budget. | Critical ratio is classical operations research [K]. | Applying it to consumer reminders with hysteresis and a visible state machine. | Medium. Good design more than invention. |
+| 5 | **Share-to-extract everywhere.** Any app can send text, a screenshot, a PDF, or a photo to Sibra in two taps, and the user sees why each date was accepted or rejected. | Share sheet, OCR. | The explanation view ("why this date, not that one") builds trust and teaches the user to correct. | Medium, but it is the most reliable discovery path Android permits. |
+
+Also worth saying: multi-language support is a **future differentiator**, not a launch claim. See section 5.
+
+---
+
+## 3. Feature architecture
+
+### Essential (v1, the thing must not ship without these)
+
+- Quick add with natural-language parsing ("Submit the signals assignment Nov 18 11:59 PM, about six hours").
+- Share-sheet receiver for text, images, PDFs. File and photo pickers. Document scanner with local OCR (Latin script).
+- Review tray: confirm, edit, dismiss, snooze. Source and evidence view ("why this date").
+- Deadline model with time zone, category, importance, effort estimate.
+- Preparation planner with templates, editing, disable, and **compressed plan** when late.
+- Urgency state machine with redundant encoding (label, glyph, position, color).
+- Reliable reminders: reboot recovery, time-zone and DST handling, duplicate prevention.
+- Local encrypted storage and optional app lock.
+- Manual encrypted export and import.
+- A privacy screen that shows exactly what is stored.
+- First-run demo using synthetic notices.
+
+### High value (v1.x)
+
+- Runway timeline and load-horizon views.
+- Ongoing "Today" notification, Quick Settings tile, home-screen widget.
+- Calendar feed (ICS) subscription and device-calendar import.
+- Structured sources: learning-management systems (Google Classroom, Canvas, Moodle) [?].
+- End-to-end encrypted cloud backup to the user's own Drive.
+- Reminder health check screen.
+- Per-category default plans and reminder rules.
+
+### Advanced (v2+)
+
+- Gmail reading (restricted scope, staged).
+- WhatsApp chat-export import (user-initiated, per chat).
+- Opt-in notification-access discovery with an app allowlist.
+- On-device personalization (per-user calibration of thresholds).
+- Multi-device sync with device enrollment and revocation.
+- Locale packs for additional languages.
+- "What if" simulator for planning.
+- Focus sessions as Android Live Updates (a compliant use, see part 2).
+
+### Experimental (only if earlier phases validate demand)
+
+- Telegram client-library adapter (high risk, see section 4).
+- Small on-device language model for ambiguous cases on capable devices.
+- Local-differential-privacy telemetry for aggregate stats.
+- Federated learning with secure aggregation (research stretch).
+- Wear OS companion. Shared deadlines between people (encrypted sharing).
+- Kotlin Multiplatform port of the Computus core.
+
+---
+
+## 4. Deadline discovery feasibility, source by source
+
+The rule for every row: **what is technically accessible, what permission it needs, what the user must do, what is not possible, and the Google Play risk.** Verdict column uses: Build now / Build later / Experimental / Do not build.
+
+### 4.1 Inputs that need no special platform permission
+
+**Manual and natural-language entry**
+- Accessible: whatever the user types or dictates.
+- Permission: none (microphone only if you add dictation).
+- User does: type one line, confirm a preview card.
+- Not possible: nothing relevant. Quality depends on the temporal parser.
+- Play risk: none. **Build now.**
+
+**Android share sheet (`ACTION_SEND`, text, images, PDFs)**
+- Accessible: exactly what the user chooses to share from any app that offers sharing, including attachments from mail apps and screenshots.
+- Permission: none. Sibra just declares an intent filter.
+- User does: tap Share, choose Sibra.
+- Not possible: it is user-initiated per item. Some apps do not offer "share" for individual messages. WhatsApp, for example, offers whole-chat export and copy, but I found no official way to share a single message to another app [S]. Test per app [?].
+- Play risk: none. **Build now.**
+
+**Text-selection menu (`ACTION_PROCESS_TEXT`)**
+- Accessible: selected text from apps that expose the system selection toolbar.
+- Permission: none.
+- Not possible: apps that render text in custom views or WebViews may not show a third-party menu item. Per-app testing required [?].
+- Play risk: none. **Build now** (cheap, high frictionless value).
+
+**Clipboard "paste and extract"**
+- Accessible: the clipboard, only when Sibra is in the foreground and the user taps Paste. Android shows a clipboard-access toast on newer versions [K].
+- Permission: none. Do not read the clipboard in the background.
+- Play risk: none if user-triggered. **Build now.**
+
+**File picker (Storage Access Framework) and Photo Picker**
+- Accessible: only the files or photos the user selects: PDF, DOCX, XLSX, images.
+- Permission: none, which avoids broad storage permissions that Play restricts [K].
+- Not possible: no background scanning of the gallery or downloads folder. Do not request all-files access or broad media permissions.
+- Play risk: none. **Build now.**
+
+**Camera scan of printed notices**
+- Accessible: a photo the user takes.
+- Use the system document-scanner flow where available [K], or an in-app capture.
+- Not possible: OCR quality depends on lighting and script.
+- Play risk: low. **Build now.**
+
+**Web page or calendar feed by URL (ICS, RSS, public page)**
+- Accessible: public content at a URL the user gives. Fetched on-device.
+- Permission: internet only.
+- Note: fetching a URL reveals to that website that this device is interested in it. Disclose it.
+- Not possible: pages behind a login.
+- Play risk: low. **Build now (ICS), later (arbitrary pages).**
+
+**Device calendar (`CalendarContract`)**
+- Accessible: events already in the user's calendars, including those other apps added (Gmail adds some events automatically [K]).
+- Permission: `READ_CALENDAR`, a runtime permission that is not a Play-restricted permission [K].
+- Not possible: it only sees what is already an event. It will not find a deadline that is only in an email.
+- Play risk: low, needs a clear disclosure. **Build later (v1.x).**
+
+### 4.2 Structured sources (the best accuracy per effort)
+
+**Learning-management systems: Google Classroom, Canvas, Moodle**
+- Accessible: assignments and due dates as structured data, no language processing needed.
+- Permission: OAuth consent for Classroom (read-only course work scopes [?]); personal access token or OAuth for Canvas; web-service token for Moodle.
+- User does: sign in or paste a token. Not every school exposes tokens or API access [?].
+- Not possible: institutions can disable access. Coverage varies by school and country.
+- Play risk: low to moderate (OAuth scope verification for Google scopes [?]).
+- **Build later. Highest value per unit risk for the student wedge.** I would research this before any message-mining work.
+
+### 4.3 Email
+
+**Gmail API**
+- Accessible: message content via official REST API after explicit consent.
+- Scopes: every scope that reads message bodies (`gmail.readonly`, `gmail.metadata`, `gmail.modify`, `mail.google.com`) is **restricted** [V]. Restricted scopes require restricted-scope OAuth verification. A security assessment applies "if you store restricted scope data on servers (or transmit)" [V]. A 2018 Google post says device-only apps skip the full assessment but must still be verified as non-malicious [S]. Whether that still holds is **unresolved**: ask the verification team in writing before you build [?].
+- Practical effect: until verified, the app works in "testing" mode for a limited number of named test users [K], which is enough for your own portfolio use and early testers.
+- User does: sign in with Google and grant read-only access; select which labels or senders to include.
+- Not possible: you cannot request broad access casually; any transmission to a server or third-party AI API risks triggering the assessment.
+- Play risk: moderate. Weeks of verification lead time. **Build later, start the verification paperwork in parallel with an earlier phase.**
+
+**Other mailboxes**
+- Microsoft accounts: Graph API with delegated `Mail.Read` after consent [K]. Consumer accounts have a lighter process than Google's restricted scopes [K, unverified].
+- Generic IMAP: the user supplies an app password, stored encrypted in Keystore-wrapped storage, and the phone connects directly. Works, but storing mail credentials makes your app a high-value target. Recommend as a power-user option at most.
+- **Build later, one provider at a time.**
+
+### 4.4 Messaging apps
+
+**WhatsApp**
+- No public API reads a personal account's chats. The WhatsApp Business Platform is for businesses messaging customers, not for reading a user's chats [K].
+- What does work:
+  1. **Chat export** (per chat, text file, through the share sheet) [S]. User-initiated, whole chat, so process it in memory, extract candidates, discard the file.
+  2. **Copy and paste** a message into Sibra.
+  3. **Notification access** (below), with caveats.
+- Not possible: reading WhatsApp's local database (encrypted and sandboxed); any unofficial client or web-scraping automation (violates terms and risks banning the user's account). Do not build these.
+- Play risk: low for export and paste. **Build later (export import). Do not build anything unofficial.**
+
+**Telegram**
+- Telegram has an open API, but it is not a "read my chats" API for an ordinary app. Two routes:
+  1. **Bot API:** a bot sees only messages sent to it or in groups where it is added. A bot is a server-side program, so message content would flow through a server. That contradicts local-first. Reject.
+  2. **TDLib (official client library):** the user logs in with their phone number and the app acts as a Telegram client. The API terms require your own `api_id`, prominent disclosure of API use, privacy care, and prohibit interfering with client behavior such as hiding read receipts [S]. I could not read the later sections of the terms, so permissibility of "client that mines chats" is **unresolved** [?]. It also means Sibra would hold a session token that grants full account access, a serious security liability.
+- Not possible: reading chats without logging in as the user.
+- **Experimental, probably do not build.** Read the full terms and get advice first.
+
+**Facebook Messenger, Instagram, Discord, Slack, Signal and others**
+- No API that lets a third-party app read a user's personal conversations [K]. Workspace tools (Slack, Teams) have their own APIs for workspace data but require admin approval and are out of scope for a personal tool.
+- Only share sheet, copy-paste, or notification access apply.
+- **Do not build dedicated integrations.**
+
+**SMS**
+- Play heavily restricts SMS reading to default-SMS-handler apps and narrow approved cases [K]. Deadline extraction is not an approved use.
+- **Do not build.** Users can copy and share an SMS manually.
+
+### 4.5 Notification access (`NotificationListenerService`)
+
+This is the closest thing to "automatic discovery from other apps", so it deserves full honesty.
+
+- **Accessible:** the title, text, and sub-text of notifications that other apps post **after the user enables Sibra** in system settings. Typically truncated text. It sees new notifications only.
+- **Not accessible:** conversation history, messages that never produced a notification, the full text of long messages, and anything from chats the user has muted (muted chats generally do not post notifications [K], so the **most deadline-rich class-group chats are often invisible to this method**; test on a device [?]).
+- **Platform limits:** Android 15 redacts the content of notifications where a one-time passcode is detected from untrusted listeners [S]. Android also bundles and, on some versions, summarises notifications with generated text [S], which can change what a listener sees.
+- **Permission:** a special-access setting the user must enable by hand in system settings. It cannot be granted through a normal pop-up. Apps installed outside Play may face extra "restricted settings" friction [K].
+- **Play policy:** I found no dedicated declaration form for this permission, but it is sensitive user data. Expect: a prominent in-app disclosure before sending the user to settings, accurate Data safety answers, and scrutiny at review about whether it is core to the app [S, wording unconfirmed]. A product that works fully without it is easier to defend.
+- **Design if built:** off by default; per-app allowlist; process in memory; keep nothing but a confirmed candidate; never read notifications from apps not on the allowlist; clear status in the privacy screen.
+- **Verdict: Build later, optional, never a launch dependency.**
+
+### 4.6 Things I recommend you do not build
+
+- **Accessibility services** as a reader for other apps. You already ruled this out, and Play restricts it to accessibility tools.
+- **Screen recording or screenshot watching** (media projection or broad media permission): intrusive, restricted, and not necessary because the Photo Picker and share sheet work.
+- **Unofficial clients, scrapers, or reverse-engineered APIs** for any messaging service.
+
+### 4.7 Summary table
+
+| Source | Auto-discovery? | Needs special permission? | Reliability | Play risk | Verdict |
+|---|---|---|---|---|---|
+| Manual / NL entry | n/a | none | high | none | Build now |
+| Share sheet, selection menu, paste | user-initiated | none | high | none | Build now |
+| File / photo picker, scan | user-initiated | none | medium (OCR) | low | Build now |
+| ICS / URL feed | yes, after subscribing | internet | high | low | Build now |
+| Device calendar | yes | `READ_CALENDAR` | high | low | Build later |
+| LMS (Classroom, Canvas, Moodle) | yes | OAuth / token | very high | low to moderate | Build later |
+| Gmail | yes | restricted scope | high | moderate, slow | Build later |
+| WhatsApp chat export | user-initiated | none | medium | low | Build later |
+| Notification access | yes, partial | special access | partial, biased | moderate | Build later, optional |
+| Telegram client library | would be | login session | unknown | high | Experimental |
+| Accessibility / scraping / SMS | n/a | restricted | n/a | very high | Do not build |
+
+### Architecture consequence: the `SourceAdapter` seam
+
+Every input becomes the same object, a `TextSegment` with provenance (source type, time received, language hint) and nothing else. The extraction engine never knows where text came from. That one decision makes every row above independently addable or removable, and lets the engine be tested with no Android dependency. It is the early, checkable extensibility decision your complexity notes call for.
+
+---
+
+## 5. Machine learning proposal
+
+### Recommendation in one line
+
+**A hybrid pipeline: deterministic temporal parsing, rule-based cues, a small calibrated classifier, and a relation linker. Not a large custom model.** Add a small neural model later only if error analysis proves the simple one cannot do the job.
+
+### Why not start with a big model
+
+- Data: there is no public dataset of "messages that contain real deadlines" that I know of [?]. Temporal-tagging corpora (TimeBank, TempEval) exist, mostly newswire and often under restrictive licences [K]. A custom model without data is guesswork.
+- Cost: model size and battery on budget phones.
+- Trust: a rules-plus-linear model is explainable. You can show the user exactly which cue words and which date made it decide, which is both a UX feature and a debuggability win.
+- LLM on device: Gemini Nano through ML Kit GenAI is limited to supported newer devices and its documented tasks are summarisation, proofreading, rewriting, and image description, not date extraction [S]. Treat it as an optional accelerator, never a requirement.
+
+### The pipeline
+
+```
+[SourceAdapter] -> TextSegment (provenance, no raw retention)
+   1. Normalise: Unicode, digits in any numeral system -> ASCII, strip signatures and quoted replies
+   2. Detect language/script, pick locale pack
+   3. Temporal tagger: find candidate date/time expressions, resolve against a reference time and locale
+   4. Cue extraction around each candidate: deadline cues, tense/modality, negation, role of the date
+   5. Classifier: P(deadline | features) and a role label for each candidate
+   6. Relation linker: NEW / UPDATE / CANCEL / DUPLICATE / CONFLICT / UNRELATED vs existing items
+   7. Confidence = calibrated probability x date-resolution certainty x source prior
+   8. Tiering: suggest / maybe / discard (discard is never stored)
+   9. Persist only what the user confirms
+```
+
+### Step 3: the temporal tagger is real algorithmic work
+
+This is where global neutrality bites hardest.
+
+- **Date order ambiguity.** "03/04/2026" is 3 April in most of the world and 4 March in the United States. Resolve using the locale, other dates in the same document, and the source; if still ambiguous, **ask**, never guess silently. This is the single largest source of silent errors in any global date extractor.
+- **Relative expressions.** "next Friday," "before the end of the month," "within 7 days," "by end of term." Needs a reference time and a documented policy (for example whether "next Friday" on a Wednesday means this week's or next week's).
+- **Time zones.** A deadline may be anchored to the institution's zone ("11:59 PM EST") rather than the device's. Store the zone; handle "floating" local times separately.
+- **Other calendars.** Regional calendars (Hijri, Hebrew, Buddhist, and so on) are supported by Java's time library as chronologies [K], so the data model must store the instant and zone, never a display string.
+- **Library choice.** ML Kit Entity Extraction can return date-time entities but is beta with no SLA and its language coverage is unconfirmed [V]. Other open-source taggers carry licence problems (some are GPL) [K]. Recommendation: **write your own rule-based tagger** for English first, using ML Kit as a cross-check where available. It is testable, deterministic, locale-pluggable, and licence-clean.
+
+### Language strategy for a global product
+
+- **Launch:** English only, but built on a **locale pack** interface. A pack supplies month and weekday names, numerals, cue lexicons, relative-expression grammar, and test fixtures. Other Latin-script languages are not "free": each has its own date grammar and cue words, so each needs its own pack and its own measured results.
+- **Next:** choose languages by data (Play Console country and language statistics) and by whether a high-quality OCR path exists.
+- **OCR limit:** ML Kit text recognition covers Chinese, Devanagari, Japanese, Korean, and Latin scripts only [V]. For other scripts (Arabic, Cyrillic, Bengali, Thai and more) you would need another engine such as Tesseract [K], with a larger APK and lower quality, or accept text-only input for those languages at first. Be explicit about this in store listing copy; do not over-promise.
+
+### Step 5: the classifier
+
+- Start with logistic regression or gradient-boosted trees over hashed word and character n-grams plus rule features, exported to a small on-device evaluator (well under 1 MB).
+- **Labels** (per candidate date): `deadline`, `event` (meeting or exam happening), `start_date`, `publication_date`, `history`, `tentative`, `other`. Plus a status: `active`, `changed`, `cancelled`.
+- Calibrate with Platt scaling or isotonic regression so the numbers mean something. A "0.9" should be right about 90% of the time. Measure it (below).
+- Upgrade path: a small quantized transformer (for example a distilled multilingual encoder, tens of MB) for the ambiguous middle band only, via an on-device runtime [K]. Justify it with error analysis first.
+
+### Step 6: update detection (never silently change a confirmed deadline)
+
+Compare a new candidate against existing items using fuzzy title and course/organisation overlap, source thread, and date proximity. Classify the relation, and when the relation is UPDATE or CANCEL, surface a **diff card** ("Report due 15 Nov, now 22 Nov"). Auto-apply only if the user has enabled it **and** confidence exceeds a high threshold **and** the match is unambiguous. Default: ask.
+
+### Confirmation without spam
+
+- One **review tray**, batched. Candidates accumulate; the user is invited when it matters, not each time.
+- At most a small number of high-confidence suggestions per day in the tray header; the rest wait in a "maybe" list.
+- Dismissed candidates leave a **fingerprint** (a keyed hash of normalised title and date, never the text) so the same thing is not suggested again.
+- Per-source and per-category acceptance rates adjust how many suggestions that source is allowed to show.
+- A "review history" page lets the user undo a dismissal.
+
+### Feedback learning without uploading messages
+
+| Layer | What it learns | Where it lives | Risk |
+|---|---|---|---|
+| L0 | Shipped global model | App | none |
+| L1 | Per-user calibration curve | Encrypted local DB | none, needs about 50 labelled interactions |
+| L2 | Per-source and per-category acceptance priors (Beta-Bernoulli) | Encrypted local DB | none |
+| L3 (later) | Small online-updated linear head | Encrypted local DB | tuning needed to avoid drift |
+
+Telemetry: **none in v1.** If you add opt-in aggregate statistics later, use local differential privacy (randomised response on coarse counters) and say plainly that this gives plausible deniability under stated parameters, not guaranteed anonymity. Timestamps, install identifiers, and unusual category combinations can re-identify people. No message text ever leaves the device.
+
+### Evaluation methodology (credible, privacy-preserving)
+
+**Data.**
+- A **synthetic generator** (templates and controlled distractors: quoted replies, forwards, signatures, negations, extensions, cancellations, date-order ambiguity, multi-date notices), in as many locales as you support.
+- A **hand-labelled gold set**, ideally at least 1,500 segments, written or collected with consent. Two annotators on a subset, report Cohen's kappa.
+- Optional **consented donation** later: the user sees a locally redacted preview before choosing to share. Requires explicit informed consent and a written methodology.
+- Split by **source thread and template**, not at random, to avoid leakage.
+
+**Metrics.**
+- Precision, recall, F1 per label and macro.
+- **False-positive rate per 100 messages** (the user-facing cost) and **false prompts per week.**
+- **Missed-deadline rate** (recall on true deadlines across all tiers).
+- Date and time accuracy (exact match, plus date-only match), and time-zone correctness.
+- Change-detection accuracy (UPDATE vs NEW) and duplicate-detection accuracy.
+- Calibration: expected calibration error and Brier score; reliability plots.
+- Cost-weighted utility: choose thresholds to maximise `benefit(TP) - cost(FP) - cost(FN)` rather than raw count of detections.
+- Bootstrap confidence intervals. Ablations (remove each cue family). A published error taxonomy.
+
+**Initial acceptance targets (revise after the first gold set exists).**
+- Precision at the "suggest" tier of at least 0.90.
+- Recall of true deadlines across suggest plus maybe tiers of at least 0.85.
+- Surfaced false prompts at most about one per 20 processed messages.
+- Calibration error (ECE) at most 0.05 at the suggest tier.
+
+These numbers are starting hypotheses, not claims.
+
+**Reproducibility.** The evaluation harness is a command-line program in the pure-Kotlin core, so the same code that ships on the phone is the code being measured.
+
+**Does it reduce missed deadlines?** Do not assume more notifications help. Run a **within-subject diary pilot** (15 to 30 volunteers, a few weeks, baseline weeks vs Sibra weeks), measuring self-reported missed or nearly missed deadlines, notification dismissal and mute rates, and time spent in review. Get consent, keep it voluntary, publish limitations. A small honest study beats a large unmeasured claim.
+
+---
+
+## 6. Reminder intelligence
+
+### 6.1 Three separate concepts
+
+| Concept | Meaning | Who sets it |
+|---|---|---|
+| **Deadline** | A real external due moment. | User or confirmed extraction |
+| **Importance** | The consequence of missing it. | User, with category defaults |
+| **Pressure** | How tight the situation is right now (time left versus work left). | Computed |
+
+Urgency and importance are not the same: a minor task due tomorrow is high-pressure but low-importance (brief reminder); an application due in three months is low-pressure but high-importance (early start suggestion).
+
+### 6.2 Pressure formula (critical ratio)
+
+Pressure is based on the classical **critical ratio** from scheduling [K]:
+
+```
+slack_ratio  = available_hours_until_due / remaining_work_hours
+pressure     = 1 / slack_ratio            (>= 1.0 means not enough time at current capacity)
+```
+
+- Remaining work is the user's estimate, optionally corrected by the user's own history (people systematically underestimate; the app learns the multiplier on-device).
+- Available hours come from the user's daily capacity setting, minus calendar blocks and quiet days. Weekend days follow the **locale or user setting** (Friday-Saturday, Saturday-Sunday, Sunday only, and so on).
+- Use a three-point estimate (optimistic, likely, pessimistic) and compute the **latest safe start** with the pessimistic figure. This is far more useful than a fixed "one day before."
+
+### 6.3 Urgency state machine
+
+States are computed from pressure and the clock, with **hysteresis** (the threshold to enter a state differs from the threshold to leave it) so the interface does not flicker.
+
+| State | Entered when | Label | Glyph | Notification behaviour |
+|---|---|---|---|---|
+| Newly discovered | Candidate exists, not confirmed | Review | dashed ring | In the tray only. No alert. |
+| Confirmed, distant | Confirmed; start date not near | Planned | open ring | None |
+| Start window | Latest safe start is within about 3 days | Start soon | half ring | One low-key nudge |
+| Active preparation | Progress above zero | In progress | arc fill | Digest only |
+| Approaching | Pressure about 0.6 to 0.85 or under about 72 h | Approaching | filled arc | Scheduled reminders, within budget |
+| Due soon | Pressure above about 0.85 or under about 24 h | Due soon | filled ring + tick | Stronger reminder |
+| Due today | Due date is today | Due today | solid disc | Morning reminder plus one before the due time |
+| Overdue | Past due, not completed | Overdue | broken ring | Calm, one daily re-check, offers reschedule |
+| Completed | User marks done | Done | tick | Quiet confirmation |
+| Postponed | User or update moved it | Moved | arrow ring | Replanned; old reminders cancelled |
+
+All thresholds are defaults the user can tune, and all are covered by tests. Color is never the only signal: label, glyph, and position carry the same meaning.
+
+### 6.4 The preparation planner (a real algorithm)
+
+Model the planning problem as **preemptive scheduling with deadlines and variable daily capacity.**
+
+- Tasks `i` have workload `w_i` (hours) and due time `d_i`. Days have capacity `c(t)` (hours), derived from the user's settings and calendar.
+- **Feasibility test.** For every time `t`, the total work due by `t` must not exceed the total capacity available by `t`. Earliest-Deadline-First is optimal for this preemptive case [K], so if EDF cannot fit the work, nothing can.
+- **Leveling.** After feasibility, spread work to avoid spikes: a transportation problem (tasks to days, daily capacities, deadline constraints) solved as **max-flow or min-cost flow** [K]. Integral flow on 30 or 60 minute slots gives concrete study blocks.
+- **Explaining infeasibility.** The tightest interval (the min-cut or the violated feasibility interval) is exactly the explanation: "Between today and day 6 you have 30 h due and 21 h of capacity, so you are 9 h short."
+
+**Worked example (deterministic, checkable).** Days are numbered from today (D0). Capacity is 3 h per day.
+
+| Task | Work | Due (end of) |
+|---|---|---|
+| A | 8 h | D3 |
+| B | 10 h | D5 |
+| C | 12 h | D6 |
+
+Cumulative capacity versus cumulative work due: by end of D3, 12 h capacity vs 8 h due (fine). By end of D5, 18 h vs 18 h (zero slack). By end of D6, 21 h vs 30 h, so **9 h short.** The tight interval is D0 to D6 and the offending set is {A, B, C}. The planner reports the shortfall and offers: raise capacity to about 4.3 h per day, reduce task C's scope, or request an extension. It then produces the **compressed plan**: A and B fully scheduled, C partially scheduled, with C marked at risk. It does not pretend the original plan still works.
+
+**Plan templates.** Stages are fractions of the available lead time, with minimum durations and a priority order for dropping optional stages when compressing. Illustrative, not universal:
+
+| Category | Stage sketch |
+|---|---|
+| Assignment | Understand requirements, gather sources, outline, first draft, revise, final check and submit |
+| Exam | Scope and syllabus review, spaced revision sessions, practice under timed conditions, light review, logistics check |
+| Meeting | Review agenda, prepare documents, final confirmation |
+| Application | Check eligibility, gather documents, draft statements, review, submit before the last date |
+| Bill or renewal | Check amount, confirm funds, pay with margin |
+
+Compression rules: scale stages proportionally but keep fixed minima for the final review and submission steps; drop optional stages first; flag the result as "compressed."
+
+**Suggested versus real.** Every generated step carries `origin = SUGGESTED`. Visually it uses a different shape (dashed outline), a different label ("Suggestion"), and never appears in lists of real deadlines. The user can accept, edit, disable, or ignore any suggestion. A real deadline is solid and labelled.
+
+**Overlapping deadlines.** The planner works across all active items at once (the flow is global), so collisions are found automatically and the "load horizon" view (part 2) is simply a rendering of the solution.
+
+### 6.5 Attention budget
+
+Reminders compete for a limited number of interruptions.
+
+- Default: at most two sound-making notifications per day outside "due today," plus an optional quiet daily digest at a time the user chooses.
+- Each reminder gets a priority score from pressure, importance, and time-to-due. A simple knapsack-style allocator picks the ones that earn an interruption; the others go to the digest or to in-app badges.
+- Respect quiet hours and the user's weekend definition. High-priority items may opt in to repeated reminders.
+- Copy style: neutral and factual ("Report due tomorrow, 9 h of estimated work left"). No shaming, no streaks, no fake scarcity.
+
+### 6.6 Reliability: what can and cannot be promised
+
+| Reminder type | Mechanism | Reliability statement |
+|---|---|---|
+| Daily digest, prep nudges | Inexact alarm window or periodic work | Good. May shift by minutes to hours under battery saving. |
+| Due-time alert | Exact alarm, only if the user grants it | Good when permission is granted. `SCHEDULE_EXACT_ALARM` is denied by default for new installs on Android 13 and later, and after a restore onto Android 14 [V]. |
+| After reboot | Reschedule on `BOOT_COMPLETED` | Works only after the user has opened the app once [V]. |
+| After time-zone or clock change | Listen for the change broadcasts and recompute | Needs tests, including DST transitions. |
+| After force-stop or aggressive vendor battery managers | Not guaranteed | Some manufacturers kill apps and clear alarms [K]. |
+
+Design response: a **reminder health check** screen (notification permission, exact alarm, channel state, battery optimisation, do-not-disturb) and a **reminder ledger** so that on next open the app can say "you may have missed these." Do not request battery-optimisation exemptions directly; Play restricts that [K]. Link the user to the relevant system settings instead.
+
+Prefer inexact alarms for most reminders, and make exact alarms an opt-in "precise reminders" setting. I recommend **not** declaring `USE_EXACT_ALARM` at first. Play limits it to alarm, timer, and calendar apps whose core function is precise timing [S], and a rejected declaration blocks release.

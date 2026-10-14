@@ -1,0 +1,118 @@
+S-IB SECURITY REVIEW
+Done 2026-10-14 by hand against a checklist written for web applications. S-IB is an offline Android app: it has no
+server, no accounts, no network permission, no web view and no admin area. So each checklist item is either applied to
+its real equivalent on a phone, or marked not applicable with the reason. No automated scanner was run (see the end).
+
+------------------------------------------------------------------------
+THE CHECKLIST, ITEM BY ITEM
+
+Protect admin routes
+  Not applicable: there is no admin area and no server routes. The nearest thing is the set of screens an outside app can
+  open. Only MainActivity and ShareReceiverActivity are exported (both must be). The screen a notification or another app
+  asks for is now checked against a fixed list (Notifier.safeRoute); anything else is ignored. The app lock sits in front
+  of every screen, so a requested route is only used after unlocking.
+
+Enforce permissions server-side
+  Not applicable (no server). On the phone: the Quick Settings tile requires the system's tile permission, the widget
+  receiver is exported only as the system requires, every other receiver is not exported, and every PendingIntent is
+  immutable.
+
+Row-level security
+  Not applicable: one local database for one user. The database is encrypted with SQLCipher (AES-256); its key is wrapped
+  by the Android Keystore.
+
+Verify email addresses
+  Not applicable: no accounts, no email.
+
+Hash passwords securely
+  There are no passwords for sign-in. The one place a passphrase exists is the optional passphrase export, which uses
+  PBKDF2-HMAC-SHA256 with 600,000 iterations and a random salt. Backups otherwise use a random 256-bit recovery key.
+
+Keep auth tokens out of local storage
+  Nothing here is an auth token. The only value kept in plain preferences is the chosen colour theme (so the intro opens in
+  the right colours). Everything else is in the encrypted database or the Keystore-wrapped vault.
+
+Keep API secrets on the server side
+  Not applicable: the app calls no API and holds no key. Checked: no API keys, tokens or credentials in the source tree.
+
+Remove environment files from GitHub
+  The project is not yet in a git repository. The new .gitignore blocks .env files, keys, certificates, keystores,
+  keystore.properties, the whole release folder, build outputs (.aab, .apk) and logs. The only secret-like file in the
+  folder is release/upload-keystore.p12, which is ignored. Before the first push, run git status and look at it.
+
+Keep sensitive data out of the logs
+  The app contains no logging calls at all. The release build also tells R8 to remove verbose, debug and info logging from
+  every library. Build logs never print the keystore password.
+
+Parameterised SQL
+  Every query is a Room @Query with bound parameters. There is no raw SQL, no string concatenation into SQL and no
+  execSQL call anywhere in the app.
+
+Validate form inputs
+  Fixed. Titles, notes, names and relations are now cleaned and cut to fixed lengths whenever anything is saved, whatever
+  the source (typing, a shared file, a restored backup): control characters removed, titles to 200 characters, notes to
+  10,000, names to 80, lead days to at most 12 values between 1 and 365. A blank title becomes "Untitled". Tested in the
+  core and again against a real (in-memory) database.
+
+Block cross-site scripting
+  There is no web view and no HTML rendering anywhere in the app; text is drawn as text. The privacy page is static HTML
+  with no scripts. A related issue was fixed: calendar-file injection (below).
+
+Validate file uploads
+  Imports are the equivalent. Existing limits: files 25 MB, text 5 MB, pictures scaled down before reading, PDFs 8 pages,
+  Word and Excel files read as zip entries without ever writing them to disk (no path traversal), entry count and total
+  size capped, XML depth capped, calendar files 5,000 items, chat exports 300,000 lines. New: only content:// sources are
+  read. A file:// address, which another app could use to point S-IB at its own private files, is refused. Pending
+  suggestions are capped at 300 so repeated shares cannot grow the database without bound.
+
+Verify webhook signatures
+  Not applicable: no webhooks.
+
+Rate limit all requests
+  Not applicable: no requests are served. The abuse that is possible on a phone, an app flooding the share window, is
+  bounded by the caps above and by the fact that nothing is added without the owner confirming it in Review.
+
+Tighten CORS
+  Not applicable: no web server. The app also declares no network permission and refuses cleartext traffic.
+
+Disable production debugging
+  Checked on the final release manifest: the app is not debuggable, not test-only, backup is off and cleartext is off.
+  Release builds are shrunk and obfuscated by R8.
+
+Update vulnerable dependencies
+  All 177 resolved libraries were listed and the security-relevant ones checked by eye: SQLCipher 4.19.1, Tink 1.23.0,
+  Room 2.8.5, WorkManager 2.12.0, Gson 2.13.2 and the ML Kit family are recent. There is no OkHttp, Netty, Jackson,
+  Bouncy Castle, Log4j or a standalone protobuf. This was a manual check, not an advisory database scan.
+
+Use Anthropic's "Cloud Code Security Review Scale"
+  No tool or scale with that name was available in this environment, so none was run. Claude Code does have a
+  /security-review command; run it yourself in a terminal from the project folder if you want an independent pass.
+
+------------------------------------------------------------------------
+FIXES MADE DURING THIS REVIEW
+1. Calendar-file injection. A bare carriage return, a Unicode line separator or a control character inside a title or note
+   was not escaped when a deadline is shared as a calendar file, so a crafted title could add properties (for example an
+   extra attendee) to the file a friend receives. All line break kinds are now escaped, other control characters are
+   dropped, the identifier is reduced to safe characters, and long lines fold on whole characters. Ten tests in the core cover it.
+2. Input limits on every save (above).
+3. content:// only for imports (above).
+4. Deep-link routes validated (above).
+5. Suggestions capped at 300 (above).
+6. Log stripping in release builds (above).
+7. .gitignore widened (above).
+
+------------------------------------------------------------------------
+HONEST LIMITS AND WHAT IS LEFT
+- Not run on a phone, and no penetration test was done. This is a code review plus unit tests.
+- The recovery key can be sent to a password manager through the system share sheet; whichever app the owner picks then
+  receives it. That is the owner's choice and the screen says so, but it is a place where care is needed.
+- Anyone who can unlock the phone and the app can read everything in it, and malware that reads the screen while the app
+  is open can too. The app says so on its Security screen.
+- Reminder text appears in notifications. Lock screen details are hidden by default and always hidden in Close ones.
+- A dependency advisory scan (OWASP dependency-check or Google Play's pre-launch report) is worth running before launch.
+- The Google Play data safety form depends on this review staying true: no INTERNET permission, which the pipeline checks
+  on every build.
+- Final build after these fixes: 218 tests pass (180 core, 38 app including 5 hostile-input tests), lint passes, the
+  signed bundle was rebuilt, and the release manifest was re-checked (no INTERNET, not debuggable).
+- Claude Code's /security-review command was tried and could not run: it needs a git repository and this folder is not
+  one. After `git init` and a first commit it can review later changes.

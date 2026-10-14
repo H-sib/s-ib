@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S-IB Privacy Policy</title>
+<style>
+  :root { --paper:#f4efe6; --ink:#1b1f2a; --soft:#555b6b; --rule:#d6cebd; --accent:#b03a20; }
+  @media (prefers-color-scheme: dark) { :root { --paper:#14161c; --ink:#e9e3d6; --soft:#a9aebb; --rule:#30343f; --accent:#ff8466; } }
+  body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.6 Georgia, "Times New Roman", serif; }
+  main { max-width:720px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:2rem; margin:0 0 4px; }
+  h2 { font-size:1.2rem; margin:2rem 0 .4rem; border-top:1px solid var(--rule); padding-top:1rem; }
+  p, li { color:var(--ink); }
+  .soft { color:var(--soft); }
+  a { color:var(--accent); }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; }
+  td, th { text-align:left; padding:6px 8px; border-bottom:1px solid var(--rule); vertical-align:top; }
+</style>
+</head>
+<body>
+<main>
+<h1>S-IB Privacy Policy</h1>
+<p class="soft">Effective 14 October 2026. Developer: H-sib.</p>
+
+<h2>The short version</h2>
+<p>S-IB does not collect your data. It has no accounts, no analytics, no advertising and no permission to use the
+internet, so it cannot send what you enter to the developer or to anyone else. Everything you add stays on your phone.</p>
+
+<h2>What S-IB stores on your phone</h2>
+<ul>
+  <li>The deadlines and dates you confirm, and the personal dates you add to Close ones (titles, dates, names you type, notes).</li>
+  <li>Suggestions waiting for your review, which expire after the number of days you choose.</li>
+  <li>Optional proof of finishing: a note, and a photo if you add one.</li>
+  <li>A history of changes to each deadline, so edits can be verified.</li>
+  <li>Your settings, and the hours you usually open the app (used only to choose a time for the daily summary).</li>
+</ul>
+<p>This is stored in an encrypted database. The key that opens it is wrapped by a key held in the Android Keystore, which
+the app cannot export. Photos kept as proof are encrypted separately.</p>
+
+<h2>What S-IB reads, and when</h2>
+<p>S-IB reads only what you hand it: text you type or paste, files, photos and PDFs you choose, and things you share to
+it from another app. It reads them on your phone. Text in pictures is recognised on the device with a model bundled in
+the app. If you use the Scan button, Google's document scanner is provided through Google Play services and runs on the
+phone; S-IB receives the scanned pages and does not send them anywhere. Google Play services is governed by Google's
+own privacy policy.</p>
+<p>The clipboard is read only when you tap Paste. S-IB does not read your messages, email, contacts or calendar.</p>
+
+<h2>Backups</h2>
+<p>If you turn on backup, S-IB writes an encrypted file to a folder you choose with the system file picker, which can be
+a cloud drive such as Google Drive. The file is encrypted on your phone before it is saved, using a key that only you
+hold (your recovery key). The storage provider receives scrambled data. The developer cannot open your backups. If you
+lose both your phone and your recovery key, nobody can recover the backup. Android's own app backup is turned off for S-IB.</p>
+
+<h2>Sharing</h2>
+<p>When you choose to share a deadline with friends, S-IB creates a calendar file containing the title and date, and
+hands it to the app you pick in the system share sheet. Notes, progress and history are not included. Items in the Close
+ones space cannot be shared and are left out of calendar export.</p>
+
+<h2>Permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Why</th></tr>
+  <tr><td>Notifications</td><td>To show your reminders. You are asked at the moment it is useful, and can say no.</td></tr>
+  <tr><td>Receive boot completed</td><td>To set your reminders again after the phone restarts.</td></tr>
+  <tr><td>Biometric or screen lock</td><td>Only if you turn on the optional app lock.</td></tr>
+  <tr><td>Wake lock</td><td>Added by the Android work scheduler so a short background task, such as a backup, can finish.</td></tr>
+</table>
+<p>S-IB does not request the internet permission, location, contacts, microphone, camera or storage permissions.</p>
+
+<h2>Notifications and your lock screen</h2>
+<p>By default reminders show no title on the lock screen. Reminders from Close ones always show only the words
+"A reminder" until you unlock the phone, whatever your other settings are.</p>
+
+<h2>Deleting your data</h2>
+<p>In the app, open Settings, then Privacy and data, and choose to erase everything. Uninstalling the app also removes its
+data. Backup files you saved in your own storage are yours to delete there.</p>
+
+<h2>Children</h2>
+<p>S-IB is a general productivity app and is not directed at children under 13.</p>
+
+<h2>Your rights</h2>
+<p>Because the developer does not receive or hold any of your data, there is nothing for the developer to access, correct
+or delete on your behalf. Your data is under your control on your own phone.</p>
+
+<h2>Changes to this policy</h2>
+<p>If the app ever changes how it handles data, for example by adding online features, this page will be updated first and
+the date above will change. A version that adds the internet permission would say so clearly in its update notes.</p>
+
+<h2>Contact</h2>
+<p>Developer: H-sib. Questions about privacy: open an issue at
+<a href="https://github.com/H-sib/s-ib/issues">github.com/H-sib/s-ib/issues</a>, or write to the contact address shown on
+the S-IB page in Google Play.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+S-IB extraction evaluation
+Gold set: 133 hand written lines (eval/src/main/resources/gold.tsv); 66 held-out lines are scored below.
+Training data: synthetic templates only, plus the other half of the gold lines for the calibration temperature.
+The gold set was written by the same author as the generator, so these numbers are optimistic
+and are not a claim about real world messages.
+
+=== rules only (hand set weights), held-out lines ===
+gold mentions evaluated: 71   lines skipped (tagger/gold count mismatch): 0
+role accuracy: 0.972
+per-role precision / recall / F1:
+  DEADLINE   P=1.000 R=0.962 F1=0.980  (n=26)
+  EVENT      P=1.000 R=1.000 F1=1.000  (n=12)
+  START      P=0.857 R=0.857 F1=0.857  (n=7)
+  PUBLISHED  P=1.000 R=1.000 F1=1.000  (n=6)
+  HISTORY    P=1.000 R=1.000 F1=1.000  (n=7)
+  TENTATIVE  P=1.000 R=1.000 F1=1.000  (n=7)
+  OTHER      P=0.857 R=1.000 F1=0.923  (n=6)
+macro F1: 0.966
+confusion (rows = gold, columns = predicted): DEAD EVEN STAR PUBL HIST TENT OTHE
+  DEADL   25    0    1    0    0    0    0
+  EVENT    0   12    0    0    0    0    0
+  START    0    0    6    0    0    0    1
+  PUBLI    0    0    0    6    0    0    0
+  HISTO    0    0    0    0    7    0    0
+  TENTA    0    0    0    0    0    7    0
+  OTHER    0    0    0    0    0    0    6
+SUGGEST tier: precision=1.000 recall=0.237 F1=0.383 (TP=9 FP=0 FN=29)
+any tier (SUGGEST or MAYBE): recall=0.895   missed-deadline rate=0.105
+false prompts (non-actionable, non-tentative given any tier): 0 of 71 mentions = 0.0 per 100 mentions
+false SUGGEST-tier prompts: 0 (0.0 per 100 non-actionable mentions)
+tentative mentions shown as MAYBE: 7 of 7
+calibration over 41 candidates: ECE=0.231  Brier=0.148
+role errors (2):
+  gold=START predicted=OTHER  9 November. | Office hours resume from 9 November.
+  gold=DEADLINE predicted=START  30 November. | Applications open 2 November and close 30 November.
+
+=== trained model, held-out lines (2075 features; synthetic templates: 38601 mentions; temperature fit on 71 hand written lines) ===
+gold mentions evaluated: 71   lines skipped (tagger/gold count mismatch): 0
+role accuracy: 0.958
+per-role precision / recall / F1:
+  DEADLINE   P=1.000 R=0.885 F1=0.939  (n=26)
+  EVENT      P=0.923 R=1.000 F1=0.960  (n=12)
+  START      P=0.875 R=1.000 F1=0.933  (n=7)
+  PUBLISHED  P=1.000 R=1.000 F1=1.000  (n=6)
+  HISTORY    P=1.000 R=1.000 F1=1.000  (n=7)
+  TENTATIVE  P=1.000 R=1.000 F1=1.000  (n=7)
+  OTHER      P=0.857 R=1.000 F1=0.923  (n=6)
+macro F1: 0.965
+confusion (rows = gold, columns = predicted): DEAD EVEN STAR PUBL HIST TENT OTHE
+  DEADL   23    1    1    0    0    0    1
+  EVENT    0   12    0    0    0    0    0
+  START    0    0    7    0    0    0    0
+  PUBLI    0    0    0    6    0    0    0
+  HISTO    0    0    0    0    7    0    0
+  TENTA    0    0    0    0    0    7    0
+  OTHER    0    0    0    0    0    0    6
+SUGGEST tier: precision=1.000 recall=0.868 F1=0.930 (TP=33 FP=0 FN=5)
+any tier (SUGGEST or MAYBE): recall=0.947   missed-deadline rate=0.053
+false prompts (non-actionable, non-tentative given any tier): 0 of 71 mentions = 0.0 per 100 mentions
+false SUGGEST-tier prompts: 0 (0.0 per 100 non-actionable mentions)
+tentative mentions shown as MAYBE: 7 of 7
+calibration over 43 candidates: ECE=0.134  Brier=0.064
+role errors (3):
+  gold=DEADLINE predicted=OTHER  the 21st | Pay the electricity bill by the 21st to avoid a late fee.
+  gold=DEADLINE predicted=EVENT  Sunday at 10 pm. | The online quiz closes on Sunday at 10 pm.
+  gold=DEADLINE predicted=START  30 November. | Applications open 2 November and close 30 November.
+

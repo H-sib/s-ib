@@ -1,0 +1,347 @@
+# Part 4: Journeys, Roadmap, Market, Launch, Critical Review
+
+Covers sections 13 to 20. Tags: [V] verified, [S] secondary source, [K] background knowledge, [?] unresolved. Effort figures are rough planning ranges for a solo developer working part-time, and they depend on your answer to question 5 in section 20.
+
+---
+
+## 13. User journeys
+
+The persona is "Ana," a student applying to universities while sitting several exams and finishing coursework. Nothing here is tied to a country.
+
+### 13.1 First launch
+
+1. Ana opens the app. One line: "Dates get lost in the middle." A short animation shows a deadline sinking out of view among others, then being caught.
+2. She taps **Try it** on a clearly labelled example notice. Date marks appear with reasons: one accepted ("follows 'last date to submit'"), one ignored ("publication date"). She edits the effort slider and watches the plan change.
+3. The privacy screen says in plain words: stored on the device, encrypted, nothing read from other apps unless she enables a source. Optional sources are listed with a **Skip all** button.
+4. She lands on an empty Runway with two obvious actions: **Add** and **Share into Sibra**.
+5. No permission prompt has appeared yet.
+
+### 13.2 Discovering a deadline
+
+1. A university sends a PDF notice. In her mail app Ana taps **Share**, then **Sibra**.
+2. Sibra extracts text on the device (OCR only if the PDF has no text layer). It finds four dates: an exam, a registration deadline, a publication date, and a class start date.
+3. The review tray shows one **Suggestion** (registration closes 10 November, 23:59, in the university's time zone) and one **Maybe** (exam on 20 November, time not stated). The publication and class-start dates are shown as ignored, with reasons she can open.
+4. The suggestion is drawn as a **dashed marker** on the Runway and on the Load horizon, so she sees it lands in a week that is already full.
+
+Failure paths: if OCR finds no text, Sibra says so and offers manual entry with the image beside it. If the date order is ambiguous ("03/04"), both readings are shown side by side.
+
+### 13.3 Confirming
+
+1. Ana taps **Confirm** on the registration deadline. Sibra asks one question: how long will this take? (Quick choices: under an hour, about half a day, a few days.)
+2. Now, and only now, Sibra asks for notification permission, with one sentence explaining why.
+3. The dismissed publication date will not be suggested again (a keyed fingerprint is stored, not the text).
+4. The "maybe" exam sits quietly in the tray. If she does nothing it expires after a set time; it never nags.
+
+### 13.4 Preparing
+
+1. The planner proposes a plan: a "start by" date based on a pessimistic effort estimate, plus four dashed steps. Ana edits one, deletes one, and accepts the rest.
+2. A week later a second notice arrives: "Registration extended to 17 November." Sibra recognises the relation and shows a **diff card**: "Registration: 10 Nov, now 17 Nov. Apply?" Nothing changes until she taps **Apply**.
+3. Because the new date eases the collision, the Load horizon shortfall for that week drops from 5 hours to 0.
+
+### 13.5 Reminders
+
+1. Two days before the latest safe start, Sibra posts one quiet nudge. A morning digest lists "Today" items. The Quick Settings tile reads "Next: Registration, 6 days."
+2. The day before, a stronger reminder fires. If notifications were disabled by the phone's battery manager, the **reminder health check** warns her inside the app.
+3. She snoozes one reminder for an hour. She never receives more than the daily interruption budget allows.
+
+### 13.6 Completing
+
+1. Ana marks the final step done. The tick animates; the Runway band for that item closes; the item moves to **Done** with its change history intact.
+2. Associated reminders are cancelled. Evidence she did not keep is already gone.
+
+### 13.7 Restoring on a new phone
+
+1. On her new phone she installs Sibra and chooses **Restore**. She signs in with Google (identity only).
+2. Sibra finds the encrypted backup in her Drive app-data folder. It asks for the 24-word recovery phrase (or approval from her old phone, scanned by QR with a short matching code).
+3. Sibra verifies the backup's signatures and chain **before** reading anything, restores into a staging database, shows "This restores 38 items, 6 sources, 4 plans," and she confirms.
+4. If she has lost both the phrase and the old phone, Sibra says plainly that the backup cannot be opened, by design, and offers a fresh start.
+
+---
+
+## 14. Development roadmap
+
+### 14.1 Recommended order, and where I deviate from your sketch
+
+| Your initial order | My recommendation | Why |
+|---|---|---|
+| Manual entry, document import, extraction, dashboard, planner, reminders, storage | **Core engine and evaluation harness first**, then the Android shell | The engine (temporal parser, planner, urgency) is the hard, risky, testable part, and it needs no UI. |
+| Encrypted local storage along the way | **At-rest encryption from day one** | Retrofitting encryption into an existing schema is painful and error-prone. |
+| Cloud backup and synchronization together | **Backup and restore first; sync later** | Most users have one phone. Restore-on-new-device covers most of the need at a fraction of the protocol complexity. |
+| Selected message integrations after | **Message sources last, behind `SourceAdapter`** | Hardest policy exposure and the least reliable data. |
+| (not mentioned) | **Start long-lead items early:** Play developer account and closed testing, privacy policy, Gmail verification enquiry, gold-set annotation | Several have fixed waiting periods. |
+
+### 14.2 Phases
+
+Duration estimates assume roughly 10 to 15 focused hours per week [?]. Treat them as ranges, not commitments.
+
+#### Phase 0: Core engine spike (about 3 to 4 weeks)
+
+**Deliverables:** pure-Kotlin modules for the temporal tagger (English), the planner (feasibility, leveling, shortfall explanation), urgency state machine, and a command-line evaluation harness; a synthetic corpus generator; first threat-model draft; a project skeleton with a build rule forbidding Android imports in `:core:*`.
+
+**Acceptance criteria:**
+- The temporal tagger resolves at least 98% of a hand-written 300-case English fixture suite (relative dates, ambiguous order, time zones, ranges), with ambiguous cases flagged rather than guessed.
+- The planner reproduces the worked example in part 1 (9 hours short over days 0 to 6) and solves a 200-task instance in under 100 ms on a developer laptop [?].
+- Property tests: the urgency state machine never flips state twice within the hysteresis band; the allocator never exceeds the daily budget.
+- The evaluation harness prints precision, recall, F1, false-positive rate per 100 segments, and ECE for the synthetic set.
+
+#### Phase 1: Minimum viable product (about 10 to 14 weeks)
+
+**Deliverables:** quick add with natural-language parsing; share target and selection-menu entry; file and photo picker; document scan with local OCR (Latin); PDF text-layer and image extraction; review tray with confirm, edit, dismiss, snooze; update diff cards; planner UI with compressed plans; urgency states with redundant encoding; reminders with reboot, time-zone, and DST recovery; Runway and Today views; encrypted Room + SQLCipher storage; app lock; manual encrypted export and import; first-run demo; privacy screen; reminder health check.
+
+**Acceptance criteria:**
+- Extraction on the gold set meets the initial targets in part 1, section 5 (precision 0.90 or better at the suggest tier, recall 0.85 or better across tiers, ECE 0.05 or better), or the shortfall is documented with an error taxonomy.
+- Reminder reliability on at least five physical devices from at least three manufacturers: exact alarms (with permission granted) within 2 minutes; inexact reminders within the stated window of 15 minutes; **zero** lost reminders after reboot across 50 reboot trials; zero duplicates across a 1,000-run schedule/cancel simulation.
+- Time-zone and DST: scripted tests across at least four zones, including a zone with a daylight-saving transition inside the test window.
+- Privacy tests pass: no content in logs, notifications at default privacy, crash reports, or backups; a device backup attempt yields no usable app data.
+- Median time for a first-time tester to add a first real deadline is under 60 seconds in a 5 to 8 person usability test [?].
+- Accessibility: TalkBack walkthrough of the primary flows without blocked steps; 200% font scale without clipped text; contrast checks on both themes.
+- Crash-free sessions of 99.5% or better during the closed test.
+
+#### Phase 2: Surfaces, feeds, and Play closed testing (about 6 to 8 weeks)
+
+**Deliverables:** ongoing "Today" notification, Quick Settings tile, widget; ICS feed subscription; device-calendar import; calendar-aware capacity; locale packs interface with a second language prototype; closed test on Play.
+
+**Acceptance criteria:**
+- At least 12 testers opted in for 14 consecutive days (Play's requirement for new personal accounts [S]), with a feedback form.
+- Notification mute-or-disable rate among testers below a threshold you set in advance (for example 20%) [?].
+- Battery measurement reported for a standard day on at least two devices.
+- All surfaces off by default and individually switchable.
+
+#### Phase 3: End-to-end encrypted backup (about 6 to 8 weeks)
+
+**Deliverables:** Sign in with Google (identity only); Drive app-data store behind `BlobStore`; record format, key hierarchy, recovery phrase and optional passphrase; signed snapshots and version history; restore into staging with diff; account deletion path; the first published security report.
+
+**Acceptance criteria:**
+- 500 randomised state round-trips (export then restore) produce identical state.
+- A tamper suite of at least 200 mutated backups (truncation, reorder, replay, wrong epoch, cross-account swap, malformed lengths) is rejected **before parsing**, with no crash and no resource exhaustion.
+- Coverage-guided fuzzing of the parser for at least 24 hours without a crash [?].
+- Restore verified on a second physical device with the old device powered off.
+- A deliberately wrong recovery phrase yields the specific error and never partial data.
+- Documentation matches behaviour: every claim in the privacy screen is backed by a test.
+
+#### Phase 4: Multi-device sync and message sources (about 8 to 12 weeks)
+
+**Deliverables:** device enrollment and revocation; hybrid logical clock merge; conflict UI; Gmail adapter in testing mode (with the verification enquiry resolved by now); WhatsApp chat-export import; optional notification-access adapter with an allowlist; Google Classroom or another LMS adapter if feasible.
+
+**Acceptance criteria:**
+- Convergence property test: for random interleavings of edits from three simulated devices, all devices reach the same state.
+- Scale test: 3 devices with 50,000 records each sync within an agreed time and memory budget; compaction does not corrupt state.
+- Rollback and truncation attempts are detected by at least one enrolled device.
+- Each message adapter ships behind a switch that is off by default, with a disclosure screen, and a documented list of what it reads and what it keeps.
+- Extraction metrics are reported **per source**, not blended.
+
+#### Phase 5: Personalization and evaluation (ongoing)
+
+**Deliverables:** local calibration, per-source priors, estimate-bias correction; a diary pilot with consenting volunteers; a published evaluation report.
+
+**Acceptance criteria:**
+- Per-user calibration reduces ECE or false-prompt rate on held-out interactions versus the global model.
+- The pilot reports missed or nearly missed deadlines, dismissal and mute rates, and limitations. Results are published whether favourable or not.
+
+### 14.3 Long-lead items to start during Phase 1
+
+- Play developer account and the closed-test clock (12 testers, 14 consecutive days [S]).
+- Privacy policy and the account-deletion web page.
+- A written enquiry to Google's OAuth verification team about a device-only Gmail design [?].
+- Trademark and domain checks for the chosen name.
+- Recruiting and training two annotators for the gold set.
+
+---
+
+## 15. Competitive analysis
+
+I have not done a hands-on teardown of these products, and some of them change fast. The table separates what I found this session from what I recall. Before you rely on any row for positioning, install the top five and write down what they actually do.
+
+| Product or category | What it does well | Evidence | Gap relative to this concept |
+|---|---|---|---|
+| **Google Calendar with Gmail and Gemini** | Can offer an "Add to Calendar" button when it recognises event text in an email; at launch English-only and web-only. Gmail also creates events from some structured emails such as bookings. | [S] and [K] | Produces events, not preparation plans; processes mail in Google's cloud; no workload collision analysis. |
+| **Pixel Magic Cue (Pixel 10)** | On-device surfacing of information from Gmail, Calendar, Messages, and screenshots inside other apps. | [S] | I found no evidence it creates events from messages; it is hardware-limited; it is not a planner. |
+| **Todoist, TickTick** | Fast natural-language capture, reminders, calendar views, large user bases. | [S] | Capture is manual; limited preparation planning and no discovery. |
+| **Motion, Reclaim** | Auto-schedule tasks into calendar time. | [S] for Motion, [K] for Reclaim | Cloud-based, calendar-centric, subscription; to my knowledge they do not find deadlines in your documents and messages. Verify. |
+| **Shovel, DormWay** | Student-focused: parse syllabi, sync learning-management systems, estimate study time against available time. | [S], vendor-written | Cloud services; student-only; descriptions are marketing claims I could not verify; Shovel's mobile app is reportedly a companion to a desktop setup [S]. |
+| **MyStudyLife** | Free student planner; mostly manual entry, with a timetable scan. | [S] | Little discovery; limited preparation planning. |
+| **Sunsama, Structured, Notion Calendar, Microsoft To Do and Outlook** | Daily planning, timeboxing, flagged email to task. | [K] | General planners; not deadline-discovery products. |
+| **Apple Reminders, Samsung Reminder, platform assistants** | Deep system integration, location and time triggers. | [K] | Not preparation-aware; privacy depends on the vendor's cloud. |
+
+**Gaps worth pursuing (as hypotheses to test, not claims of uniqueness):**
+
+1. Discovery, preparation planning, and local-first privacy **in one product**.
+2. **Explainable infeasibility**: naming the interval and hours short, instead of silently overbooking.
+3. **Candidate impact preview**: seeing what a suggestion does to your schedule before you accept it.
+4. **End-to-end encrypted backup using the user's own storage**, with no vendor server.
+5. **False-prompt rate as a first-class metric**, reported openly.
+
+**Risk to name:** large platform vendors can add event suggestions to their own apps at any time. Your defensible ground is planning depth and verifiable privacy, not "detects dates."
+
+---
+
+## 16. Google Play readiness and money
+
+### 16.1 Readiness checklist
+
+Official requirements are marked as such; recommendations are marked as design choices.
+
+| Area | Requirement or consideration | Tag | Action |
+|---|---|---|---|
+| Developer account | New personal accounts need a closed test with 12 testers for 14 consecutive days before production | [S] | Plan the clock early. Organization accounts have different rules [?]. |
+| Target API | New apps and updates must target Android 16 (API 36) from 2026-08-31 | [S] | Build against the required level from day one; test large-screen behaviour, since orientation locks are removed at newer targets [S]. |
+| Native libraries | Apps targeting recent Android versions must support 16 KB memory page sizes for native code | [K, verify] | Check that SQLCipher, Argon2, and any OCR library are built for 16 KB alignment. |
+| Data safety form | Declare data collected, shared, and security practices | [K] | With no server and no analytics, answers are simple, but you must still answer accurately (including Drive sync and any crash reports). |
+| Privacy policy | Required, must match behaviour | [K] | Write in plain language. Keep a changelog. |
+| Account deletion | Apps that let users create an account need in-app deletion and a web deletion link | [V] | Treat Google sign-in plus Drive backup as an account; the web page explains the user-side deletion steps. Confirm acceptability at review [?]. |
+| Notifications | Runtime permission on Android 13 and later | [K] | Ask in context after the first confirmed deadline. |
+| Exact alarms | `USE_EXACT_ALARM` limited by policy; `SCHEDULE_EXACT_ALARM` user-granted and denied by default on new installs | [V], [S] | Declare only `SCHEDULE_EXACT_ALARM` as an opt-in feature; do not declare `USE_EXACT_ALARM` at first. |
+| Background work | Avoid a foreground service for a persistent notification | [K] | Use alarms and WorkManager. |
+| Battery optimisation | Direct requests for exemption are restricted by policy | [K] | Link to settings and explain; do not request the exemption. |
+| Storage and media | Broad media and all-files permissions are restricted | [K] | Use the Photo Picker and system file picker only. |
+| Calendar access | Runtime permission, not Play-restricted | [K] | Optional, with an in-app explanation. |
+| Gmail | Restricted scope verification; possible security assessment if data is stored on servers or transmitted | [V] | Keep processing on-device; ask Google in writing [?]. |
+| Notification access | Sensitive; needs prominent disclosure and accurate declarations; I could not find a dedicated declaration form | [S] | Optional feature, off by default, allowlist, no retention. |
+| Accessibility service | Restricted to accessibility purposes | [K] | Do not use. |
+| Messaging platforms | Respect each platform's terms; Telegram's terms require your own `api_id` and disclosure | [S] | No unofficial integrations. |
+| Generative AI policies | Play has introduced AI-related policies; I could not confirm details | [?] | Re-check before publishing if any generative model is added. |
+| Audience | Teenagers will use it; apps aimed at children are subject to stricter rules | [K] | Set the target audience deliberately and avoid designing for under-13s. |
+| Developer verification beyond Play | Google has announced developer-identity requirements for apps on certified devices, rolling out by region | [K, verify] | Check the current schedule before planning any sideload distribution. |
+
+### 16.2 Monetization
+
+Principle: **never monetise through personal content.** No ads, no data sales, no "free" tier funded by reading messages.
+
+| Model | Pros | Cons | Fit |
+|---|---|---|---|
+| Free core + one-time "Pro" unlock | Aligns with a no-server cost structure; users dislike subscriptions for utilities; simple | Revenue is lumpy; support is lifetime | **Recommended** |
+| Subscription | Recurring revenue | Hard to justify when you hold no servers; reviewers will ask what the recurring cost is | Weak fit unless you later add a hosted sync service |
+| Paid-only app | Clear | Kills discovery and trust-building | Poor fit |
+| Donations or "pay what you like" | Honest, matches a portfolio/research posture | Low revenue | Good complement |
+
+**What is free and what is Pro (proposal).** Keep everything that prevents someone from losing a deadline or losing their data free: capture, planning, reminders, local encryption, manual export, and the encrypted Drive backup. Pro could include power features such as multiple source adapters beyond the basics, advanced personalization, extra surfaces and themes, and bulk tools. Never put basic security behind a paywall.
+
+**Regional pricing.** Play supports country-specific pricing so one price does not exclude whole regions [K].
+
+**Ongoing costs to expect.** Developer account fee [K], domain and privacy-policy hosting, test devices, annotation time, legal review of terms and privacy policy, possible security-assessment fees if Google requires one for restricted Gmail scopes [?], Play's service fee (a reduced rate applies to smaller developers; check the current terms [K]), and your own support time. If you add a hosted sync option later, server costs appear. For payouts, check that Play merchant accounts work for your own country, as that concerns where **you** are paid [S].
+
+---
+
+## 17. CV and portfolio value
+
+### 17.1 Artifacts that make the work credible
+
+1. **Threat model** (version-controlled, with residual risks).
+2. **Protocol specification** for backup, sync, enrollment, and recovery.
+3. **Security evaluation report**: adversarial tests, fuzzing hours, MASVS mapping, defects you found in your own design.
+4. **Evaluation report** for extraction: precision, recall, false-prompt rate, calibration, error taxonomy, per-source results.
+5. **Open-source core** (`Computus` and the crypto core) so claims can be inspected.
+6. **Reproducible harness** that runs the shipped code against the benchmark.
+7. **Architecture decision records** capturing alternatives you rejected and why.
+8. **Defect log** kept from day one, including bugs found only by using the app on real devices.
+
+### 17.2 How to describe it without overclaiming
+
+Say: "Designed and implemented an end-to-end encrypted backup protocol over an untrusted blob store, with a documented threat model, authenticated records, rollback detection, and adversarial testing; implemented using vetted primitives."
+
+Do not say: "Invented a new encryption scheme," "military-grade," "zero-knowledge," or "unhackable." The contribution is the system design, the evidence, and the honesty about limits.
+
+### 17.3 Research angles (optional, only if the evidence supports them)
+
+- Freshness and rollback detection in end-to-end encrypted synchronization over a store with no atomic operations.
+- False-prompt rate as the primary metric for proactive extraction, with calibration-aware thresholding.
+- A public synthetic benchmark for deadline extraction with date-order ambiguity, change, and cancellation cases, in several languages.
+
+### 17.4 Mapping to your own complexity calibration notes
+
+| Your checklist item | How this project meets it |
+|---|---|
+| 1. Real algorithmic depth | Flow-based preparation planner with a provable infeasibility explanation; a temporal grammar and resolver; hybrid logical clock merge; probability calibration |
+| 2. Core separated from interface | Pure-Kotlin `:core:*` modules with a build rule; a command-line harness; UI as a separate layer |
+| 3. Design for scale and push to it | Start with a vertical slice (one deadline, one source), then scale to thousands of obligations, 100,000 synthetic segments, three simulated devices with 50,000 records each, and record the bugs only scale reveals |
+| 4. Multiple real test layers | Unit, property-based, fuzz, adversarial tamper, integration, on-device instrumented, accessibility, and battery tests; target several hundred automated tests |
+| 5. Document real problem-solving | The defect log and the security report's "defects found in our own design" section |
+| 6. Ground the mechanics in something real | Critical ratio and earliest-deadline-first scheduling, max-flow, HPKE (RFC 9180), authenticated encryption, OWASP MASVS |
+| 7. Deliberate extensibility decision | The `SourceAdapter` and `BlobStore` seams, verifiable by dependency rules |
+
+Anti-patterns to avoid, per the same notes: abstraction for requirements that do not exist yet, and features added because they sound impressive. For example, I have deliberately not proposed an on-device large language model, federated learning in the main path, or a custom backend.
+
+### 17.5 Project summary file
+
+At wrap-up I will create `PROJECT_SUMMARY.txt` in the project root with exactly three sections (Overview in plain language, Complexity Level, Future Scope), as your standing instructions require. Not yet; this is a proposal.
+
+---
+
+## 18. Additional ideas, ranked
+
+Scoring is my own judgment on a 1 to 5 scale where higher is better for all four columns: **Impact** for users, **Feasibility**, **Distinctiveness**, and **Low effort** (5 means small). The total is a rough ranking aid, not a measurement.
+
+| Rank | Idea | Impact | Feasibility | Distinct. | Low effort | Total |
+|---|---|---|---|---|---|---|
+| 1 | **Latest safe start per task.** Show the date you must begin (from pessimistic effort), instead of arbitrary "one day before." | 5 | 5 | 3 | 5 | 18 |
+| 2 | **Reminder health check and missed-reminder ledger.** Verify permission, channel, battery, DND; say "you may have missed these." | 5 | 5 | 3 | 4 | 17 |
+| 3 | **Candidate impact preview.** Draw an unconfirmed suggestion on the Runway and Load horizon before accepting. | 4 | 4 | 5 | 3 | 16 |
+| 3 | **Update diff card and change history.** "Registration: 10 Nov, now 17 Nov"; "why does it say this?" evidence view. | 5 | 4 | 3 | 4 | 16 |
+| 3 | **Selection-menu and share-target capture.** "Add to Sibra" from any text. | 4 | 5 | 2 | 5 | 16 |
+| 6 | **Personal estimate calibration.** Learn the user's average underestimate and adjust future estimates on-device. | 4 | 4 | 4 | 3 | 15 |
+| 6 | **Date-order ambiguity resolver.** Show "3 April or March 4?" with source context; learn the user's convention. | 4 | 4 | 3 | 4 | 15 |
+| 8 | **Calendar-aware capacity.** Read free/busy to set daily capacity automatically. | 4 | 4 | 3 | 3 | 14 |
+| 8 | **48-hour triage mode.** One screen that re-plans only what can still be done. | 3 | 4 | 3 | 4 | 14 |
+| 8 | **Event-day checklist.** Documents, travel buffer, time-zone display, offline. | 3 | 4 | 3 | 4 | 14 |
+| 8 | **Open synthetic benchmark release.** Publish the generator and test set. | 2 | 4 | 5 | 3 | 14 |
+| 12 | **Signed public date packs.** Subscribable public calendars (exam periods, application windows) with no personal data. | 4 | 3 | 4 | 2 | 13 |
+| 13 | **Dependency chains and critical path** for multi-step applications. | 3 | 3 | 3 | 3 | 12 |
+| 14 | **Encrypted shared deadlines** for a study group or team. | 3 | 2 | 4 | 1 | 10 |
+| 15 | **Wear OS glance.** | 2 | 3 | 2 | 2 | 9 |
+
+My top five for the first two releases: ranks 1, 2, 3 (three items), and the estimate calibration. They are high-impact, cheap, and reinforce the core story.
+
+---
+
+## 19. Critical review
+
+### 19.1 Weakest assumptions in the vision
+
+1. **"Message discovery is the crown jewel."** It is the most constrained part of the product, not the most reliable. Gmail needs restricted-scope verification [V]. WhatsApp and Telegram offer no ordinary read API [S]. Notification access sees only what posts a notification, likely misses muted group chats [K, test needed], and is redacted for sensitive content on newer Android [S]. If the product's value depends on it, the product is fragile.
+2. **"Detecting dates is the hard part."** Detecting *accurately enough that the user trusts it* is the hard part. A tool that surfaces one false deadline a day will be uninstalled in a week.
+3. **"More reminders mean fewer missed deadlines."** Untested and probably false. Past a point, reminders get muted, and then everything is missed.
+4. **"Multi-device sync is needed."** Most people have one phone. They need *restore on a new phone*, which is a far smaller problem. Continuous sync is where most of the cryptographic and engineering cost lives.
+5. **"Users will edit generated plans."** Many will ignore them or resent being told what to do. A plan that is large, rigid, or guilt-inducing becomes noise.
+6. **"Privacy sells."** It earns trust and press with a small group; most people choose on convenience. Privacy must come with, not instead of, usefulness.
+
+### 19.2 Features most likely to fail
+
+- **Notification-shade "dashboard":** the prohibited Live Updates route [V] removes the most visually exciting option. The compliant substitutes are good, but modest.
+- **Telegram client integration:** security liability and unresolved terms [S, ?].
+- **Multi-language support promised too early:** on-device OCR covers only five script families [V], and extraction quality in each language needs a gold set you do not yet have. Promise a language only after it has its own measured results.
+- **Fully automatic edits to existing deadlines:** one wrong auto-edit destroys trust. Keep "ask first" as the default.
+- **Aggressive persistent notifications:** users will disable them and may then disable all notifications from the app.
+
+### 19.3 How it could become unpleasant
+
+- A tray that grows faster than the user clears it (backlog guilt).
+- Suggestions that repeat after dismissal.
+- A planner that fills the calendar with homework the user never asked for.
+- Overdue states in red with accusatory text.
+- Permission prompts before value is shown.
+- Sync conflicts that silently overwrite.
+
+### 19.4 What I would change if I owned this product
+
+1. **Make the preparation planner and the review tray the heart of v1; make discovery adapters plug-ins.**
+2. **Ship backup before sync, and say "backup" in the UI until true sync exists.**
+3. **Build the evaluation harness before the UI** so every extraction change is measured by false prompts per week, not by feel.
+4. **Add the reminder health check in v1.** Reliability on budget phones with aggressive battery managers is a trust issue, not a polish item.
+5. **Run a small diary pilot** before investing in the heavy sources, to learn whether capture or reminders are the actual failure for real users.
+6. **Open-source the core.** It strengthens the security story and the CV value at no product cost.
+7. **Keep the language promise small:** launch in English, publish the locale-pack interface, add languages when data and demand exist.
+8. **Retire the claim "developer cannot read your data" in favour of the precise statements in part 3, section 10.2.**
+
+---
+
+## 20. Questions for you
+
+These are the decisions I need before architecture is finalised. Everything else I can default sensibly.
+
+1. **Launch wedge.** Even for a global product, the first audience shapes the sources, the templates, and the language. My recommendation is **students and applicants** (exams, assignments, applications), because they have the most announced-in-advance deadlines and the best structured sources. Do you agree, or do you want professionals or general users first?
+2. **Purpose and ambition.** Is this primarily a **portfolio and research artifact**, or a **real commercial product**? It changes how much you invest in Gmail verification, legal review, support, and whether you register a developer organization instead of a personal account. It also decides whether the core should be open source.
+3. **Sync ambition.** Do you accept **encrypted backup and restore first, with continuous multi-device sync as a later phase**? (My recommendation.) Or is multi-device sync from the start essential?
+4. **Name and look.** Which name direction do you want to pursue: **Sibra** (my recommendation for the product, with **Computus** as the engine name), **Computus** for the product, or a fresh round? And do you accept **Almanac identity with Instrument discipline** as the visual direction?
+5. **Capacity and constraints.** How many hours per week can you give this, what is your target date, which physical Android devices do you have for reminder testing (ideally several manufacturers), and does your earlier **no-paid-services** rule apply here? The Play developer account has a one-time fee [K], and any Google security assessment for restricted Gmail scopes could cost far more [?], so this affects the plan.
+
+When you answer these, my suggested next step is **Phase 0**: the pure-Kotlin temporal tagger, planner, and evaluation harness, with no UI.
