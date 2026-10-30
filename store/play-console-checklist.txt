@@ -1,4 +1,5 @@
-PLAY CONSOLE CHECKLIST FOR S-IB
+SUPERSEDED 2026-10-30: use store\PLAY_CONSOLE_RELEASE_GUIDE.txt. This older list is kept for its account type notes.
+PLAY CONSOLE CHECKLIST FOR H-sib Reminder
 Things only you can do are marked YOU. Everything else is prepared in this project.
 
 BEFORE YOU START
@@ -19,7 +20,7 @@ BUILD
       signing key so a lost upload key can be reset.
 
 CREATE THE APP
-[YOU] Create app: name "S-IB: Deadline Planner", default language English, App, Free. (Free cannot later become paid.)
+[YOU] Create app: name "H-sib Reminder: Deadlines", default language English, App, Free. (Free cannot later become paid.)
 [YOU] Declarations: contains ads No; target audience 18 and over; privacy policy URL; data safety (store\data-safety-and-policy-answers.txt);
       content rating questionnaire; app access: no restrictions; news app No; government No; financial features None.
 [YOU] Main store listing: paste from store\listing.txt. Add your support email (Play requires one), the icon 512 x 512,
@@ -31,7 +32,7 @@ TEST
         1. Add a deadline due in 10 minutes and one due tomorrow; lock the phone; confirm the reminders arrive.
         2. Restart the phone; confirm reminders still arrive.
         3. Settings > Reminder health check: follow its advice on a brand with aggressive battery saving.
-        4. Share a screenshot of a notice from the gallery to S-IB; confirm it appears in Review.
+        4. Share a screenshot of a notice from the gallery to H-sib Reminder; confirm it appears in Review.
         5. Turn on backup to a folder, make a change, restore on a second phone or after clearing the app's data.
         6. Close ones: add an anniversary 3 days away; confirm the lock screen only says "A reminder".
         7. Turn on app lock; switch away for over 30 seconds and back.
@@ -45,7 +46,7 @@ LAUNCH
 [YOU] After launch: watch Android vitals (crashes and ANRs) in Play Console, and answer reviews.
 
 KNOWN RISKS TO KEEP IN MIND
-- The name S-IB is close to bank abbreviations. The store title "S-IB: Deadline Planner" helps; check trademarks.
+- Check the name "H-sib Reminder" for trademarks in the countries you care about. H-sib is the umbrella name of the maker.
 - Reminder reliability differs by phone maker and cannot be fully guaranteed. The in-app health check exists for that reason.
 - Google Play services provides the document scanner; on phones without it, Scan shows a message and Photo still works.
 - The app is English only in version 1.

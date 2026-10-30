@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The same mark as a single colour shape, for themed icons. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#FF000000"
-        android:fillType="evenOdd"
-        android:pathData="M54,25a29,29 0,1 0,0.01 0zM54,34.5a19.5,19.5 0,1 1,-0.01 0z" />
-    <path android:fillColor="#FF000000" android:pathData="M52.5,40h3v14.5l9,5.2l-1.5,2.6l-10.5,-6.1z" />
-    <path android:fillColor="#FF000000" android:pathData="M72,36.5a6.5,6.5 0,1 0,0.01 0z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,36a4,4 0,0 1,4 4v32a4,4 0,0 1,-8 0v-32a4,4 0,0 1,4 -4zM70,36a4,4 0,0 1,4 4v32a4,4 0,0 1,-8 0v-32a4,4 0,0 1,4 -4zM47,57a2.2,2.2 0,1 0,4.4 0a2.2,2.2 0,1 0,-4.4 0zM52,52.5a2.8,2.8 0,1 0,5.6 0a2.8,2.8 0,1 0,-5.6 0zM57.5,48.8a3.4,3.4 0,1 0,6.8 0a3.4,3.4 0,1 0,-6.8 0zM70,23.5a5,5 0,1 0,0.01 0z" />
 </vector>

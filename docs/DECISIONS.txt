@@ -1,0 +1,21 @@
+H-SIB REMINDER: DECISIONS LEDGER (newest first). Each line: date, decision, why, who can overrule it.
+No dashes, plain text. Rules the maker gave in his own words are in docs/DESIGN_REDO.txt and are swept on every pass.
+
+2026-10-30 Name: "H-sib Reminder" (store title "H-sib Reminder: Deadlines", 25 characters; wordmark "H-sib" with REMINDER under it,
+           the s, i and b still spell Start It Before). Why: the maker said every app lives under the H-sib name, like H-sib
+           Workshop, and suggested "H-sib Reminder App or something". applicationId stays com.hsib.sib. Maker can overrule.
+2026-10-30 First run shows a terms and security screen before anything is stored; acceptance is stored with a version and a date
+           and asked again when Terms.VERSION changes. Why: Workshop does this and the maker liked it. Assistant never taps it.
+2026-10-30 Guide, What's new card per release, intro speed setting (long once, then short; Settings can change it). Why: standard
+           P5, P10, L13 and the maker's Workshop experience.
+2026-10-30 Network permissions are stripped from the merged manifest of every build unless app/google-services.json exists.
+           Why: the offline promise stays true and checkable until Firebase is connected (tools/release-gate.py checks it).
+2026-10-30 Firebase: Google sign in through Credential Manager and Firebase Auth tells accounts apart; Cloud Firestore holds
+           sealed data; App Check (Play Integrity, debug provider in debug). Chosen by the maker 2026-10-14.
+2026-10-30 Quality ruler: C:\Users\lordhasib\Desktop\Projects\Create An App H-sib\APP_QUALITY_STANDARD.txt. Gap report in
+           docs/QUALITY_GAP_REPORT.txt. Token economy: short outputs, no polling, batch builds (maker's instruction).
+2026-10-14 Sharing: end to end sealed, no push (free Firebase plan), see docs/FRIENDS_AND_CHAT_DESIGN.txt.
+2026-10-14 Themes: Light, Twilight, Black, Neon. Typeface: Sora (OFL). Buttons flat and solid. Done is solid green.
+2026-10-30 Languages: users read English and give feedback in Bangla, Hindi and English (maker). Interface stays English; Send
+           feedback (Settings, Help) accepts any language and adds version and phone model; person titles in any script render
+           through system fallback fonts. The date reader stays English only (a stated limit). Maker can overrule.

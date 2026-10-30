@@ -1,6 +1,7 @@
 package com.hsib.sib.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -335,9 +336,11 @@ interface SettingDao {
     entities = [
         ObligationEntity::class, CandidateEntity::class, StepEntity::class, ReceiptEntity::class, EvidenceEntity::class,
         SealEntity::class, ReminderEntity::class, DismissedEntity::class, SettingEntity::class,
+        RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class SibDatabase : RoomDatabase() {
     abstract fun obligations(): ObligationDao
@@ -349,6 +352,11 @@ abstract class SibDatabase : RoomDatabase() {
     abstract fun reminders(): ReminderDao
     abstract fun dismissed(): DismissedDao
     abstract fun settings(): SettingDao
+    abstract fun rooms(): RoomDao
+    abstract fun roomKeys(): RoomKeyDao
+    abstract fun roomMembers(): RoomMemberDao
+    abstract fun roomMessages(): RoomMessageDao
+    abstract fun blocked(): BlockedDao
 
     companion object {
         /** Opens the encrypted database. The SQLCipher key is derived from the vault master and given as a raw key. */

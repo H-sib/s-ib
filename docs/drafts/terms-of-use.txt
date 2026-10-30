@@ -1,0 +1,51 @@
+S-IB: COMMUNITY RULES AND TERMS OF USE (DRAFT, NOT PUBLISHED)
+Written 2026-10-14. These apply only to the optional sharing and chat features. The rest of S-IB needs no account.
+This is a plain language draft by the developer, not legal advice. Have it checked before it is published.
+
+The short version is in the app (core\...\social\SocialModel.kt, CommunityRules) and is what a person agrees to before the
+first share, join or message. This longer text is what the web page will say. They must stay in step.
+
+1. WHO CAN USE SHARING
+You must be 13 or older. Sharing needs a Google account. S-IB is not for children.
+
+2. WHAT SHARING IS
+You can add people to a deadline you own. They get its title, date and notes, they are reminded on their own phones, and they
+can chat about it. Only people who hold the invite code can join. S-IB has no search, no public groups and no way to message
+someone who has not joined your deadline.
+
+3. WHAT YOU MAY NOT DO
+Do not use sharing or chat to: harass, bully, threaten or abuse anyone; post hate, or sexual, violent or illegal content;
+spam or scam; pretend to be someone else; share what you have no right to share; or try to break, probe or overload the
+service. Do not invite people who do not want to be invited.
+
+4. YOUR CONTENT
+What you send is yours. By sending it you let S-IB store it and show it to the people in that shared deadline, which is the
+point of sharing. Titles, dates, notes and chat are sealed on your phone before they are sent, so the developer and the server
+host cannot read them. Everyone in the shared deadline can read what you send there, and any of them can report it.
+
+5. REPORTING, BLOCKING AND MODERATION
+You can block a person and report a person or a message from inside the app. Because chat is sealed, a report includes the
+text of a message only if you choose to send it. The developer reads reports and may remove a person from the service or end a
+shared deadline. The developer cannot read the chat otherwise, and does not promise to see anything that is not reported.
+Reports are looked at as soon as a person can, and urgent ones (threats, harm to a child, anything illegal) first. [OWNER: state
+a realistic response time before publishing. Do not promise more than you can keep.]
+
+6. THE OWNER OF A SHARED DEADLINE
+The person who made a shared deadline can change its title and date, invite people, cancel invites, remove people and delete it
+for everyone. Everyone else can leave at any time. When someone is removed they keep what they already saw but cannot read
+anything new.
+
+7. DELETING YOUR ACCOUNT
+You can delete your account inside S-IB (Friends, Account, Delete my account). Your messages are removed, you leave every shared
+deadline, and shared deadlines you own are deleted for everyone. Your own deadlines on your phone stay. There is also a web page
+for people who have already uninstalled the app: https://[OWNER: address] .
+
+8. WHAT THE SERVICE IS AND IS NOT
+Sharing is offered as is, without a promise that it will always be available or free of mistakes. Do not rely on it as the only
+way to learn about something important. The developer may change or stop sharing, and will say so in the app first where possible.
+
+9. ENDING YOUR ACCESS
+The developer may end a person's access to sharing if these rules are broken, and will say why where that is safe to say.
+
+10. CONTACT
+Developer: H-sib. Contact: [OWNER: address].

@@ -1,0 +1,52 @@
+SUPERSEDED 2026-10-30: the live answers are in store\data-safety-and-policy-answers.txt. Kept only as history.
+S-IB: GOOGLE PLAY DATA SAFETY ANSWERS FOR THE VERSION WITH SHARING (DRAFT, NOT SUBMITTED)
+Written 2026-10-14. Use these INSTEAD of store\data-safety-and-policy-answers.txt, and only when the version that adds the
+INTERNET permission is the one being uploaded. Today's release has no network permission and its answers stay as they are.
+Check every answer against the Play Console form on the day, because Google changes the wording.
+
+OVERVIEW OF THE CHANGE
+  Everything is local and optional until the person signs in with Google. After that, only what they share leaves the phone,
+  and it leaves sealed (end to end encrypted), so the developer and the host cannot read titles, dates, notes or chat.
+
+DOES THE APP COLLECT OR SHARE USER DATA?  Yes, only for people who sign in and share.
+
+DATA TYPES (collected, only after sign in, for app functionality and account management)
+  Personal info
+    Name                     Collected. The display name the person chooses. Not optional once signed in.
+    Email address            Collected by the sign in service (Firebase Authentication). Used to sign in. Not shown to friends.
+    User IDs                 Collected. The account id.
+  Messages
+    Other in-app messages    Collected. Chat messages. They are sealed on the phone; the server holds only sealed text.
+  App activity
+    Other user-generated content   Collected. The title, date and notes of a deadline the person chooses to share, sealed.
+  Device or other IDs        Not collected by S-IB. (Check what the Firebase and Google Play services libraries add.)
+  Location, contacts, calendar, photos, files, audio, health, financial: not collected.
+
+DATA SHARING WITH THIRD PARTIES
+  Data is processed by Google (Firebase) as the service provider that hosts it. Play treats a service provider acting on the
+  developer's behalf as not "sharing". Nothing is sold. Nothing is used for advertising or analytics.
+  Notification text read by the optional chat reader is never sent anywhere. It has no path to the network code, and a test
+  fails the build if one is added.
+
+SECURITY PRACTICES
+  Data is encrypted in transit: Yes (TLS to Firebase).
+  Data is encrypted at rest: Yes on the phone (SQLCipher with a Keystore wrapped key); on the server the shared text is sealed
+    before it is sent, in addition to the provider's own encryption.
+  You can request that data is deleted: Yes. In app (Friends, Account, Delete my account) and by a web page (see
+    docs\drafts\delete-account.html). Deleting removes the person's messages, memberships, profile and rooms they own.
+  Committed to follow the Play Families policy: No. The app is not for children (13 and over for sharing).
+  Independent security review: No.
+
+APP ACCESS, ACCOUNT DELETION AND UGC
+  Account creation: Yes (Google sign in), optional.
+  Account deletion: in app and web link, as above. Enter the web link in the Data deletion field.
+  User generated content: Yes. The app has terms (docs\drafts\terms-of-use.txt) accepted before the first share, join or message;
+    an in app way to report a person or a message; a way to block a person; and the developer reviews reports. Tick the UGC
+    declaration and describe those four things.
+  Permissions to declare: INTERNET and ACCESS_NETWORK_STATE (sharing only). Notification access stays as it is.
+
+THINGS THAT MUST BE TRUE BEFORE THIS IS SUBMITTED
+  - The real FirestoreBackend and Google sign in are written, and the emulator tests for the rules pass.
+  - The pipeline's permission check now expects INTERNET and fails if any package other than social imports a network library.
+  - site\privacy.html, store\listing.txt and the Why S-IB text are updated in the SAME change (see privacy-policy-online.html).
+  - The owner has accepted the moderation duty in docs\FRIENDS_AND_CHAT_DESIGN.txt, section 8.

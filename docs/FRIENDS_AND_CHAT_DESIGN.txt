@@ -1,0 +1,235 @@
+S-IB: SIGN IN WITH GOOGLE, SHARED DEADLINES AND CHAT (DESIGN FOR APPROVAL)
+Written 2026-10-14. Plain text on purpose. No application code has been written for this yet.
+
+WHY THIS FILE EXISTS
+The owner's review said two things were missing: "log in with and sign up with Google" and "adding people to the same
+deadline to be reminded, and chatting for that". The owner chose Firebase as the backend. These are the first features
+that need a server, so they change what the app promises. This file says what will be built, what it costs in privacy and
+effort, what only the owner can do, and what I can build before any of that exists. Approve it (or change it) before code.
+
+DECISIONS MADE BY THE OWNER (2026-10-14)
+  Backend: Firebase.  Encryption: end-to-end encrypted (section 6).  Push: none for now, free Spark plan (section 7,
+  option A).  Go ahead with steps 1 to 4 of section 9 (no downloads, no Firebase project needed). Step 5 asks again.
+
+PROGRESS (2026-10-14, evening)
+  Steps 1 to 4 of section 9 are done and tested; step 5 and 6 wait for the owner.
+  Step 1 core\...\social: invite codes (typo checked), sealed values bound to room, field, sender and message, room key wrapping
+         (X25519 + HKDF + XChaCha20-Poly1305), the shared deadline payload (parsed as hostile input), limits and rules.
+         40 tests (SocialCryptoTest, SocialModelTest).
+  Step 2 app\...\social: SocialBackend, an in memory FakeBackend that applies the same rules as the server will, and
+         SocialRepository (share, invite, join, sync, chat, done, remove with a new key, leave, block, report, delete account).
+         Encrypted local tables (database version 2, automatic migration). 21 tests with simulated phones, including checks that
+         the server never held a readable word.
+  Step 3 app\...\ui: Friends hub, Account, Join, People (room), Chat, Report, Community rules. A People entry on a deadline, a
+         Shared chip in lists, a Friends entry on Today and in Settings. 25 screenshot tests in four themes.
+  Step 4 firebase\: firestore.rules, emulator tests (NOT run), setup notes. docs\drafts\: terms of use, privacy policy for the
+         sharing version, Data safety answers, delete account page. ArchitectureTest keeps the notification reader and the
+         other readers from ever reaching the sharing code or a network library.
+  Step 5 (2026-10-30) the code is written and compiles: FirebaseSetup (manual start, App Check), FirebaseSocialAuth (Google sign in
+         through Credential Manager, Firebase Auth), FirestoreBackend (transactions that match firebase/firestore.rules),
+         FirestoreMapping (hostile document handling, 10 tests), SocialSyncWorker (background sync every 3 hours while signed in).
+         NEVER RUN against a real project. The owner must create the project and put google-services.json into app\.
+  RELEASE BUILDS DO NOT OFFER SHARING YET (they have no connection file, so no network permission). SocialConfig builds it only in debug builds, as a practice mode on the in memory
+  server, so the signed bundle still has no INTERNET permission and the published privacy policy is still true.
+  STILL TO DO (needs the owner): step 5, the real Firestore backend, Google sign in, WorkManager sync, and the manifest and
+  pipeline change; then step 6. See firebase\README.txt for what the owner has to create first.
+
+------------------------------------------------------------------------
+1. WHAT THE OWNER WILL GET
+
+  a) Sign in with Google. Optional. The app keeps working fully without it, offline, exactly as today. Signing in only
+     unlocks sharing.
+  b) Share a deadline with people. From a deadline's screen: "Add people". It makes an invite code the owner sends with
+     the Android share sheet (WhatsApp, Telegram, SMS, anything). A friend installs S-IB, signs in, taps "Join with
+     code", and the deadline appears on their phone as a shared deadline.
+  c) Everyone is reminded. Each person's phone plans its own reminders from the shared date, so quiet hours, effort
+     estimates and lead days stay personal. If the date moves, everyone's reminders move.
+  d) Who is done. A small line on the deadline: "2 of 4 done". Each person marks their own part done.
+  e) Chat on the deadline. One conversation per shared deadline, text only, no strangers: only people holding the invite
+     can be in it.
+  f) Safety tools Google Play requires: report a message or person, block a person, leave, remove a member (owner), and
+     delete your account from inside the app.
+
+NOT IN THE FIRST RELEASE: finding people by search or contacts, public groups, GIFs, pictures or voice in chat, sharing
+Close ones items (these stay private by design), a web version. Each is a separate decision later.
+
+------------------------------------------------------------------------
+2. WHAT CHANGES FOR THE PRIVACY PROMISE (HONEST VERSION)
+
+Today the app has no INTERNET permission, so it CANNOT send anything anywhere, and the build checks that. Sharing needs the
+permission, so the promise becomes: "S-IB works fully offline. The network is used only if you sign in and share, and only
+for the people and deadline you shared." That is weaker than "cannot", and I would rather say so than hide it.
+
+How the weaker promise is kept honest in the code:
+  - All network code lives in one package, com.hsib.sib.social. Nothing else may import it.
+  - The notification reader, importer, backup and Close ones code have no path to that package. A test fails the build
+    if any of them ever imports it. So notification text cannot be sent, by construction and by test.
+  - The release pipeline stops checking "no INTERNET" and starts checking "INTERNET present and only social imports a
+    network library".
+  - The privacy policy, Data safety answers, store listing and the Why S-IB text are rewritten in the same change as the
+    permission, never before and never after. Until then site\privacy.html stays as it is, because it is true today.
+
+------------------------------------------------------------------------
+3. ARCHITECTURE
+
+  Backend: Firebase. Authentication (Google provider), Cloud Firestore, App Check with Play Integrity (stops other
+  apps and scripts from using the project's API key), optionally Cloud Messaging for push.
+  Client sign-in: Android Credential Manager with the Google ID option, then Firebase Auth signInWithCredential. This is
+  the route Firebase documents today; the older Google Sign-In API is not used. It needs the WEB client ID that Firebase
+  creates, not the Android one.
+  Structure in the repo:
+    core/   a new pure-JVM package "social": the models (Room, Member, Message, Invite), limits and validation, invite
+            code format, message and report rules. Tested without a phone, like the rest of the core.
+    app/    package "social": an interface SocialBackend, a FirestoreBackend that implements it, a FakeBackend for tests
+            and screenshots, the Sync worker, the local tables (rooms, members, messages) inside the existing encrypted
+            SQLCipher database, and the screens (Account, People, Chat, Join, Report, Terms).
+  Local first: the shared deadline is also a normal local deadline (source type SHARED), so the planner, widget, tile,
+  dashboard and reminders treat it like any other. Server changes arrive as sealed history entries ("Date changed by
+  Sam"). Close ones items cannot be shared, as before.
+  Because the screens talk to the SocialBackend interface, almost all of it can be built and tested before the Firebase
+  project exists (section 9).
+
+------------------------------------------------------------------------
+4. DATA MODEL (FIRESTORE)
+
+  users/{uid}                    public profile: displayName, publicKey. No email is stored here.
+  rooms/{roomId}                 ownerUid, memberCount, createdAt, keyVersion, sealed payload (title, date, notes)
+  rooms/{roomId}/members/{uid}   role (owner or member), displayName, joinedAt, doneAt, wrappedKey, lastMessageAt
+  rooms/{roomId}/messages/{id}   senderUid, createdAt, sealed body, kind (text or system)
+  invites/{inviteId}             roomId, createdBy, expiresAt, revoked, key material sealed with the invite secret
+  reports/{id}                   reporterUid, roomId, reportedUid, reason, text the reporter chose to include, createdAt
+  Per-user blocks live only on the phone (and in the encrypted backup), so a block list is not something the server holds.
+
+Limits (enforced by the rules, not only by the app): 20 members per room, 50 rooms per person, 2,000 characters per
+message, title 200, notes 4,000, invite valid at most 7 days, display name 40.
+
+------------------------------------------------------------------------
+5. SERVER RULES (WHAT "ROW LEVEL SECURITY" MEANS HERE)
+
+Firestore security rules do the job row-level security does elsewhere. The permissions are enforced on Google's side, so a
+modified app cannot get around them. Sketch of the rules, to be written for real and tested in the Firebase emulator
+before use:
+  - Every request needs a signed-in user with a verified Google email. No anonymous access anywhere.
+  - A person can read a room, its members and its messages only if they have a member document in that room.
+  - Only the room owner can change the room payload or remove another member. A member can remove only themselves.
+  - A member can write messages only as themselves (senderUid equals their uid), only into rooms they belong to, only
+    within the size limits, and not faster than one per second (checked against lastMessageAt, updated in the same write).
+  - A person can delete only their own messages.
+  - Joining: a person may create their own member document only if an invite exists for that room, is not revoked, has not
+    expired, and the room is under its member limit. Invites cannot be listed, only fetched by their unguessable id.
+  - reports can be created by any member and read by nobody from the app. The owner of S-IB reads them in the console.
+  - Profiles: anyone signed in can read a profile by uid (needed to share keys); only the person can write their own.
+  - Unknown fields and wrong types are rejected, so nothing can be smuggled in.
+I will also write rules tests. The emulator needs Node.js and the Firebase CLI, which is a download I will ask about.
+
+------------------------------------------------------------------------
+6. ENCRYPTION (RECOMMENDED, NEEDS THE OWNER'S YES)
+
+Recommendation: end-to-end encrypt the deadline details and the chat. The server then stores only scrambled text for
+titles, notes and messages, and Google (and anyone who breaches the project) cannot read them. This matches what the app
+says about backups, and Tink and XChaCha20-Poly1305 are already in the project.
+  - Each room has a random 256-bit room key made on the owner's phone.
+  - Each person has a device key pair (Tink HPKE); the public half is in their profile.
+  - The room key is wrapped for each member's public key and stored in their member document. A new member gets the room
+    key through the invite: the owner puts it in the invite sealed with a secret that travels only inside the invite code,
+    so the owner does not have to be online.
+  - Removing a member makes a new room key (keyVersion + 1) for everyone left. The removed person keeps what they already
+    saw but cannot read anything new.
+What the server can still see (cannot be hidden without more infrastructure): who is in which room, display names, message
+times and sizes, the owner's Google account, the IP address of each request.
+Costs, said plainly:
+  - A new phone or a reinstall loses the device key. Old chat history cannot be read again unless the key is in the
+    encrypted backup (planned: it goes in, so a restore brings it back). A fresh join gets the current key, not old history.
+  - Reporting a message works by the reporter choosing to attach the readable text, because the server cannot read it.
+  - It is more work and more to test than plain server-readable data, roughly a third of the whole feature.
+The alternative is server-readable data protected only by the rules. It is quicker, but then the privacy page has to say
+"Google and the developer could read your chats", which does not fit this app. I recommend the encrypted version.
+
+------------------------------------------------------------------------
+7. NOTIFICATIONS FOR CHAT AND CHANGES (A REAL LIMIT)
+
+Reminders for the deadline itself still fire from the phone with no server. What needs a server is waking a phone because
+a friend wrote something or moved the date while the app is closed. Sending a Firebase push needs trusted code, which
+means a Cloud Function, and Cloud Functions need the Blaze plan on Firebase. Blaze has the same free quotas as the free
+Spark plan but needs a billing account with a card on file; if usage goes over the free quota you are charged. The owner
+would set a budget alert. (Source: Firebase pricing plans page; the exact free quotas I found in third-party summaries and
+the official page should be re-read before deciding.)
+Options:
+  A) Spark (free), no push. The app syncs when opened and about hourly in the background with WorkManager, and the
+     deadline reminders still fire. A chat message may sit unread until the app opens or the next sync. Cheap, simple,
+     feels slow for chat.
+  B) Blaze with one small Cloud Function that sends a content-free push ("New activity on Signals lab report"). Feels
+     like a real chat. Needs the card, the budget alert, and one function to deploy and maintain.
+With encryption the push never contains message text either way.
+
+------------------------------------------------------------------------
+8. WHAT GOOGLE PLAY REQUIRES (CHECKED AGAINST GOOGLE'S POLICY PAGES)
+
+  User generated content (chat counts): users must accept Terms of Use before posting; the terms must define and forbid
+  objectionable content; the app must have an in-app way to report content and users and a way to block users; the
+  developer must moderate and act on reports in a reasonable time. Source: Google Play User Generated Content policy
+  (support.google.com/googleplay/android-developer/answer/9876937).
+  Account deletion: an app that lets people create an account must offer deletion of the account and its data inside the
+  app and a web page where it can be requested, and the URL goes into Play Console. Source: Google Play account deletion
+  help page (support.google.com/googleplay/android-developer/answer/13327111). I will build Settings, Account, Delete
+  account, and a site\delete-account.html page. Deleting data of someone who has already uninstalled and writes via the
+  web page is manual work in the Firebase console unless a Cloud Function (Blaze) does it.
+  Data safety form: it will have to declare email address and name (account), user IDs, and messages (user content),
+  encrypted in transit, deletable on request. Firebase acts as the service provider.
+  Moderation is a real, ongoing duty for a solo developer. Reports land in the Firebase console, where someone has to
+  read them and remove a member or room. The owner must decide whether they accept that duty before launch; I cannot
+  do it for them.
+  Age: the app is not for children; the terms will say 13 or older and Google sign-in carries its own age rules.
+
+------------------------------------------------------------------------
+9. WHAT I CAN BUILD BEFORE THE FIREBASE PROJECT EXISTS
+
+  Step 1  The core "social" package: models, limits, invite code format, validation, the envelope format for encrypted
+          payloads, report and block rules. Pure JVM tests.
+  Step 2  The local tables and migration, the SocialBackend interface, the FakeBackend, the Sync logic with conflict
+          rules (owner wins on the room payload, messages merge by time and id). Tests with the fake.
+  Step 3  The screens: Account (sign in, sign out, delete), People on a deadline, Join with code, Chat, Report, Terms of
+          Use. Screenshot tests in all four themes, and the Today and deadline screens gain a "shared" look.
+  Step 4  The Firestore rules file and rules tests (needs Node and the Firebase CLI, to be approved), the Terms of Use
+          text, the draft privacy policy and Data safety answers (kept as drafts under docs\, not published).
+  Step 5  Needs the owner: the real FirestoreBackend and the sign-in. It needs the Firebase SDK libraries downloaded by
+          Gradle (I will ask first, with the list and the added app size), and the file google-services.json.
+  Step 6  The pipeline changes, the full test run, lint, a rebuilt signed bundle, a new Security Review section, and the
+          final policy and listing rewrite in one change.
+
+------------------------------------------------------------------------
+10. WHAT ONLY THE OWNER CAN DO
+
+  - Create the Firebase project (suggested id s-ib-app, free Spark plan to start) in the owner's Google account.
+  - Add the Android app com.hsib.sib and register the SHA-1 fingerprints: the debug key, the upload key (printed by
+    ./gradlew signingReport), and later the Play App Signing key from Play Console. A missing one makes sign-in fail.
+  - Turn on the Google sign-in provider, create the Firestore database in production mode (choose the region carefully, it
+    cannot be changed later), turn on App Check with Play Integrity.
+  - Decide Spark or Blaze (section 7), and set a budget alert if Blaze.
+  - Download google-services.json and put it in app\ (it is project configuration, not a password, but I will keep it out
+    of git with a template file beside it).
+  - Accept the moderation duty in section 8, and the cost and maintenance of running a server.
+  I cannot create accounts, projects, keys or billing, and I will not enter credentials anywhere.
+
+------------------------------------------------------------------------
+11. RISKS
+
+  - The "cannot send anything" guarantee goes away and is replaced by an architectural rule and a test.
+  - Play will look hard at an app with both notification access and a network permission. The listing and the in-app
+    disclosure must say plainly that notification text never leaves the phone, and the code must make that true.
+  - Firebase and Play services add several megabytes and one more dependency on Google. The app was independent of them.
+  - Encryption and member removal are the hardest parts to get right. I will test them with hostile cases (wrong key,
+    replayed message, removed member, tampered envelope), as was done for backups.
+  - Cost and abuse: App Check, the size limits and the one-per-second rule reduce it, they do not remove it. Spark stops
+    at its daily quota instead of billing, which is safe but means the chat stops until the next day if it is exceeded.
+  - Nothing here can be tested on a real phone from this environment. The sign-in, push and background sync have to be
+    tried by the owner on at least two devices.
+
+------------------------------------------------------------------------
+SOURCES USED
+  Firebase: Authenticate with Google on Android, firebase.google.com/docs/auth/android/google-signin
+  Firebase pricing plans, firebase.google.com/docs/projects/billing/firebase-pricing-plans
+  Google Play User Generated Content policy, support.google.com/googleplay/android-developer/answer/9876937
+  Google Play account deletion requirements, support.google.com/googleplay/android-developer/answer/13327111
+  Free quota numbers and the Blaze requirement for Cloud Functions came from third-party summaries as well; re-read the
+  official pages before relying on exact figures.

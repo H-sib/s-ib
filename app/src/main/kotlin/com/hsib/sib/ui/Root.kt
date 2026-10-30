@@ -37,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +61,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hsib.sib.Authenticator
+import com.hsib.sib.BuildConfig
 import com.hsib.sib.ImportUi
 import com.hsib.sib.MainViewModel
 import com.hsib.sib.Phase
@@ -67,6 +69,8 @@ import com.hsib.sib.Ready
 import com.hsib.sib.core.model.Space
 import com.hsib.sib.data.ThemeMode
 import com.hsib.sib.domain.AppState
+import com.hsib.sib.social.SocialSyncWorker
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
@@ -107,6 +111,17 @@ private fun SystemBars() {
     }
 }
 
+/** How long the opening plays, from what the phone remembered: long the first time, short after, or as chosen. 0 skips it. */
+private fun introDuration(prefs: android.content.SharedPreferences): Int {
+    val speed = runCatching { com.hsib.sib.data.IntroSpeed.valueOf(prefs.getString("introSpeed", "AUTO").orEmpty()) }.getOrDefault(com.hsib.sib.data.IntroSpeed.AUTO)
+    return when (speed) {
+        com.hsib.sib.data.IntroSpeed.OFF -> 0
+        com.hsib.sib.data.IntroSpeed.LONG -> 4200
+        com.hsib.sib.data.IntroSpeed.SHORT -> 1600
+        com.hsib.sib.data.IntroSpeed.AUTO -> if (prefs.getBoolean("introSeen", false)) 1600 else 4200
+    }
+}
+
 @Composable
 fun SibRoot(
     vm: MainViewModel,
@@ -125,19 +140,21 @@ fun SibRoot(
     val cachedTheme = remember { cachedTheme(context) }
     val mode = if (settingsKnown) st.settings.theme else cachedTheme
     LaunchedEffect(settingsKnown, st.settings.theme) {
-        if (settingsKnown) context.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE).edit().putString("theme", st.settings.theme.name).apply()
+        if (settingsKnown) context.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE).edit().putString("theme", st.settings.theme.name).putString("introSpeed", st.settings.introSpeed.name).apply()
     }
 
-    SideEffect { onSecureChange(if (settingsKnown) st.settings.hideInRecents else true) }
+    SideEffect { onSecureChange(settingsKnown && st.settings.hideInRecents) }
 
     // The intro plays on a cold start. Opening from a notification goes straight to the item, and a tap skips it.
-    var introDone by rememberSaveable { mutableStateOf(route != null) }
+    val prefs = remember { context.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE) }
+    val introMs = remember { introDuration(prefs) }
+    var introDone by rememberSaveable { mutableStateOf(route != null || introMs == 0) }
 
     Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion) {
         val motion = rememberMotionEnabled()
         Crossfade(introDone, animationSpec = tween(if (motion) 520 else 0), label = "intro") { done ->
             when {
-                !done -> IntroScreen { introDone = true }
+                !done -> IntroScreen(introMs) { prefs.edit().putBoolean("introSeen", true).apply(); introDone = true }
                 phase is Phase.VaultLost -> VaultLostScreen(vm::resetVault)
                 running == null || !st.loaded -> Splash()
                 else -> Running(running.ready, st, vm, importActions, auth, route, onRouteHandled)
@@ -153,7 +170,7 @@ private fun Splash() {
     val c = SibTheme.colors
     Box(Modifier.fillMaxSize().background(c.paper), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("S-IB", style = SibType.display, color = c.ink)
+            AppName()
             Text("Start It Before", style = SibType.small, color = c.inkSoft)
         }
     }
@@ -166,7 +183,7 @@ private fun VaultLostScreen(onReset: () -> Unit) {
     Page("Storage could not be opened", null) {
         Spacer(Modifier.height(8.dp))
         Text(
-            "S-IB keeps your deadlines in storage that is locked with a key held by your phone. That key is gone, which can happen after a phone restore, a reset, or a change to the phone's security.",
+            "H-sib Reminder keeps your deadlines in storage that is locked with a key held by your phone. That key is gone, which can happen after a phone restore, a reset, or a change to the phone's security.",
             style = SibType.body, color = c.ink,
         )
         Spacer(Modifier.height(10.dp))
@@ -182,7 +199,7 @@ private fun VaultLostScreen(onReset: () -> Unit) {
             onDismissRequest = { confirm = false },
             containerColor = c.raised,
             title = { Text("Start fresh?", style = SibType.title, color = c.ink) },
-            text = { Text("The unreadable data on this phone is erased and S-IB starts empty.", style = SibType.body, color = c.inkSoft) },
+            text = { Text("The unreadable data on this phone is erased and H-sib Reminder starts empty.", style = SibType.body, color = c.inkSoft) },
             confirmButton = { TextButton({ confirm = false; onReset() }) { Text("Start fresh", style = SibType.bodyStrong, color = c.vermilion) } },
             dismissButton = { TextButton({ confirm = false }) { Text("Cancel", style = SibType.body, color = c.ink) } },
         )
@@ -197,7 +214,7 @@ private fun LockScreen(onUnlock: () -> Unit) {
         Modifier.fillMaxSize().background(c.paper).windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
     ) {
-        Text("S-IB", style = SibType.display, color = c.ink)
+        AppName()
         Text("Locked", style = SibType.body, color = c.inkSoft)
         Spacer(Modifier.height(24.dp))
         SibButton("Unlock", onUnlock)
@@ -220,13 +237,22 @@ private fun Running(
     val context = LocalContext.current
     var showRestore by remember { mutableStateOf(false) }
 
+    // Nothing is stored and nothing is asked until the terms have been read and accepted (again, if they change).
+    if (st.settings.termsVersion < Terms.VERSION) {
+        TermsScreen(
+            online = BuildConfig.FIREBASE_READY, acceptedOn = null, onBack = null,
+            onAccept = { scope.launch { ready.settings.putRaw("termsAcceptedOn", java.time.LocalDate.now().toString()); ready.settings.putRaw("termsAcceptedAt", java.time.Instant.now().toString() + " v" + Terms.VERSION); ready.settings.update { it.copy(termsVersion = Terms.VERSION) } } },
+        )
+        return
+    }
+
     if (!st.settings.onboardingDone) {
         if (showRestore) {
             RestoreScreen(st, ready, onBack = { showRestore = false }, onRestored = { showRestore = false })
         } else {
             Onboarding(
                 st.today, vm::demo, onRestore = { showRestore = true },
-                onFinish = { scope.launch { ready.settings.update { it.copy(onboardingDone = true) } } },
+                onFinish = { scope.launch { ready.settings.update { it.copy(onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE) } } },
             )
         }
         return
@@ -234,7 +260,7 @@ private fun Running(
 
     // If the phone no longer has a screen lock, there is nothing to ask for, so the app must not trap its owner.
     if (st.settings.appLock && auth.available() && vm.lock.locked) {
-        LockScreen { auth.prompt("Unlock S-IB") { ok -> if (ok) vm.lock.locked = false } }
+        LockScreen { auth.prompt("Unlock H-sib Reminder") { ok -> if (ok) vm.lock.locked = false } }
         return
     }
 
@@ -244,6 +270,22 @@ private fun Running(
     var askNotifications by remember { mutableStateOf(false) }
     val reduce = LocalReduceMotion.current
     val mode = st.settings.theme
+
+    // Shared deadlines catch up when the app opens and then every ten minutes while it is open. Chat uses a lighter refresh.
+    val socialState = rememberSocial(ready)
+    LaunchedEffect(socialState.user?.uid) {
+        val social = ready.social
+        if (social != null && socialState.user != null) {
+            // Also while the app is closed, a few times a day, so a changed date or a new message is waiting.
+            if (!social.practice) SocialSyncWorker.schedule(context)
+            while (true) {
+                social.sync()
+                delay(10 * 60_000L)
+            }
+        } else if (social != null) {
+            SocialSyncWorker.cancel(context)
+        }
+    }
 
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) scope.launch { ready.reminders.sync(vm.state.value) }
@@ -291,15 +333,31 @@ private fun Running(
         popExitTransition = { fadeOut(tween(ms)) + slideOutHorizontally(tween(ms)) { it / 12 } },
     ) {
         composable("home") { HomeTabs(tab, { tab = it }, st, nav, ready, importActions, afterSave) }
-        composable("all") { AllScreen(st, onOpen = { nav.navigate("item/$it") }, onBack = back) }
-        composable("item/{id}") { e -> DetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, back) }
+        composable("all") { AllScreen(st, onOpen = { nav.navigate("item/$it") }, onBack = back, sharedIds = socialState.rooms.keys) }
+        composable("item/{id}") { e -> DetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, back, onPeople = { nav.navigate("room/$it") }) }
         composable("add") {
-            AddScreen(st, ready, importActions, back) { id ->
+            AddScreen(st, ready, importActions, back, onJoin = if (ready.social != null) ({ nav.navigate("friends/join") }) else null, onSaved = { id ->
                 afterSave()
                 nav.popBackStack()
                 nav.navigate("item/$id")
-            }
+            })
         }
+
+        composable("friends") {
+            FriendsScreen(
+                st, ready, back,
+                onOpenRoom = { nav.navigate("room/$it") },
+                onJoin = { nav.navigate("friends/join") },
+                onAccount = { nav.navigate("friends/account") },
+            )
+        }
+        composable("friends/account") { AccountScreen(ready, back, onSignedOut = { nav.popBackStack("home", inclusive = false) }) }
+        composable("friends/join") { JoinScreen(ready, back, onJoined = { id -> nav.popBackStack(); nav.navigate("item/$id") }) }
+        composable("room/{id}") { e ->
+            val id = e.arguments?.getString("id").orEmpty()
+            RoomScreen(id, st, ready, back, onChat = { nav.navigate("room/$id/chat") })
+        }
+        composable("room/{id}/chat") { e -> ChatScreen(e.arguments?.getString("id").orEmpty(), st, ready, back) }
 
         composable("settings/reminders") { RemindersSettings(st, ready, back) }
         composable("settings/notifications") { NotificationSettings(st, ready, back) }
@@ -309,8 +367,15 @@ private fun Running(
         composable("settings/security") { SecuritySettings(st, ready, back, toggleLock) }
         composable("settings/appearance") { AppearanceSettings(st, ready, back) }
         composable("settings/health") { HealthScreen(st, ready, back) }
-        composable("settings/about") { AboutScreen(back) }
+        composable("settings/about") { AboutScreen(back, onTerms = { nav.navigate("settings/terms") }) }
         composable("settings/close") { CloseOnesSettings(st, ready, back) }
+        composable("settings/reader") { ReaderScreen(st, ready, back) }
+        composable("settings/feedback") { FeedbackScreen(back) }
+        composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back) }
+        composable("settings/terms") {
+            val on by produceState<String?>(null) { value = ready.settings.raw("termsAcceptedOn") }
+            TermsScreen(online = BuildConfig.FIREBASE_READY, acceptedOn = on, onAccept = null, onBack = back)
+        }
         composable("restore") { RestoreScreen(st, ready, back, onRestored = back) }
 
         composable("close") {
@@ -365,7 +430,7 @@ private fun Running(
             title = { Text("Allow reminders?", style = SibType.title, color = c.ink) },
             text = {
                 Text(
-                    "Reminders are the point of S-IB, and Android only lets an app show them if you allow notifications. They are made and shown on this phone, and nothing is sent anywhere.",
+                    "Reminders are the point of H-sib Reminder, and Android only lets an app show them if you allow notifications. They are made and shown on this phone, and nothing is sent anywhere.",
                     style = SibType.body, color = c.inkSoft,
                 )
             },
@@ -380,6 +445,8 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
     val c = SibTheme.colors
     val scope = rememberCoroutineScope()
     val reduce = LocalReduceMotion.current
+    // Null when this build has no sharing, so the entries for it simply do not appear.
+    val social = if (ready.social != null) rememberSocial(ready) else null
     Column(Modifier.fillMaxSize().background(c.paper)) {
         Box(Modifier.weight(1f).fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)) {
             Crossfade(tab, animationSpec = tween(if (reduce) 0 else 180), label = "tab") { t ->
@@ -393,6 +460,20 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onAll = { nav.navigate("all") },
                         onLog = { id, minutes -> scope.launch { ready.store.addProgress(id, minutes) } },
                         onCloseOnes = { nav.navigate("close") },
+                        social = social,
+                        onFriends = { nav.navigate("friends") },
+                        whatsNew = WhatsNew.unseen(st.settings.lastSeenVersion, BuildConfig.VERSION_CODE),
+                        onWhatsNewSeen = { scope.launch { ready.settings.update { it.copy(lastSeenVersion = BuildConfig.VERSION_CODE) } } },
+                        onPrompt = { p ->
+                            scope.launch {
+                                when (p) {
+                                    Prompt.DASHBOARD_ON -> { ready.settings.update { it.copy(todayNotification = true, dashboardPromptDismissed = true) }; afterSave() }
+                                    Prompt.DASHBOARD_LATER -> ready.settings.update { it.copy(dashboardPromptDismissed = true) }
+                                    Prompt.READER_SETUP -> { ready.settings.update { it.copy(readerPromptDismissed = true) }; nav.navigate("settings/reader") }
+                                    Prompt.READER_LATER -> ready.settings.update { it.copy(readerPromptDismissed = true) }
+                                }
+                            }
+                        },
                     )
                     Tab.PLAN -> PlanScreen(st, onOpen = { nav.navigate("item/$it") }, onAdd = { nav.navigate("add") })
                     Tab.REVIEW -> ReviewScreen(
@@ -402,7 +483,7 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onSnooze = { id -> scope.launch { ready.store.snooze(id, Instant.now().plus(Duration.ofDays(3))) } },
                         onAdd = { nav.navigate("add") },
                     )
-                    Tab.SETTINGS -> SettingsHome(st, onNav = { nav.navigate(it) })
+                    Tab.SETTINGS -> SettingsHome(st, social = social, onNav = { nav.navigate(it) })
                 }
             }
         }

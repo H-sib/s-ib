@@ -13,7 +13,6 @@ import com.hsib.sib.R
 import com.hsib.sib.core.model.Precision
 import com.hsib.sib.core.urgency.ReminderKind
 import com.hsib.sib.core.urgency.UrgencyState
-import com.hsib.sib.data.AppSettings
 import com.hsib.sib.data.LockScreenDetail
 import com.hsib.sib.domain.AppState
 import com.hsib.sib.domain.Fmt
@@ -23,7 +22,7 @@ import com.hsib.sib.domain.ObligationView
  * Builds every notification. Rules that hold everywhere: calm factual wording, no guilt, lock-screen details
  * hidden unless the user chose otherwise, and each reminder offers Done and Snooze without opening the app.
  */
-class Notifier(private val context: Context) {
+class Notifier(internal val context: Context) {
     companion object {
         const val CH_REMINDERS = "reminders"
         const val CH_URGENT = "urgent"
@@ -60,7 +59,7 @@ class Notifier(private val context: Context) {
                 ch(CH_REMINDERS, "Reminders", "Start nudges and approaching deadlines.", NotificationManager.IMPORTANCE_DEFAULT),
                 ch(CH_URGENT, "Due today and past due", "Deadlines that need attention now.", NotificationManager.IMPORTANCE_HIGH),
                 ch(CH_DIGEST, "Daily summary", "One quiet summary of today.", NotificationManager.IMPORTANCE_LOW),
-                ch(CH_TODAY, "Today overview", "Optional ongoing summary in the notification shade.", NotificationManager.IMPORTANCE_LOW),
+                ch(CH_TODAY, "Dashboard", "Your next deadlines as a card in the notification bar, shown only when something needs you.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_REVIEW, "New suggestions", "Possible deadlines found in what you shared.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_CLOSE, "Close ones", "Gentle reminders for anniversaries, birthdays and other occasions. Never shows details on the lock screen.", NotificationManager.IMPORTANCE_DEFAULT),
             ),
@@ -76,7 +75,7 @@ class Notifier(private val context: Context) {
 
     fun cancel(id: Int) = manager.cancel(id)
 
-    private fun openIntent(route: String?, requestCode: Int): PendingIntent {
+    internal fun openIntent(route: String?, requestCode: Int): PendingIntent {
         val i = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             route?.let { putExtra(EXTRA_ROUTE, it) }
@@ -84,14 +83,14 @@ class Notifier(private val context: Context) {
         return PendingIntent.getActivity(context, requestCode, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-    private fun actionIntent(action: String, obligationId: String): PendingIntent {
+    internal fun actionIntent(action: String, obligationId: String): PendingIntent {
         val i = Intent(context, ActionReceiver::class.java).setAction(action).putExtra(EXTRA_ID, obligationId)
             .setData(android.net.Uri.parse("sib://action/$action/$obligationId"))
         return PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun publicVersion(channel: String, text: String): Notification =
-        NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_sib).setContentTitle("S-IB").setContentText(text).build()
+        NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_sib).setContentTitle("H-sib Reminder").setContentText(text).build()
 
     fun reminder(v: ObligationView, kindName: String, st: AppState): Notification {
         val s = st.settings
@@ -188,47 +187,8 @@ class Notifier(private val context: Context) {
             .build()
     }
 
-    /** The optional ongoing summary. One notification, updated only when something changes. */
-    fun today(st: AppState): Notification? {
-        val s: AppSettings = st.settings
-        val ranked = st.active.filter { it.urgency.rank >= UrgencyState.START_SOON.rank }
-        if (ranked.isEmpty()) return null
-        val overdue = ranked.count { it.urgency == UrgencyState.OVERDUE }
-        val dueToday = ranked.count { it.urgency == UrgencyState.DUE_TODAY }
-        val tomorrow = ranked.count { it.dueInstant != null && it.urgency != UrgencyState.DUE_TODAY && it.urgency != UrgencyState.OVERDUE && it.dueInstant.atZone(st.zone).toLocalDate() == st.today.plusDays(1) }
-        val prepare = ranked.count { it.urgency == UrgencyState.START_SOON || it.urgency == UrgencyState.IN_PROGRESS }
-        val headline = buildList {
-            if (overdue > 0) add("$overdue past due")
-            if (dueToday > 0) add("$dueToday due today")
-            if (tomorrow > 0) add("$tomorrow due tomorrow")
-            if (prepare > 0) add("$prepare to prepare")
-        }.joinToString(", ").ifEmpty { "${ranked.size} on your list" }
-        val inbox = NotificationCompat.InboxStyle().setBigContentTitle(headline.replaceFirstChar { it.uppercase() })
-        ranked.take(5).forEach { v ->
-            val whenText = v.dueInstant?.let { fmt.daysFrom(st.today, it.atZone(st.zone).toLocalDate()) } ?: ""
-            inbox.addLine("${v.urgency.label}: ${v.o.title}  $whenText")
-        }
-        val titles = s.lockScreenDetail == LockScreenDetail.TITLES
-        val delete = PendingIntent.getBroadcast(
-            context, 0, Intent(context, ActionReceiver::class.java).setAction(ACTION_TODAY_DISMISSED).setData(android.net.Uri.parse("sib://action/today")),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-        return NotificationCompat.Builder(context, CH_TODAY)
-            .setSmallIcon(R.drawable.ic_stat_sib)
-            .setContentTitle(headline.replaceFirstChar { it.uppercase() })
-            .setContentText(ranked.first().o.title.takeIf { titles } ?: "Open S-IB for details")
-            .setStyle(inbox)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setSilent(true)
-            .setShowWhen(false)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setContentIntent(openIntent(null, ID_TODAY))
-            .setDeleteIntent(delete)
-            .setVisibility(if (titles) NotificationCompat.VISIBILITY_PUBLIC else NotificationCompat.VISIBILITY_PRIVATE)
-            .setPublicVersion(publicVersion(CH_TODAY, headline.replaceFirstChar { it.uppercase() }))
-            .build()
-    }
+    /** The notification bar dashboard. Null when nothing needs attention, so the card disappears by itself. */
+    fun today(st: AppState): Notification? = dashboard(st)
 
     fun test(): Notification =
         NotificationCompat.Builder(context, CH_REMINDERS)

@@ -1,0 +1,173 @@
+GOOGLE PLAY CONSOLE: EVERYTHING YOU NEED TO RELEASE H-sib Reminder TO CLOSED TESTING
+Written 2026-10-30. Things only you can do are marked YOU. Everything else is already prepared in this project.
+Play Console wording and rules change, so read each screen's own text on the day. If it disagrees with this file, the screen wins.
+
+=====================================================================================================================
+0. THE FACTS YOU WILL BE ASKED FOR
+=====================================================================================================================
+App name (max 30)        H-sib Reminder: Deadlines
+Package name             com.hsib.sib   (cannot be changed after the first upload)
+Version                  1.0.0, version code 1 (every new upload needs a higher version code)
+Category                 Productivity.  Free.  Language: English.
+Android                  minSdk 26 (Android 8), targetSdk 36 (Android 16)
+Upload bundle            release\h-sib-reminder-release.aab   (made by tools\offline-pipeline.ps1, signed with the upload key)
+Developer                H-sib (Chowdhury Hasibur Rahaman)
+Privacy policy URL       https://h-sib.github.io/s-ib/privacy.html
+Terms of use URL         https://h-sib.github.io/s-ib/terms.html
+Account deletion URL     https://h-sib.github.io/s-ib/delete-account.html
+Support email / website  YOU: your own email address (Play requires one and shows it publicly). Website can be https://github.com/H-sib
+Permissions in the build INTERNET and ACCESS_NETWORK_STATE (sharing and chat only), POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED,
+                         USE_BIOMETRIC, USE_FINGERPRINT, WAKE_LOCK, plus the notification listener service (optional, off by default)
+Firebase project         h-sib-reminder (account chr.siam7@gmail.com). Package com.hsib.sib.
+Upload key fingerprints  SHA-1  4F:3B:69:F1:AC:CE:6C:C5:15:C3:FB:E6:E6:F7:85:A8:B5:AC:49:A7
+                         SHA-256 3D:94:8D:4F:1D:E6:59:83:DC:8F:AE:9B:F0:43:44:AC:28:DE:74:76:A5:D3:B3:60:9A:F4:29:A7:B3:21:12:D6
+
+=====================================================================================================================
+1. FILES TO UPLOAD (all in this project)
+=====================================================================================================================
+Icon 512 x 512                    store\graphics\icon-512.png
+Feature graphic 1024 x 500        store\graphics\feature-1024x500.png
+Phone screenshots (1080 x 2160)   store\graphics\screenshot-1-*.png to screenshot-7-*.png   (upload at least 4; Play wants 2 to 8)
+Store texts                       store\listing.txt (title, short and full description, what's new). Paste each block as it is.
+Data safety answers               store\data-safety-and-policy-answers.txt
+Terms the app and the site use    site\terms.html, site\privacy.html, site\delete-account.html
+Redraw the graphics any time      python tools\store-graphics.py   (after the screenshot tests)
+Tablet screenshots are not needed to publish. Add them later if Play asks.
+
+=====================================================================================================================
+2. BEFORE YOU OPEN PLAY CONSOLE
+=====================================================================================================================
+YOU 2.1  Developer account. Go to play.google.com/console, pay the one-time registration fee and finish identity verification
+         (it can take days, so do it first). A personal account created recently must run a closed test with at least 12 testers,
+         opted in for 14 days in a row, before it can ask for production access. Check the current rule on the day. An organisation
+         account is exempt but needs a real registered organisation; do not invent one.
+YOU 2.2  Put the three web pages online. Create the GitHub repository H-sib/s-ib, push this project to it, then in the repository:
+         Settings, Pages, Source: GitHub Actions. The file .github\workflows\pages.yml in this project publishes the site folder
+         every time you push. When it finishes, open the three URLs above on your phone and check they load. Play checks the privacy
+         URL, so it must work before you submit.
+YOU 2.3  Back up the signing files: release\upload-keystore.p12 and release\keystore.properties. Keep a second copy somewhere that is
+         not this computer (an encrypted drive or a password manager). Never commit them. If the only copy is lost and you are not
+         enrolled in Play App Signing, the app can never be updated.
+YOU 2.4  Decide who your 12 or more testers are and collect their Google account emails (Gmail addresses). Ask them to be ready for
+         14 days. They can write feedback in Bangla, Hindi or English; the app has a Send feedback screen for that.
+
+=====================================================================================================================
+3. CREATE THE APP
+=====================================================================================================================
+Play Console, Create app.
+  App name                        H-sib Reminder: Deadlines
+  Default language                English (United Kingdom or United States)
+  App or game                     App
+  Free or paid                    Free (cannot be changed to paid later)
+  Declarations                    Tick the developer program policies and US export laws boxes after reading them.
+
+=====================================================================================================================
+4. DASHBOARD TASKS ("Set up your app"), IN THIS ORDER
+=====================================================================================================================
+4.1  App access
+     Choose "All or some functionality is restricted". Reason: sharing and chat need a Google account. Add one instruction set:
+       "Open the app, tap I accept. Everything except sharing and chat needs no login. To try sharing, go to More, Friends,
+        Account, Continue with Google, and sign in with the test account below. Then open any deadline, tap Share, and accept the
+        community rules."
+     YOU: create a plain Google test account only for the reviewers and paste its email and password into the access form.
+     Do not use your own account. Change its password after review.
+4.2  Ads                         "No, my app does not contain ads".
+4.3  Content rating              Start the questionnaire. Category: Utility, productivity, communication or other.
+     Violence, fear, sexual content, bad language, drugs, gambling: No.
+     Users can interact or share user-generated content: YES (chat inside shared deadlines, with report and block).
+     Users share their location: No.  Purchases: No.  Expect a rating higher than Everyone because of user interaction.
+4.4  Target audience             18 and over. The community rules set 13 as the minimum age for sharing; that is allowed.
+     Does the app appeal to children: No.
+4.5  Data safety                 Follow store\data-safety-and-policy-answers.txt line by line. Summary:
+       Collects data: Yes, only after sign in for sharing. Types: name, email address, user IDs, other in-app messages,
+       other user-generated content, device or other IDs (Firebase installation id). Purpose: app functionality, account
+       management. Encrypted in transit: Yes. Users can request deletion: Yes (in app and by the web URL). Not shared for
+       advertising. No sale of data.
+4.6  Privacy policy              https://h-sib.github.io/s-ib/privacy.html
+4.7  Data deletion               Account deletion URL: https://h-sib.github.io/s-ib/delete-account.html (and it is also in the app).
+4.8  User generated content      Tick it. Describe: terms and community rules accepted before the first share, join or message
+     (and the acceptance is recorded); an in-app way to report a person or a message; a way to block a person; the developer
+     reviews reports and can remove people and shared deadlines.
+4.9  Government app: No.  Financial features: none.  Health: none.  News: No.  Advertising ID: the app does not use it ("No").
+4.10 Notification access          The optional chat reader uses the notification listener service. If Play asks why: it is optional,
+     off by default, needs two steps from the person (Android's own list and ticking apps inside the app), the text is read on the
+     phone only, is not stored and is never sent anywhere (the code has no path from the reader to the network, enforced by a
+     test). Be ready to say that in a review reply.
+4.11 Store settings              Category Productivity. Tags: To-do list, Reminder, Planner, Productivity, Calendar. Add your contact
+     email and website.
+
+=====================================================================================================================
+5. MAIN STORE LISTING
+=====================================================================================================================
+Paste from store\listing.txt: app name, short description (max 80), full description (max 4000; yours is 3934, so do not add
+more). Upload the icon, the feature graphic and the screenshots from store\graphics\. Order the screenshots as they are numbered.
+
+=====================================================================================================================
+6. THE CLOSED TEST RELEASE
+=====================================================================================================================
+6.1  Testing, Closed testing, Create track (name it "Friends and family"), then Create new release.
+6.2  Play App Signing: accept. Google keeps the real signing key; your upload key only proves uploads are yours.
+6.3  Upload release\h-sib-reminder-release.aab. Release name: 1.0.0 (1).
+6.4  Release notes (the "what's new" text for testers), paste from store\listing.txt, WHAT'S NEW.
+6.5  Testers: create an email list with your 12 or more testers, and tick it. Copy the opt-in link and send it to them. They must open
+     the link, accept, and install from Play. They must stay opted in for 14 days.
+6.6  Countries: choose where testers live (Bangladesh, India, and any others).
+6.7  Save, then Send for review. The first review can take several days. Watch your email and the Publishing overview.
+
+=====================================================================================================================
+7. RIGHT AFTER THE FIRST UPLOAD (sign in and security depend on this)
+=====================================================================================================================
+YOU 7.1  Google sign in for the Play build. Play Console, Test and release, App integrity, App signing key certificate: copy the SHA-1
+         and SHA-256. In the Firebase console (project h-sib-reminder), Project settings, your Android app, Add fingerprint, and add
+         both. Without this, sign in fails for anyone who installs from Play.
+YOU 7.2  App Check. In Play Console, App integrity, Play Integrity API: link the Cloud project of h-sib-reminder. Then in Firebase,
+         App Check, check that the Play build gets verified requests. Only then turn on enforcement for Firestore and Authentication.
+         (It is off now on purpose, so nothing breaks while testing.)
+YOU 7.3  Install the app from the Play opt-in link on a real phone and run the checks in section 8 with two Google accounts.
+
+=====================================================================================================================
+8. WHAT THE TESTERS SHOULD TRY (give them this list)
+=====================================================================================================================
+ 1. First start: the intro, then I accept. The app works with no account.
+ 2. Add a deadline by typing a sentence, by paste, and by photo or file. Check the date it understood.
+ 3. The deadline page: move the date, add progress, open Plan, Tune and Pause, mark it done, reopen it.
+ 4. The notification bar card: pull the shade down. It should show the next deadline, colour by how close it is, with Open and Done.
+    Swipe it away; it should come back tomorrow. In Settings, Notifications, try Keep it after Clear all.
+ 5. Reminders: leave a deadline due tomorrow and see that a reminder arrives. Use Settings, Reminder health check if it does not.
+ 6. Share a deadline with a friend using the invite code. Join with the code. Chat both ways. Report a message. Block someone.
+ 7. Leave a shared deadline. Delete the account in More, Friends, Account.
+ 8. Backup and restore: make a backup, uninstall, reinstall, restore with the recovery key.
+ 9. Turn on the app lock, large text, and a screen reader if you use one.
+10. Send feedback from Settings (Bangla, Hindi and English are fine).
+
+=====================================================================================================================
+9. AFTER THE 14 DAYS
+=====================================================================================================================
+Production access: Play Console, Release, Apply for production. It asks how you tested and what you learned; answer from the feedback.
+Then create the production release. Start with a staged rollout (for example 20 percent), watch Android vitals (crashes and ANRs) and
+the privacy and report inbox, then widen. Each new upload needs a higher version code and a What's new entry in the app
+(app\src\main\kotlin\com\hsib\sib\ui\WhatsNew.kt); tools\release-gate.py checks both.
+
+=====================================================================================================================
+10. YOUR PROMISES TO KEEP (these are written in the terms and privacy pages)
+=====================================================================================================================
+ - Answer reports as fast as you reasonably can, urgent ones first. If you will be away, say so on the Play page.
+ - Delete an account within 30 days of a request from a person who uninstalled the app (the delete-account page promises this).
+ - Keep the record that a person accepted the rules: it lives in Firestore under users/{id}/consent. You can show it from the
+   Firebase console. It is kept up to three years after an account is deleted.
+ - If the policy or terms change in a way that matters, raise Terms.VERSION (ui\Terms.kt) and SocialLimits.TERMS_VERSION so everyone
+   is asked again, and update the web pages first.
+
+=====================================================================================================================
+11. HONEST LIST OF WHAT IS AND IS NOT PROVEN
+=====================================================================================================================
+Proven by tests and on your phone: the full unit test suite and the layout audit pass; the release gate passes with internet on;
+two Google accounts shared a deadline, joined by code and chatted both ways on the real Firebase project; switching accounts on one
+phone no longer leaks shared deadlines; the Firestore rules (including the consent record) are published.
+Not proven yet, and why it matters:
+ - Install from Play (needs the upload). Sign in and App Check on the Play build (needs section 7).
+ - The security rules have never been run in the Firebase emulator (it needs a download you have not approved).
+ - No screen reader or right to left pass on a real phone, and no long monkey or battery run.
+ - The terms, privacy policy and consent record are written carefully in plain language but are not reviewed by a lawyer. They are
+   a good faith attempt to protect you, not a guarantee. A lawyer's review later is still worth the money once the app has users.
+ - The second copy of the signing key (2.3) is yours to make.

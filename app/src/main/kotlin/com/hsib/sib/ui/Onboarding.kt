@@ -22,9 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -41,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.hsib.sib.BuildConfig
 import com.hsib.sib.core.extract.Extraction
 import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.plan.Capacity
@@ -84,7 +83,7 @@ fun Onboarding(
                 },
                 label = "onboarding",
             ) { p ->
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp)) {
+                Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 28.dp)) {
                     Gap(32.dp)
                     when (p) {
                         0 -> PageOne()
@@ -115,7 +114,7 @@ private fun PageOne() {
     Gap(36.dp)
     Text("Start before it is late.", style = SibType.display, color = c.ink)
     Gap(12.dp)
-    Text("S-IB finds your deadlines and tells you when to begin.", style = SibType.body.copy(fontSize = 17.sp, lineHeight = 26.sp), color = c.inkSoft)
+    Text("H-sib Reminder finds your deadlines and tells you when to begin.", style = SibType.body.copy(fontSize = 17.sp, lineHeight = 26.sp), color = c.inkSoft)
 }
 
 @Composable
@@ -182,7 +181,7 @@ private fun PagePrivacy() {
     Text("Yours alone.", style = SibType.display, color = c.ink)
     Gap(28.dp)
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        listOf("Stays on your phone", "No internet permission", "Backups are encrypted").forEach {
+        listOf("Stays on your phone", if (BuildConfig.FIREBASE_READY) "Sharing is your choice" else "No internet permission", "Backups are encrypted").forEach {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.raised).padding(horizontal = 20.dp, vertical = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,

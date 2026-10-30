@@ -224,7 +224,7 @@ class ActionReceiver : BroadcastReceiver() {
                     ready.notifier.cancel(Notifier.notificationId(id))
                 }
                 Notifier.ACTION_SNOOZE -> if (id != null) ready.reminders.snooze(id, 60)
-                Notifier.ACTION_TODAY_DISMISSED -> ready.settings.update { it.copy(todayNotification = false) }
+                Notifier.ACTION_TODAY_DISMISSED -> intent.getStringExtra("key")?.let { key -> ready.settings.update { it.copy(dashboardHidden = key) } }
             }
         }
     }

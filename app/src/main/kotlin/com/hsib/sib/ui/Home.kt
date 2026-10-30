@@ -18,10 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +41,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hsib.sib.core.model.Candidate
@@ -63,6 +61,7 @@ import com.hsib.sib.data.CandidateEdit
 import com.hsib.sib.domain.AppState
 import com.hsib.sib.domain.Fmt
 import com.hsib.sib.domain.ObligationView
+import com.hsib.sib.social.SocialState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -183,6 +182,11 @@ fun TodayScreen(
     onAll: () -> Unit,
     onLog: (String, Int) -> Unit,
     onCloseOnes: () -> Unit,
+    onPrompt: (Prompt) -> Unit,
+    social: SocialState? = null,
+    onFriends: () -> Unit = {},
+    whatsNew: List<WhatsNew.Entry> = emptyList(),
+    onWhatsNewSeen: () -> Unit = {},
 ) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
@@ -192,13 +196,13 @@ fun TodayScreen(
     val dueToday = items.count { it.urgency == UrgencyState.DUE_TODAY }
     val thisWeek = items.count { it.urgency == UrgencyState.DUE_SOON || it.urgency == UrgencyState.APPROACHING }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
         Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink)
         Text(weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
 
         Gap(24.dp)
-        NextCard(next, st, fmt, onOpen, onAdd, nextStep(st), onLog)
+        NextCard(next, st, fmt, onOpen, onAdd, nextStep(st), onLog, shared = next != null && social?.roomFor(next.o.id) != null)
 
         if (overdue + dueToday + thisWeek > 0) {
             Gap(16.dp)
@@ -207,6 +211,19 @@ fun TodayScreen(
                 if (dueToday > 0) StatPill(dueToday, "today", Tone.ALERT, onAll)
                 if (thisWeek > 0) StatPill(thisWeek, "this week", Tone.WARN, onAll)
             }
+        }
+
+        if (whatsNew.isNotEmpty()) {
+            Gap(16.dp)
+            WhatsNewCard(whatsNew, onWhatsNewSeen)
+        }
+
+        // One gentle recommendation at a time: the notification dashboard first, then reading chats.
+        val askDashboard = next != null && !st.settings.todayNotification && !st.settings.dashboardPromptDismissed
+        val askReader = !askDashboard && st.settings.notificationReaderApps.isEmpty() && !st.settings.readerPromptDismissed
+        if (askDashboard || askReader) {
+            Gap(16.dp)
+            PromptCard(askDashboard, onPrompt)
         }
 
         if (st.pending.isNotEmpty()) {
@@ -246,6 +263,20 @@ fun TodayScreen(
 
         Gap(28.dp)
         NavRow("All deadlines", if (items.isEmpty()) "Nothing yet" else "${items.size} open", onAll)
+        if (social != null) {
+            Gap(12.dp)
+            val unread = social.rooms.values.sumOf { it.unread }
+            NavRow(
+                "Friends",
+                when {
+                    social.user == null -> "Share a deadline and chat about it"
+                    social.rooms.isEmpty() -> "Signed in"
+                    unread > 0 -> "${social.rooms.size} shared  ·  $unread new"
+                    else -> "${social.rooms.size} shared"
+                },
+                onFriends,
+            )
+        }
         if (st.settings.closeOnesEnabled) {
             Gap(12.dp)
             CloseOnesEntry(st, onCloseOnes)
@@ -264,6 +295,7 @@ private fun NextCard(
     onAdd: () -> Unit,
     step: NextStep?,
     onLog: (String, Int) -> Unit,
+    shared: Boolean = false,
 ) {
     val c = SibTheme.colors
     val day = v?.dueInstant?.atZone(st.zone)?.toLocalDate()
@@ -279,7 +311,7 @@ private fun NextCard(
             Gap(20.dp)
             ActionButton("Add a deadline", onAdd)
         } else {
-            Text(v.o.title, style = SibType.headline, color = c.ink, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(v.o.title, style = SibType.headline, color = c.ink, textAlign = TextAlign.Center)
             Gap(6.dp)
             Text(day?.let { fmt.dayLong(it) } ?: "", style = SibType.body, color = c.inkSoft)
             Gap(10.dp)
@@ -287,6 +319,7 @@ private fun NextCard(
                 UrgencyGlyph(v.urgency, size = 18.dp)
                 Spacer(Modifier.width(8.dp))
                 Text(v.urgency.label, style = SibType.bodyStrong, color = stateColor(v.urgency))
+                if (shared) { Spacer(Modifier.width(10.dp)); Chip("Shared") }
             }
             Gap(22.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -302,7 +335,7 @@ private fun NextCard(
 
 /** The second layer: every open deadline, grouped by how soon it needs you. */
 @Composable
-fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit) {
+fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, sharedIds: Set<String> = emptySet()) {
     val fmt = rememberFmt()
     val items = st.items.filter { it.urgency != UrgencyState.DONE && it.o.space == Space.WORK }
     val groups = listOf(
@@ -317,7 +350,7 @@ fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit) {
             if (list.isEmpty()) continue
             SectionHeader(title, count = list.size)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                list.forEach { v -> ObligationRow(v, fmt, st.today, st.zone, st.now, { onOpen(v.o.id) }) }
+                list.forEach { v -> ObligationRow(v, fmt, st.today, st.zone, st.now, { onOpen(v.o.id) }, shared = v.o.id in sharedIds) }
             }
         }
         if (items.isEmpty()) {
@@ -345,7 +378,7 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
     val fmt = rememberFmt()
     var view by rememberSaveable { mutableStateOf(PlanView.WEEK) }
     var selected by remember { mutableStateOf(st.today) }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Plan", style = SibType.display, color = c.ink, modifier = Modifier.weight(1f))
@@ -396,7 +429,7 @@ private fun WeekView(st: AppState, fmt: Fmt, selected: LocalDate, onSelect: (Loc
             ) {
                 UrgencyGlyph(v.urgency, size = 22.dp)
                 Spacer(Modifier.width(14.dp))
-                Text(v.o.title, style = SibType.title, color = c.ink, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(v.o.title, style = SibType.title, color = c.ink, modifier = Modifier.weight(1f))
                 Text("Due", style = SibType.bodyStrong, color = c.vermilion)
             }
         }
@@ -406,8 +439,8 @@ private fun WeekView(st: AppState, fmt: Fmt, selected: LocalDate, onSelect: (Loc
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.raised).bounceClick { onOpen(b.taskId) }.padding(horizontal = 18.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(fmt.minutes(b.minutes), style = SibType.number.copy(fontSize = 17.sp, lineHeight = 22.sp), color = c.violet, maxLines = 1, softWrap = false, modifier = Modifier.width(104.dp))
-                Text(title, style = SibType.title, color = c.ink, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(fmt.minutes(b.minutes), style = SibType.number.copy(fontSize = 17.sp, lineHeight = 22.sp), color = c.violet, modifier = Modifier.widthIn(min = 104.dp))
+                Text(title, style = SibType.title, color = c.ink, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -461,7 +494,7 @@ fun ReviewScreen(
     onAdd: () -> Unit,
 ) {
     val c = SibTheme.colors
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
         Text("Review", style = SibType.display, color = c.ink)
         if (st.pending.isEmpty()) {
@@ -592,7 +625,7 @@ private fun CandidateCard(
                 Text("Effort", style = SibType.bodyStrong, color = c.ink)
                 Gap(8.dp)
                 Choice(
-                    listOf(30 to "30 min", 120 to "2 h", 240 to "4 h", 480 to "A day"), effort.likelyMin.let { l -> listOf(30, 120, 240, 480).minByOrNull { kotlin.math.abs(it - l) } ?: 120 },
+                    EffortChoices.take(4), effort.likelyMin.let { l -> listOf(30, 120, 240, 480).minByOrNull { kotlin.math.abs(it - l) } ?: 120 },
                     { effort = Effort.fromLikely(it) },
                 )
                 if (due != null || cand.fog != null) {

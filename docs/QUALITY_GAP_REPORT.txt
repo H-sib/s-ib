@@ -1,0 +1,78 @@
+H-SIB REMINDER: GAP REPORT AGAINST APP_QUALITY_STANDARD.txt (Mode B)
+2026-10-30. Reference phone: Sony SOV43, Android 12, 1080x2520 (the same low end phone as H-sib Workshop). Evidence tags: SEEN
+(a screenshot), MEASURED (a number), READ (in the source), ASSUMED (not checked; caps a pillar at 2).
+
+1. WHAT IT IS
+A privacy first Android deadline planner: it reads messages, photos and files you hand it, finds the dates, plans when to
+start, and sends few well timed reminders. Close ones is a private space for personal dates. Sharing with friends and chat are
+built and wait for a Firebase project. Idea alive: yes. Signature: the hero ring and the plan that says when to begin.
+
+2. SCORES (before this session's work, then after the work done today)
+ pillar                          w  before  after  what holds it back
+ P1 product depth                3   3       3     first success in 60 seconds never timed on an outsider (ASSUMED)
+ P2 engineering                  3   2.5     3     core has no Android imports (READ); never run as a release build on a phone until today
+ P3 visual identity              3   3.5     3.5   four themes, Sora, tokens (SEEN in renders); never judged on the phone beside a leader
+ P4 interaction and flow         3   2.5     2.5   no font scale 1.3 or 2.0 audit yet; states mostly designed; no outsider test
+ P5 words and teaching           2   2.5     3.5   words scan clean (MEASURED: 0 findings); Guide and What's new now exist
+ P6 performance                  2   1       2     measured today: see section 4; intro is GPU heavy on this phone
+ P7 reliability and data         3   2       3     migration test added; no monkey run, no upgrade chain on a phone yet
+ P8 security, privacy, legal     3   2.5     3     terms and security gate added; release gate script passes; texts never read by a lawyer
+ P9 accessibility                2   2       2.5   contrast 184 pairs pass the strict numbers (MEASURED); targets under 48 dp and no screen reader pass
+ P10 release and operations      2   2.5     3     release gate script, signed bundle; signing key backup unknown (H7)
+ P11 evidence and honesty        3   3       3.5   this report, decisions ledger, handoff; claims traced to numbers
+ P12 delight and distinction     1   3       3     intro, hero ring, notification card (SEEN); no share card yet
+ W (weighted)                        2.6     3.0
+ GAP POINTS (weight x (4 minus score), pillars below 4):  before about 44, after about 33.
+ VERDICT: REWORK. Not SHIP: P4, P6, P9 are below 3 and several pillars rest on unrun checks.
+
+3. HARD STOPS (section 6)
+ H7  The signing key (release/upload-keystore.p12) exists on this computer; a second copy off the computer is not known. OWNER.
+ H8  The exact release file now installs and runs on the reference phone (MEASURED today); installing it over a previous
+     version, and a full pass through every screen on the phone, are not done. The first run needs the maker to tap Accept.
+ H10 Every feature is now in the Guide (Settings, Guide). Cleared in the code; not yet checked on the phone by a stranger.
+ H11 Text cut off with dots: many titles use maxLines with an ellipsis. Not yet swept. OPEN.
+ H3  Store texts and the privacy page now use the new name and say the same as the manifest (release gate passes).
+     They have not been read by a lawyer, and sharing/chat is not claimed in a release without a Firebase connection.
+ H5, H6, H4  Checked by script today: no dashes, banned words or emoji; permissions match the policy; contrast above the floor.
+
+4. MEASURED ON THE REFERENCE PHONE (signed release build unless stated)
+ Cold start, force stopped: 1.65 s, 1.57 s, then 0.74 s warm. Debug build: 2.5 to 3.1 s. Release APK 54.8 MB (universal; the
+ bundle Play serves is about 30 MB). Memory after launch 164 MB PSS (debug).
+ Opening animation, release: 241 frames in 7 s, median 36 ms, 90th 40 ms, 99th 93 ms, 89 percent janky. Cause: the animation
+ repaints the whole 1080x2520 screen every frame and Adreno 610 is fill rate bound (the same lesson as Workshop's page glow).
+ Work done: glow painted once into a layer, shrunk, and settled in the first fifth of the opening. Debug build, same
+ phone: 80.6 percent janky (median 38 ms) before the shrink, 26.5 percent janky (median 27 ms) after. A new release run is due.
+ Not yet measured: Today scroll, Plan scroll, Guide scroll, notification card, widget.
+
+5. ALREADY AT THE BAR (keep, do not touch)
+ The planner and date reader engine and its tests (core: 260 plus tests). Encrypted storage and backups. The theme tokens and
+ the four palettes. The consent screen for notification reading. The server rules and the sealing design for sharing.
+
+6. ORDERED WORK PLAN (done today marked DONE)
+ 1 H11 sweep of dotted text and a font scale 1.3 and 2.0 clipping audit test, then fix every finding.        P9 P4   M
+ 2 Touch targets to 48 dp everywhere.                                                                         P9      S
+ 3 DONE Terms and security gate at first run, with version and date; read only copy in Settings.             P8      M
+ 4 DONE In app Guide for every feature, and What's new card with a release gate check.                       P5 P10  M
+ 5 DONE Room migration test from the exported version 1 schema.                                              P7      S
+ 6 Frame time A/B on the phone: intro, Today, Plan, Guide; fix the fill rate cost; baseline profile.          P6      L
+ 7 Monkey run 30 minutes on the release build; upgrade over the previous build with data kept.               P7      S (phone)
+ 8 First success under 60 seconds measured with one outsider; a guided first deadline instead of cards.      P1 P4   M (people)
+ 9 Screen reader walk and right to left run on the phone; interface in the audience's languages.              P9      XL (languages need the maker)
+ 10 Share card: one tap makes an image of a deadline or result with the H-sib mark.                            P12     M
+ 11 Logo and adaptive icon redesign with the H-sib mark, checked at 512 px.                                    P3 P12  M
+ 12 Real Firebase project, sign in and two account tests on two phones; rules emulator tests run.             P8      M (owner creates the project)
+ 13 A lawyer reads the terms, privacy and community rules.                                                    P8      owner, spend
+ 14 In app feedback with version and phone model; crash log screen the person can choose to send.            P10     M
+
+7. DECISIONS ONLY THE MAKER CAN MAKE
+ a Languages the real users read (Bangla, Hindi, others): recommendation, Bangla first, as Workshop's testers wrote in it.
+ b The app mark: a monogram H with a start marker and arc (recommended), or the wordmark only.
+ c Firebase project, Blaze plan or not, moderation duty (docs/FRIENDS_AND_CHAT_DESIGN.txt sections 7 and 8).
+ d Where to keep the second copy of the signing key.
+
+8. WHAT CANNOT BE KNOWN WITHOUT REAL PEOPLE OR DEVICES
+ First success time, whether the hero feels like the best in its category, screen reader quality, other phone brands, Play
+ vitals, how reminders behave overnight on this phone, anything about the live Firebase server.
+
+9. ESTIMATE
+ Remaining: about 3 M jobs and 2 L jobs of code, 2 phone sessions, 1 session with an outsider, and the owner's decisions above.

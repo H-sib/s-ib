@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,13 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -55,7 +55,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -198,7 +197,7 @@ fun SibButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, 
         modifier.heightIn(min = if (compact) 46.dp else 52.dp).clip(shape).background(fill).bounceClick(enabled = enabled, onClick = onClick).padding(horizontal = if (compact) 12.dp else if (kind == ButtonKind.TEXT) 8.dp else 24.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = SibType.bodyStrong, color = fg, maxLines = 1)
+        Text(text, style = SibType.bodyStrong, color = fg, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
@@ -242,26 +241,40 @@ fun Field(
 }
 
 /** A row of text choices with a rule under the selected one. */
-/** A segmented control: one pill with the chosen option lit in the signature gradient. */
+/**
+ * A choice among a few options. Short sets show as one segmented pill. Sets that would not fit without cutting a word
+ * (five options, or long labels) show as chips that wrap onto more lines, so a label is never shortened to "30...".
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <T> Choice(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
     val c = SibTheme.colors
+    val fitsInOneRow = options.size <= 4 && options.sumOf { it.second.length } <= 24 && androidx.compose.ui.platform.LocalDensity.current.fontScale <= 1.15f
+    if (!fitsInOneRow) {
+        FlowRow(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for ((value, label) in options) SelectChip(label, value == selected, { onSelect(value) })
+        }
+        return
+    }
     Row(modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(c.lifted).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         for ((value, label) in options) {
             val on = value == selected
             Box(
-                Modifier.weight(1f).heightIn(min = 44.dp).clip(RoundedCornerShape(50))
+                Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(50))
                     .then(if (on) Modifier.background(c.action) else Modifier)
                     .bounceClick(role = Role.RadioButton) { onSelect(value) }
                     .semantics { stateDescription = if (on) "Selected" else "Not selected" }
                     .padding(horizontal = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (on) c.onAction else c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(label, style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (on) c.onAction else c.ink, maxLines = 1, softWrap = false)
             }
         }
     }
 }
+
+/** The effort choices used wherever the amount of work is asked, spelled out so nothing is abbreviated into a puzzle. */
+val EffortChoices = listOf(30 to "30 min", 120 to "2 hours", 240 to "4 hours", 480 to "1 day", 960 to "2 days")
 
 @Composable
 fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
@@ -311,7 +324,7 @@ fun NavRow(title: String, subtitle: String?, onClick: () -> Unit, modifier: Modi
 fun BackArrow(onClick: () -> Unit) {
     val c = SibTheme.colors
     Box(
-        Modifier.size(44.dp).clip(CircleShape).background(c.lifted).bounceClick(onClick = onClick).semantics { contentDescription = "Back" },
+        Modifier.size(48.dp).clip(CircleShape).background(c.lifted).bounceClick(onClick = onClick).semantics { contentDescription = "Back" },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(16.dp)) {
@@ -340,12 +353,12 @@ fun Page(
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
             if (onBack != null) BackArrow(onBack) else Spacer(Modifier.width(8.dp))
-            Text(title, style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp))
             action?.invoke()
         }
         Column(
             Modifier.weight(1f).fillMaxWidth()
-                .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .then(if (scroll) Modifier.cuedVerticalScroll() else Modifier)
                 .padding(horizontal = 24.dp),
             content = content,
         )
@@ -354,7 +367,7 @@ fun Page(
 
 /** The one list card used for deadlines everywhere: shape-coded state, title, when, and how tight it is. */
 @Composable
-fun ObligationRow(v: ObligationView, fmt: Fmt, today: java.time.LocalDate, zone: java.time.ZoneId, now: Instant, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ObligationRow(v: ObligationView, fmt: Fmt, today: java.time.LocalDate, zone: java.time.ZoneId, now: Instant, onClick: () -> Unit, modifier: Modifier = Modifier, shared: Boolean = false) {
     val c = SibTheme.colors
     val o = v.o
     val fog = o.fog
@@ -377,10 +390,11 @@ fun ObligationRow(v: ObligationView, fmt: Fmt, today: java.time.LocalDate, zone:
         UrgencyGlyph(v.urgency, Modifier.padding(top = 2.dp), size = 26.dp, progress = o.effort?.let { if (it.expectedMin > 0) o.progressMin.toFloat() / it.expectedMin else 0f } ?: 0f)
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(o.title, style = SibType.title, color = if (v.urgency == UrgencyState.DONE) c.inkSoft else c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(o.title, style = SibType.title, color = if (v.urgency == UrgencyState.DONE) c.inkSoft else c.ink)
             Spacer(Modifier.height(2.dp))
             Text(listOfNotNull(relative, dueText).joinToString("  ·  "), style = SibType.small, color = c.inkSoft)
             if (v.tentative) { Spacer(Modifier.height(8.dp)); Chip("Date not confirmed", Tone.WARN) }
+            if (shared) { Spacer(Modifier.height(8.dp)); Chip("Shared") }
             if (v.urgency.rank in 1..6 && o.effort != null && v.pressure > 0) {
                 Spacer(Modifier.height(12.dp))
                 PressureBar(v.pressure, v.urgency)

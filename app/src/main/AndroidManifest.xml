@@ -2,18 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Everything S-IB asks for. There is deliberately no INTERNET permission: nothing leaves the phone. -->
+    <!--
+      Everything S-IB asks for. Without a Firebase connection (app/google-services.json) there is deliberately no INTERNET
+      permission and nothing leaves the phone: app/build.gradle.kts strips the network permissions out of the merged manifest
+      of every variant. With a connection they are kept, for sharing and chat only; the ArchitectureTest keeps every network
+      library inside the social package.
+    -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!--
       Libraries such as ML Kit and WorkManager add network and foreground service permissions for features S-IB does not
-      use (usage statistics upload, long running work). They are removed so the promise stays true and checkable:
-      the merged manifest of the release build must never contain INTERNET.
+      use (usage statistics upload, long running work). The foreground service one is always removed. The network ones are
+      removed by the build when there is no Firebase connection, so the promise stays true and checkable.
     -->
-    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+
+    <!-- Only these chat and mail apps are looked up, to show which of them are installed. Nothing broader is requested. -->
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <package android:name="org.telegram.messenger" />
+        <package android:name="com.facebook.orca" />
+        <package android:name="com.google.android.apps.messaging" />
+        <package android:name="com.samsung.android.messaging" />
+        <package android:name="com.google.android.gm" />
+        <package android:name="com.microsoft.office.outlook" />
+        <package android:name="com.Slack" />
+        <package android:name="com.discord" />
+        <package android:name="com.microsoft.teams" />
+        <package android:name="com.google.android.apps.classroom" />
+        <package android:name="org.thoughtcrime.securesms" />
+        <package android:name="com.viber.voip" />
+        <package android:name="jp.naver.line.android" />
+        <package android:name="com.tencent.mm" />
+    </queries>
 
     <application
         android:name=".SibApp"
@@ -106,6 +129,26 @@
         </receiver>
 
         <service android:name="androidx.work.impl.foreground.SystemForegroundService" tools:node="remove" />
+
+        <!-- Firebase is started by hand, and only when a connection is configured, so it does nothing at app start otherwise. -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            tools:node="remove" />
+
+        <!--
+          Optional. Android only delivers notifications here after the owner switches S-IB on in the system's notification
+          access list, and S-IB looks at nothing but the apps the owner ticks inside S-IB.
+        -->
+        <service
+            android:name=".platform.NotificationReaderService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <service
             android:name=".platform.NextUpTileService"

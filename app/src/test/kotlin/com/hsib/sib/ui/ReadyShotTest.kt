@@ -56,7 +56,15 @@ class ReadyShotTest {
 
     @Test fun appearanceDark() = shot("settings-appearance-dark") { AppearanceSettings(st.copy(settings = st.settings.copy(theme = ThemeMode.DARK)), it) {} }
 
-    @Test fun aboutDark() = shot("settings-about-dark") { AboutScreen {} }
+    @Test fun readerDark() = shot("settings-reader-dark") { ReaderScreen(st, it) {} }
+
+    @Test fun sourcesDark() = shot("settings-sources-dark") { SourcesSettings(st, it) {} }
+
+    @Test fun privacyDark() = shot("settings-privacy-dark") { PrivacyScreen(st, it, {}, {}) }
+
+    @Test fun healthDark() = shot("settings-health-dark") { HealthScreen(st, it) {} }
+
+    @Test fun aboutDark() = shot("settings-about-dark") { AboutScreen(onBack = {}) }
 
     @Test fun closeDetailDark() = shot("close-detail-dark", space = Space.CLOSE) { CloseDetailScreen("x1", Fixtures.withClose, it, {}, {}, {}) }
 

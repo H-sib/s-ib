@@ -27,3 +27,9 @@ build-log.txt
 build-exit.txt
 offline-logs/
 offline-report.txt
+
+# Firebase test tooling
+firebase/tests/node_modules/
+firebase/tests/package-lock.json
+firebase/.firebase/
+firebase-debug.log

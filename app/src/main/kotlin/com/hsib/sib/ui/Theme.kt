@@ -138,7 +138,7 @@ val LocalSibColors = staticCompositionLocalOf { LightColors }
 /** The theme actually in force (never SYSTEM), so a nested theme can keep the same look. */
 val LocalThemeMode = staticCompositionLocalOf { ThemeMode.LIGHT }
 
-/** True when the user asked for no motion in S-IB. The phone's own "remove animations" setting is honoured as well. */
+/** True when the user asked for no motion in H-sib Reminder. The phone's own "remove animations" setting is honoured as well. */
 val LocalReduceMotion = staticCompositionLocalOf { false }
 
 /** Whether animations should play: off when the user chose Reduce motion or the phone's Remove animations is on. */

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>S-IB Privacy Policy</title>
+<title>H-sib Reminder Privacy Policy</title>
 <style>
   :root { --paper:#f4efe6; --ink:#1b1f2a; --soft:#555b6b; --rule:#d6cebd; --accent:#b03a20; }
   @media (prefers-color-scheme: dark) { :root { --paper:#14161c; --ink:#e9e3d6; --soft:#a9aebb; --rule:#30343f; --accent:#ff8466; } }
@@ -16,80 +16,157 @@
   a { color:var(--accent); }
   table { border-collapse:collapse; width:100%; font-size:.95rem; }
   td, th { text-align:left; padding:6px 8px; border-bottom:1px solid var(--rule); vertical-align:top; }
+  .fade { opacity:.5; }
+  .sib { font-weight:800; background:linear-gradient(90deg,#8b6cff,#ff7a5c); -webkit-background-clip:text; background-clip:text; color:transparent; }
 </style>
 </head>
 <body>
 <main>
-<h1>S-IB Privacy Policy</h1>
-<p class="soft">Effective 14 October 2026. Developer: H-sib.</p>
+<h1><span class="fade">H-</span><span class="sib">sib</span><span class="fade"> Reminder</span> Privacy Policy</h1>
+<p class="soft">Effective 30 October 2026. Developer and data controller: H-sib (Chowdhury Hasibur Rahaman), an individual developer. See also the <a href="terms.html">terms of use</a>.</p>
 
 <h2>The short version</h2>
-<p>S-IB does not collect your data. It has no accounts, no analytics, no advertising and no permission to use the
-internet, so it cannot send what you enter to the developer or to anyone else. Everything you add stays on your phone.</p>
+<p>H-sib Reminder works fully on your phone, with no account. If you choose to share a deadline with friends, you sign in with
+Google, and only the deadline you share and its chat leave your phone. They are sealed on your phone before they are sent, so
+neither the developer nor the company that hosts the service can read them. There is no advertising and no analytics, and
+nothing is sold.</p>
 
-<h2>What S-IB stores on your phone</h2>
+<h2>What H-sib Reminder stores on your phone</h2>
 <ul>
   <li>The deadlines and dates you confirm, and the personal dates you add to Close ones (titles, dates, names you type, notes).</li>
   <li>Suggestions waiting for your review, which expire after the number of days you choose.</li>
   <li>Optional proof of finishing: a note, and a photo if you add one.</li>
   <li>A history of changes to each deadline, so edits can be verified.</li>
   <li>Your settings, and the hours you usually open the app (used only to choose a time for the daily summary).</li>
+  <li>If you use sharing: the shared deadlines you are in, their chat, the keys that open them, and the people you blocked.</li>
 </ul>
 <p>This is stored in an encrypted database. The key that opens it is wrapped by a key held in the Android Keystore, which
 the app cannot export. Photos kept as proof are encrypted separately.</p>
 
-<h2>What S-IB reads, and when</h2>
-<p>S-IB reads only what you hand it: text you type or paste, files, photos and PDFs you choose, and things you share to
+<h2>What H-sib Reminder reads, and when</h2>
+<p>H-sib Reminder reads only what you hand it: text you type or paste, files, photos and PDFs you choose, and things you share to
 it from another app. It reads them on your phone. Text in pictures is recognised on the device with a model bundled in
 the app. If you use the Scan button, Google's document scanner is provided through Google Play services and runs on the
-phone; S-IB receives the scanned pages and does not send them anywhere. Google Play services is governed by Google's
+phone; H-sib Reminder receives the scanned pages and does not send them anywhere. Google Play services is governed by Google's
 own privacy policy.</p>
-<p>The clipboard is read only when you tap Paste. S-IB does not read your messages, email, contacts or calendar.</p>
+<p>The clipboard is read only when you tap Paste. H-sib Reminder does not read your email, contacts or calendar. It reads
+notifications only if you switch on Chats and notifications, described below.</p>
+
+<h2>Reading notifications (optional, off by default)</h2>
+<p>If you turn on Chats and notifications, H-sib Reminder can find deadlines in the notifications of the chat and mail apps you choose.
+Nothing happens until you do two things: allow H-sib Reminder in Android's own notification access list, and tick the apps inside H-sib Reminder.
+H-sib Reminder then reads the title and text of notifications from only those apps, on your phone, to look for dates. It ignores every other app.</p>
+<ul>
+  <li>The notification text is not saved. A suggestion keeps only the sentence it came from, until you accept it or it expires.</li>
+  <li><strong>The notification text is never sent anywhere.</strong> The part of H-sib Reminder that reads notifications has no
+      connection to the part that uses the internet, and the app's own tests fail if one is ever added.</li>
+  <li>Nothing becomes a deadline until you confirm it in Review.</li>
+  <li>You can switch it off in H-sib Reminder, or in Android's notification access list, at any time.</li>
+</ul>
+
+<h2>Signing in and sharing (optional)</h2>
+<p>Sharing needs a Google account. Until you sign in and share, none of your deadlines, notes or messages leave your phone.
+Like most apps that use Google's services, H-sib Reminder may contact Google to confirm that a request comes from the genuine
+app (Firebase App Check, which uses Google Play services). That check carries no deadline, note or message.</p>
+<p>When you share a deadline, you invite people with a code. Only people who hold the code can join. Everyone in a shared deadline can
+see its title, date and notes, the chat, who is in it, and who has marked their part done. They each keep their own plan: effort,
+importance, reminders and progress are not shared. Before you share, join or send a message for the first time, you are asked to
+accept the community rules, which include how to report or block a person.</p>
+
+<h2>What leaves your phone, and who can read it</h2>
+<table>
+  <tr><th>What</th><th>Who can read it</th></tr>
+  <tr><td>Title, date and notes of a deadline you share, and the chat</td><td>Only you and the people in that shared deadline. They are sealed on your phone with a key that is passed on only to members. The service that stores them holds scrambled text.</td></tr>
+  <tr><td>Your display name and your Google account email</td><td>The name is shown to the people in your shared deadlines. The email is used only to sign you in and is not shown to others.</td></tr>
+  <tr><td>Who is in which shared deadline, and when messages were sent and how long they are</td><td>The service that hosts the data, and the developer through it. This cannot be hidden while still delivering messages.</td></tr>
+  <tr><td>A report you send about a person or a message</td><td>The developer. A report includes the text of a message only if you choose to include it.</td></tr>
+  <tr><td>Technical data such as your IP address, an installation identifier and device details when you connect</td><td>Google, which provides the sign in, hosting and app check services, under its own privacy policy.</td></tr>
+</table>
+<p>Data is encrypted in transit. The service is provided by Google (Firebase). It acts for the developer and is governed by Google's
+own terms and privacy policy.</p>
+
+<h2>Why your data is used, and on what basis</h2>
+<p>Data on your phone is used only to run the app for you. Data sent for sharing and chat is used only to deliver them, because you
+asked for them and accepted the terms and community rules (your consent, and the agreement you made when you accepted the terms).
+Reports are handled to protect people and to meet legal duties, which is a legitimate interest of the developer and of the people
+concerned. The developer does not use your data for advertising, profiling or analytics, and does not sell it.</p>
+
+<h2>How long it is kept</h2>
+<ul>
+  <li>On your phone: until you delete it or uninstall the app.</li>
+  <li>Shared deadlines and chat on the service: until a member or the owner deletes them, or the account is deleted. Deleting your account removes your messages, your place in every shared deadline, your profile, and shared deadlines you own.</li>
+  <li>Reports about a person or a message: only as long as needed to handle them and to protect other people, then deleted, normally within 12 months, or longer where the law requires or a claim is pending.</li>
+  <li>The record that you accepted the community rules (see below): up to three years after you delete your account.</li>
+  <li>Technical logs kept by Google for sign in and hosting: under Google's own policies.</li>
+</ul>
+
+<h2>Your consent, and the record of it</h2>
+<p>You accept the terms by tapping "I accept" on the first screen, and the community rules by tapping "I agree" before your first
+share, join or message. The app keeps a record on your phone of the version you accepted and the date and time. For the community
+rules, a record is also kept on the sharing service: your account id, the version of the rules, the version of the app and the time
+on the service's clock. It contains no message, title, date or note. It exists so that acceptance can be shown by you or by the
+developer if there is ever a disagreement or a claim. If the terms change in a way that matters, you are asked again.</p>
+
+<h2>Where it is processed</h2>
+<p>Sharing and chat data is stored and processed by Google (Firebase) on its servers, which may be in a country other than yours.
+Google applies its own safeguards for international transfers. Because the content of shared deadlines and chat is sealed on your
+phone first, what Google holds is scrambled text, plus the technical data in the table above.</p>
 
 <h2>Backups</h2>
-<p>If you turn on backup, S-IB writes an encrypted file to a folder you choose with the system file picker, which can be
+<p>If you turn on backup, H-sib Reminder writes an encrypted file to a folder you choose with the system file picker, which can be
 a cloud drive such as Google Drive. The file is encrypted on your phone before it is saved, using a key that only you
 hold (your recovery key). The storage provider receives scrambled data. The developer cannot open your backups. If you
-lose both your phone and your recovery key, nobody can recover the backup. Android's own app backup is turned off for S-IB.</p>
+lose both your phone and your recovery key, nobody can recover the backup. Android's own app backup is turned off for H-sib Reminder.</p>
+<p>If you use sharing, your backup also contains the key that opens your shared deadlines on a new phone. Without it, a new phone
+can rejoin a shared deadline but cannot read what was said before.</p>
 
-<h2>Sharing</h2>
-<p>When you choose to share a deadline with friends, S-IB creates a calendar file containing the title and date, and
-hands it to the app you pick in the system share sheet. Notes, progress and history are not included. Items in the Close
-ones space cannot be shared and are left out of calendar export.</p>
+<h2>Other ways to share</h2>
+<p>You can also send a deadline as a calendar file through the system share sheet. The file holds the title and date only, and goes
+to the app you pick. Notes, progress and history are not included. Items in Close ones can never be shared this way or with
+sharing, and are left out of calendar export.</p>
 
 <h2>Permissions</h2>
 <table>
   <tr><th>Permission</th><th>Why</th></tr>
+  <tr><td>Internet and network state</td><td>Only for sharing and chat, after you sign in, and the app check described above.</td></tr>
   <tr><td>Notifications</td><td>To show your reminders. You are asked at the moment it is useful, and can say no.</td></tr>
   <tr><td>Receive boot completed</td><td>To set your reminders again after the phone restarts.</td></tr>
   <tr><td>Biometric or screen lock</td><td>Only if you turn on the optional app lock.</td></tr>
+  <tr><td>Notification access (optional)</td><td>Only if you turn on Chats and notifications. You grant it yourself in Android's notification access list; it is not a pop-up permission.</td></tr>
   <tr><td>Wake lock</td><td>Added by the Android work scheduler so a short background task, such as a backup, can finish.</td></tr>
 </table>
-<p>S-IB does not request the internet permission, location, contacts, microphone, camera or storage permissions.</p>
+<p>H-sib Reminder does not request location, contacts, microphone, camera or storage permissions.</p>
 
 <h2>Notifications and your lock screen</h2>
 <p>By default reminders show no title on the lock screen. Reminders from Close ones always show only the words
-"A reminder" until you unlock the phone, whatever your other settings are.</p>
+"A reminder" until you unlock the phone, whatever your other settings are. The optional notification bar dashboard also hides deadline titles on the lock screen unless you choose to show them.</p>
 
 <h2>Deleting your data</h2>
-<p>In the app, open Settings, then Privacy and data, and choose to erase everything. Uninstalling the app also removes its
+<p>On your phone: open Settings, then Privacy and data, and choose to erase everything. Uninstalling the app also removes its
 data. Backup files you saved in your own storage are yours to delete there.</p>
+<p>Your account: in H-sib Reminder open Friends, then Account, then Delete my account. This removes your messages, your place in
+every shared deadline, your profile, and shared deadlines you own. If you have already uninstalled the app, use the
+<a href="delete-account.html">delete your account page</a>. The only thing kept afterwards is the record of acceptance described
+above, and any report that has to be kept to protect other people.</p>
 
 <h2>Children</h2>
-<p>S-IB is a general productivity app and is not directed at children under 13.</p>
+<p>H-sib Reminder is a general productivity app and is not directed at children under 13. Sharing and chat are for people 13 and over.</p>
 
 <h2>Your rights</h2>
-<p>Because the developer does not receive or hold any of your data, there is nothing for the developer to access, correct
-or delete on your behalf. Your data is under your control on your own phone.</p>
+<p>Everything on your phone is under your control. For data held for sharing, you can delete it yourself as described above. Because
+titles, dates, notes and chat are sealed, the developer cannot read them to correct or export them for you; you can read them in the
+app. Depending on where you live you may also have the right to ask what the developer holds about you, to have it corrected or
+deleted, to object to its use, to withdraw consent (by deleting your account or stopping use of sharing), and to complain to your
+data protection authority. Write to the contact below and the developer will answer within 30 days. Withdrawing consent does not
+affect what was done before.</p>
 
 <h2>Changes to this policy</h2>
-<p>If the app ever changes how it handles data, for example by adding online features, this page will be updated first and
-the date above will change. A version that adds the internet permission would say so clearly in its update notes.</p>
+<p>If the app changes how it handles data, this page will be updated first and the date above will change.</p>
 
 <h2>Contact</h2>
-<p>Developer: H-sib. Questions about privacy: open an issue at
+<p>Developer: H-sib (Chowdhury Hasibur Rahaman). Questions about privacy: open an issue at
 <a href="https://github.com/H-sib/s-ib/issues">github.com/H-sib/s-ib/issues</a>, or write to the contact address shown on
-the S-IB page in Google Play.</p>
+the H-sib Reminder page in Google Play. Do not put private information in a public issue.</p>
 </main>
 </body>
 </html>

@@ -38,7 +38,7 @@ data class RestoreOutcome(val ok: Boolean, val message: String, val restoredObli
  * End-to-end encrypted backup to a folder the user chooses with the system file picker.
  *
  * Whatever storage app owns that folder (a local directory, Google Drive, a sync client) only ever receives
- * ciphertext. The key never leaves the phone except as the recovery key the user writes down. S-IB needs no network
+ * ciphertext. The key never leaves the phone except as the recovery key the user writes down. H-sib Reminder needs no network
  * permission for this: the system file picker does the transport.
  */
 class BackupService(
@@ -89,7 +89,7 @@ class BackupService(
     suspend fun backupNow(): BackupOutcome = withContext(Dispatchers.IO) {
         val s = settings.current()
         val root = folder(s.backupFolder) ?: return@withContext fail("No backup folder is chosen.")
-        if (!root.canWrite()) return@withContext fail("S-IB can no longer write to that folder. Choose it again in Backup settings.")
+        if (!root.canWrite()) return@withContext fail("H-sib Reminder can no longer write to that folder. Choose it again in Backup settings.")
         val key = loadKey() ?: return@withContext fail("The recovery key is missing. Set up backup again.")
         val seq = s.backupSeq + 1
         val prev = s.backupHead?.let(HistoryKeys::unhex)?.takeIf { it.size == 32 } ?: ByteArray(32)
@@ -123,7 +123,7 @@ class BackupService(
         val root = folder(s.backupFolder) ?: return@withContext VerifyReport(false, "No backup folder is chosen.", emptyList())
         val key = loadKey() ?: return@withContext VerifyReport(false, "The recovery key is missing.", emptyList())
         val files = backupFiles(root).mapNotNull { readAll(it.uri) }
-        if (files.isEmpty()) return@withContext VerifyReport(false, "The folder has no S-IB backups.", emptyList())
+        if (files.isEmpty()) return@withContext VerifyReport(false, "The folder has no H-sib Reminder backups.", emptyList())
         val details = ArrayList<String>()
         var ok = true
         val chain = BackupChain.verify(files, s.backupLineage?.let(HistoryKeys::unhex))
@@ -151,8 +151,8 @@ class BackupService(
     private fun describe(e: BackupError) = when (e) {
         BackupError.AUTH_FAILED -> "wrong key, or the file was changed"
         BackupError.TRUNCATED -> "the file is incomplete"
-        BackupError.BAD_MAGIC -> "not a S-IB backup"
-        BackupError.UNSUPPORTED_VERSION -> "made by a newer version of S-IB"
+        BackupError.BAD_MAGIC -> "not an H-sib Reminder backup"
+        BackupError.UNSUPPORTED_VERSION -> "made by a newer version of H-sib Reminder"
         BackupError.MALFORMED -> "damaged"
         BackupError.TOO_LARGE -> "unreasonably large"
     }
@@ -167,7 +167,7 @@ class BackupService(
         val root = folder(folderUri) ?: return@withContext RestoreOutcome(false, "That folder could not be opened.")
         val files = backupFiles(root).mapNotNull { f -> readAll(f.uri)?.let { b -> (BackupFormat.peek(b) as? BackupResult.Ok)?.value?.let { h -> h to b } } }
             .sortedByDescending { it.first.seq }
-        if (files.isEmpty()) return@withContext RestoreOutcome(false, "No S-IB backups were found in that folder.")
+        if (files.isEmpty()) return@withContext RestoreOutcome(false, "No H-sib Reminder backups were found in that folder.")
         val notes = ArrayList<String>()
         when (val c = BackupChain.verify(files.map { it.second })) {
             is ChainCheck.Broken -> notes += "Warning: ${c.why}."

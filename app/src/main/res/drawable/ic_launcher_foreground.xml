@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A dial in the signature gradient: the ring is the day, the bright marker is a deadline sitting on its edge. -->
+<!--
+  The H-sib mark: an H made of two bars. The left bar is where you start, the right bar is the deadline, and the dots between
+  them are the time you have, rising from one to the other. The right bar and the dots wear the signature gradient; the marker
+  above the right bar is the date itself. Everything sits inside the 66 dp safe circle of an adaptive icon.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
@@ -7,20 +11,33 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillType="evenOdd"
-        android:pathData="M54,25a29,29 0,1 0,0.01 0zM54,34.5a19.5,19.5 0,1 1,-0.01 0z">
+        android:fillColor="#F7F4FF"
+        android:pathData="M38,36a4,4 0,0 1,4 4v32a4,4 0,0 1,-8 0v-32a4,4 0,0 1,4 -4z" />
+    <path android:pathData="M70,36a4,4 0,0 1,4 4v32a4,4 0,0 1,-8 0v-32a4,4 0,0 1,4 -4z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="26"
-                android:startY="26"
-                android:endX="84"
-                android:endY="84"
+                android:startX="70"
+                android:startY="36"
+                android:endX="70"
+                android:endY="76"
+                android:type="linear">
+                <item android:color="#FF8A70" android:offset="0" />
+                <item android:color="#9B86FF" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M47,57a2.2,2.2 0,1 0,4.4 0a2.2,2.2 0,1 0,-4.4 0zM52,52.5a2.8,2.8 0,1 0,5.6 0a2.8,2.8 0,1 0,-5.6 0zM57.5,48.8a3.4,3.4 0,1 0,6.8 0a3.4,3.4 0,1 0,-6.8 0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="47"
+                android:startY="57"
+                android:endX="64"
+                android:endY="48"
                 android:type="linear">
                 <item android:color="#9B86FF" android:offset="0" />
                 <item android:color="#FF8A70" android:offset="1" />
             </gradient>
         </aapt:attr>
     </path>
-    <path android:fillColor="#F7F4FF" android:pathData="M52.5,40h3v14.5l9,5.2l-1.5,2.6l-10.5,-6.1z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M72,36.5a6.5,6.5 0,1 0,0.01 0z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M70,23.5a5,5 0,1 0,0.01 0z" />
 </vector>

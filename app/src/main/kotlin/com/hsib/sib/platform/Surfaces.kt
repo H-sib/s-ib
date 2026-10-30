@@ -72,11 +72,11 @@ class NextUpTileService : TileService() {
             val st = app.container.awaitReady()?.engine?.snapshot()
             val tile = qsTile ?: return@launch
             val next = st?.active?.firstOrNull { it.urgency.rank >= UrgencyState.PLANNED.rank && it.dueInstant != null && it.urgency != UrgencyState.MOVED }
-            tile.label = "S-IB"
+            tile.label = "H-sib"
             val showTitles = st?.settings?.lockScreenDetail == LockScreenDetail.TITLES
             if (Build.VERSION.SDK_INT >= 29) {
                 tile.subtitle = when {
-                    st == null -> "Open S-IB"
+                    st == null -> "Open H-sib Reminder"
                     next == null -> "Nothing pending"
                     showTitles -> "${next.o.title}, " + Fmt(applicationContext).daysFrom(st.today, next.dueInstant!!.atZone(st.zone).toLocalDate())
                     else -> next.urgency.label
@@ -127,7 +127,7 @@ private fun WidgetContent(context: Context, st: AppState?) {
         modifier = GlanceModifier.fillMaxSize().background(paper).padding(14.dp).clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
     ) {
         if (st == null) {
-            Text("S-IB", style = TextStyle(color = ink, fontWeight = FontWeight.Bold, fontSize = 16.sp))
+            Text("H-sib", style = TextStyle(color = ink, fontWeight = FontWeight.Bold, fontSize = 16.sp))
             Text("Open the app to set up.", style = TextStyle(color = quiet, fontSize = 12.sp))
             return@Column
         }

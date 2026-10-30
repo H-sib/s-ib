@@ -1,0 +1,272 @@
+rules_version = '2';
+
+// S-IB sharing and chat. These rules are the server side of the permissions: a modified app cannot get around them.
+// They mirror FakeBackend in app/src/main/kotlin/com/hsib/sib/social/FakeBackend.kt, which the app tests run against.
+// NOT YET RUN against the Firebase emulator. Run firebase/tests first (see firebase/README.txt).
+//
+// Everything stored in sealedPayload, sealedBody, sealedKey and wrappedKey is sealed on the phone, so the server and these
+// rules only ever see opaque text and its size. People are found only by an invite code, never by search.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+
+    // Google sign in gives a verified email. Nobody gets anything without one, and there is no anonymous access.
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function me() { return request.auth.uid; }
+
+    function roomPath(roomId) { return /databases/$(database)/documents/rooms/$(roomId); }
+
+    function memberPath(roomId, uid) { return /databases/$(database)/documents/rooms/$(roomId)/members/$(uid); }
+
+    function isMember(roomId) { return signedIn() && exists(memberPath(roomId, me())); }
+
+    function isOwner(roomId) { return signedIn() && get(roomPath(roomId)).data.ownerUid == me(); }
+
+    function text(v, max) { return v is string && v.size() <= max; }
+
+    // Sealed text: present, a string, and not larger than the app ever produces.
+    function sealed(v) { return v is string && v.size() > 0 && v.size() <= 40000; }
+
+    function keysOnly(allowed) { return request.resource.data.keys().hasOnly(allowed); }
+
+    function changes(allowed) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed); }
+
+    // ---------- profiles ----------
+
+    match /users/{uid} {
+      // A profile is read one at a time by its id (needed to seal a room key for that person). It cannot be listed.
+      allow get: if signedIn();
+      allow list: if false;
+
+      // The public key is 32 bytes as base64url, 43 characters.
+      allow create, update: if signedIn() && uid == me()
+        && keysOnly(['displayName', 'publicKey'])
+        && request.resource.data.keys().hasAll(['displayName', 'publicKey'])
+        && text(request.resource.data.displayName, 40) && request.resource.data.displayName.size() > 0
+        && request.resource.data.publicKey is string && request.resource.data.publicKey.size() == 43;
+
+      allow delete: if signedIn() && uid == me();
+
+      // A private record that this account accepted the community rules: the version, the service's own time and the app version.
+      // It is created once per version and never changed or deleted by the person, so it can show what was agreed and when.
+      match /consent/{docId} {
+        allow get: if signedIn() && uid == me();
+        allow list: if false;
+        allow create: if signedIn() && uid == me()
+          && keysOnly(['version', 'acceptedAt', 'app'])
+          && request.resource.data.keys().hasAll(['version', 'acceptedAt', 'app'])
+          && request.resource.data.version is int
+          && docId == 'rules-' + string(request.resource.data.version)
+          && request.resource.data.acceptedAt == request.time
+          && request.resource.data.app is string && request.resource.data.app.size() <= 40;
+        allow update, delete: if false;
+      }
+
+      // A private list of the rooms a person is in, so a new phone or a restore can find them again.
+      match /rooms/{roomId} {
+        allow get, list: if signedIn() && uid == me();
+        allow create: if signedIn() && uid == me() && keysOnly(['joinedAt']) && request.resource.data.joinedAt == request.time
+          && existsAfter(memberPath(roomId, uid));
+        // The person can remove their own entry, and the room's owner can remove it when removing that person.
+        allow delete: if signedIn() && (uid == me() || isOwner(roomId));
+      }
+    }
+
+    // ---------- rooms (one per shared deadline) ----------
+
+    match /rooms/{roomId} {
+      // Only members can read a room, and rooms cannot be listed.
+      allow get: if isMember(roomId);
+      allow list: if false;
+
+      // The owner makes the room and becomes its first member in the same batch.
+      allow create: if signedIn()
+        && keysOnly(['ownerUid', 'keyVersion', 'rev', 'sealedPayload', 'memberCount', 'createdAt'])
+        && request.resource.data.ownerUid == me()
+        && request.resource.data.keyVersion == 1
+        && request.resource.data.rev == 1
+        && request.resource.data.memberCount == 1
+        && sealed(request.resource.data.sealedPayload)
+        && request.resource.data.createdAt == request.time
+        && getAfter(memberPath(roomId, me())).data.role == 'OWNER';
+
+      allow update: if isOwner(roomId) && (ownerPayloadUpdate() || ownerRemovesMember())
+        || memberJoins(roomId)
+        || memberLeaves(roomId);
+
+      allow delete: if isOwner(roomId);
+
+      // The owner changes the deadline: one revision at a time, sealed.
+      function ownerPayloadUpdate() {
+        return changes(['rev', 'sealedPayload'])
+          && request.resource.data.rev == resource.data.rev + 1
+          && sealed(request.resource.data.sealedPayload);
+      }
+
+      // The owner removes someone: a new key version, the details sealed again under it, one fewer person.
+      function ownerRemovesMember() {
+        return changes(['keyVersion', 'sealedPayload', 'memberCount'])
+          && request.resource.data.keyVersion == resource.data.keyVersion + 1
+          && request.resource.data.memberCount == resource.data.memberCount - 1
+          && sealed(request.resource.data.sealedPayload);
+      }
+
+      // Someone joins: only the count moves, by one, up to twenty, in the same batch as their own member record.
+      function memberJoins(roomId) {
+        return signedIn()
+          && changes(['memberCount'])
+          && request.resource.data.memberCount == resource.data.memberCount + 1
+          && request.resource.data.memberCount <= 20
+          && !exists(memberPath(roomId, me()))
+          && existsAfter(memberPath(roomId, me()));
+      }
+
+      // A member (never the owner) leaves: only the count moves, down by one, and their record goes in the same batch.
+      function memberLeaves(roomId) {
+        return isMember(roomId)
+          && resource.data.ownerUid != me()
+          && changes(['memberCount'])
+          && request.resource.data.memberCount == resource.data.memberCount - 1
+          && !existsAfter(memberPath(roomId, me()));
+      }
+
+      // ---------- members ----------
+
+      match /members/{uid} {
+        allow get, list: if isMember(roomId);
+
+        allow create: if signedIn() && uid == me() && (ownerRecord(roomId) || joinRecord(roomId));
+
+        allow update: if signedIn() && (ownDoneOrTyping(roomId, uid) || ownerRekeys(roomId));
+
+        // A member removes themselves; the owner removes anyone else, and removes their own record only as the room is deleted.
+        allow delete: if signedIn() && (
+          (uid == me() && get(roomPath(roomId)).data.ownerUid != me())
+          || (uid != me() && isOwner(roomId))
+          || (uid == me() && isOwner(roomId) && !existsAfter(roomPath(roomId))));
+
+        function memberFields() {
+          return keysOnly(['role', 'displayName', 'joinedAt', 'doneAt', 'wrappedKey', 'wrappedKeyVersion', 'lastMessageAt', 'inviteId'])
+            && request.resource.data.keys().hasAll(['role', 'displayName', 'joinedAt', 'wrappedKey', 'wrappedKeyVersion', 'lastMessageAt'])
+            && text(request.resource.data.displayName, 40) && request.resource.data.displayName.size() > 0
+            && text(request.resource.data.wrappedKey, 512)
+            && request.resource.data.joinedAt == request.time
+            && request.resource.data.lastMessageAt == request.time
+            && !('doneAt' in request.resource.data && request.resource.data.doneAt != null);
+        }
+
+        // The owner's record, written in the same batch that creates the room.
+        function ownerRecord(roomId) {
+          return !exists(roomPath(roomId))
+            && getAfter(roomPath(roomId)).data.ownerUid == me()
+            && memberFields()
+            && request.resource.data.role == 'OWNER'
+            && request.resource.data.wrappedKeyVersion == 1;
+        }
+
+        // A member's record, written with a valid invite: not cancelled, not expired, made for the room's current key.
+        function joinRecord(roomId) {
+          let invite = get(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data;
+          return memberFields()
+            && request.resource.data.role == 'MEMBER'
+            && invite.roomId == roomId
+            && invite.revoked == false
+            && invite.expiresAt > request.time
+            && invite.keyVersion == get(roomPath(roomId)).data.keyVersion
+            && request.resource.data.wrappedKeyVersion == invite.keyVersion;
+        }
+
+        // A person changes only their own done mark, and the time of their last message (at most one a second).
+        function ownDoneOrTyping(roomId, uid) {
+          return uid == me() && isMember(roomId)
+            && changes(['doneAt', 'lastMessageAt'])
+            && (!('doneAt' in request.resource.data.diff(resource.data).affectedKeys())
+                || request.resource.data.doneAt == null || request.resource.data.doneAt == request.time)
+            && (!('lastMessageAt' in request.resource.data.diff(resource.data).affectedKeys())
+                || (request.resource.data.lastMessageAt == request.time
+                    && request.time > resource.data.lastMessageAt + duration.value(1, 's')));
+        }
+
+        // The owner seals the new room key for everyone who stays, in the same batch as the key version change.
+        function ownerRekeys(roomId) {
+          return isOwner(roomId)
+            && changes(['wrappedKey', 'wrappedKeyVersion'])
+            && text(request.resource.data.wrappedKey, 512)
+            && request.resource.data.wrappedKeyVersion == get(roomPath(roomId)).data.keyVersion + 1
+            && getAfter(roomPath(roomId)).data.keyVersion == request.resource.data.wrappedKeyVersion;
+        }
+      }
+
+      // ---------- messages ----------
+
+      match /messages/{messageId} {
+        allow get, list: if isMember(roomId);
+
+        // As themselves, at the server's time, sealed, for the current key, and not faster than one a second.
+        allow create: if isMember(roomId)
+          && keysOnly(['senderUid', 'createdAt', 'kind', 'sealedBody', 'keyVersion'])
+          && request.resource.data.senderUid == me()
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.kind in ['TEXT', 'SYSTEM']
+          && sealed(request.resource.data.sealedBody)
+          && request.resource.data.keyVersion == get(roomPath(roomId)).data.keyVersion
+          && request.time > get(memberPath(roomId, me())).data.lastMessageAt + duration.value(1, 's')
+          && getAfter(memberPath(roomId, me())).data.lastMessageAt == request.time;
+
+        // A person can delete their own messages, and the room's owner can delete any message in it (to remove something
+        // harmful, and to clear a room before deleting it). Messages are never edited.
+        allow delete: if isMember(roomId) && (resource.data.senderUid == me() || isOwner(roomId));
+        allow update: if false;
+      }
+    }
+
+    // ---------- invites ----------
+
+    match /invites/{inviteId} {
+      // Fetched by id (an unguessable ten character code) and never listed.
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn()
+        && keysOnly(['roomId', 'createdByUid', 'expiresAt', 'revoked', 'sealedKey', 'keyVersion'])
+        && inviteId.size() == 10
+        && isOwner(request.resource.data.roomId)
+        && request.resource.data.createdByUid == me()
+        && request.resource.data.revoked == false
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(7, 'd') + duration.value(1, 'h')
+        && request.resource.data.keyVersion == get(roomPath(request.resource.data.roomId)).data.keyVersion
+        && request.resource.data.sealedKey is string && request.resource.data.sealedKey.size() <= 512;
+
+      // The owner can cancel an invite, and only that.
+      allow update: if signedIn() && isOwner(resource.data.roomId)
+        && changes(['revoked']) && request.resource.data.revoked == true;
+
+      allow delete: if signedIn() && isOwner(resource.data.roomId);
+    }
+
+    // ---------- reports ----------
+
+    // Written by a member about a person or a message, and read by nobody from the app. The developer reads them in the
+    // Firebase console.
+    match /reports/{reportId} {
+      allow create: if isMember(request.resource.data.roomId)
+        && keysOnly(['roomId', 'reportedUid', 'reporterUid', 'messageId', 'reason', 'detail', 'quote', 'createdAt'])
+        && request.resource.data.reporterUid == me()
+        && request.resource.data.createdAt == request.time
+        && text(request.resource.data.reason, 40)
+        && text(request.resource.data.detail, 1000)
+        && (!('quote' in request.resource.data) || request.resource.data.quote == null || text(request.resource.data.quote, 2000));
+      allow read, update, delete: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

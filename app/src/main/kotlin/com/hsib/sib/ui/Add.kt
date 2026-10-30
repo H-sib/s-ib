@@ -69,7 +69,7 @@ fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: M
     val shape = RoundedCornerShape(50)
     Text(
         text, style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (selected) c.onAction else c.ink,
-        modifier = modifier.heightIn(min = 44.dp).clip(shape)
+        modifier = modifier.heightIn(min = 48.dp).clip(shape)
             .then(if (selected) Modifier.background(c.action) else Modifier.background(c.lifted))
             .bounceClick(role = Role.RadioButton, onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 11.dp),
@@ -78,7 +78,7 @@ fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: M
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: () -> Unit, onSaved: (String) -> Unit) {
+fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: () -> Unit, onJoin: (() -> Unit)? = null, onSaved: (String) -> Unit) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
     val scope = rememberCoroutineScope()
@@ -135,12 +135,13 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
             singleLine = false, minLines = 2, keyboard = KeyboardOptions(imeAction = ImeAction.Default),
         )
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SibButton("Paste", importActions.paste, Modifier.weight(1f), ButtonKind.QUIET, compact = true)
-            SibButton("Photo", importActions.photo, Modifier.weight(1f), ButtonKind.QUIET, compact = true)
-            SibButton("Scan", importActions.scan, Modifier.weight(1f), ButtonKind.QUIET, compact = true)
-            SibButton("File", importActions.file, Modifier.weight(1f), ButtonKind.QUIET, compact = true)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconAction(SibIcon.PASTE, "Paste", Modifier.weight(1f), onClick = importActions.paste)
+            IconAction(SibIcon.PHOTO, "Photo", Modifier.weight(1f), onClick = importActions.photo)
+            IconAction(SibIcon.SCAN, "Scan", Modifier.weight(1f), onClick = importActions.scan)
+            IconAction(SibIcon.FILE, "File", Modifier.weight(1f), onClick = importActions.file)
         }
+        if (onJoin != null) SibButton("Join a shared deadline with a code", onJoin, kind = ButtonKind.TEXT)
 
         // What was understood, in plain words, so a wrong reading is caught before it is saved.
         if (text.isNotBlank()) {
@@ -209,7 +210,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
         Text("Effort", style = SibType.bodyStrong, color = c.ink)
         if (parsedEffort != null && !touchedEffort) Text("Read from your text: about ${fmt.minutes(parsedEffort)}.", style = SibType.small, color = c.inkSoft)
         Choice(
-            listOf(30 to "30 min", 120 to "2 h", 240 to "4 h", 480 to "A day", 960 to "2 days"),
+            EffortChoices,
             listOf(30, 120, 240, 480, 960).minBy { kotlin.math.abs(it - effortMin) },
             { effortMin = it; touchedEffort = true },
         )

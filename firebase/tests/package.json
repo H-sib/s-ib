@@ -1,0 +1,13 @@
+{
+  "name": "sib-rules-tests",
+  "private": true,
+  "description": "Tests for the S-IB Firestore security rules. Not yet run: nothing here has been installed.",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project sib-rules-test \"node --test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.0",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

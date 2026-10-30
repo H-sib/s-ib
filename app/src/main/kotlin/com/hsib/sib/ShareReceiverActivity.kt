@@ -21,7 +21,7 @@ import com.hsib.sib.ui.SibTheme
 import com.hsib.sib.ui.SibType
 
 /**
- * The small window that opens when something is shared to S-IB. It reads what it was given on the phone, saves
+ * The small window that opens when something is shared to H-sib Reminder. It reads what it was given on the phone, saves
  * suggestions only, and says how many it found. Titles are shown only when the app lock is off.
  */
 class ShareReceiverActivity : FragmentActivity() {

@@ -13,7 +13,7 @@ import java.time.ZoneId
 
 /**
  * Sharing a deadline with friends needs no server and no account. The recipient gets a standard calendar file that
- * any calendar app can open, plus a readable list in the message. Friends who use S-IB can open the file in S-IB.
+ * any calendar app can open, plus a readable list in the message. Friends who use H-sib Reminder can open the file in H-sib Reminder.
  * Only what is needed to know the date is shared: title and date. Notes, effort, progress and history stay private.
  */
 object Sharing {

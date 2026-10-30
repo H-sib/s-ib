@@ -10,8 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,17 +51,18 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hsib.sib.Ready
 import com.hsib.sib.core.model.DueSpec
 import com.hsib.sib.core.model.Effort
 import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Precision
+import com.hsib.sib.core.model.Space
 import com.hsib.sib.core.plan.Step
 import com.hsib.sib.core.seal.SealCheck
 import com.hsib.sib.data.UserStep
@@ -102,12 +105,17 @@ fun SibDatePicker(initial: LocalDate, onPick: (LocalDate) -> Unit, onCancel: () 
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onDeleted: () -> Unit) {
+fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onDeleted: () -> Unit, onPeople: (String) -> Unit = {}) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val social = rememberSocial(ready)
+    val shared = social.roomFor(id)
+    // In a shared deadline only the owner changes the title and date; everyone else asks in the chat.
+    val locked = shared != null && !shared.isOwner && !shared.removed
     val v = st.items.firstOrNull { it.o.id == id }
     if (v == null) {
         Page("Deadline", onBack) { Text("This deadline is no longer on your list.", style = SibType.body, color = c.inkSoft) }
@@ -126,9 +134,17 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
     var completing by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var tab by rememberSaveable(id) { mutableStateOf(DetailTab.OVERVIEW) }
-    var adjust by rememberSaveable(id) { mutableStateOf(false) }
 
-    suspend fun save(new: com.hsib.sib.core.model.Obligation, reason: String) { ready.store.save(new, "USER", reason) }
+    suspend fun save(new: com.hsib.sib.core.model.Obligation, reason: String) {
+        ready.store.save(new, "USER", reason)
+        // If this is the owner's shared deadline, everyone gets the new title or date. Personal changes send nothing.
+        val note = when (reason) {
+            "date changed", "date confirmed" -> new.due?.let { "moved the date to " + fmt.dayShort(it.dayIn(st.zone)) }
+            "renamed" -> "renamed this to \"${new.title}\""
+            else -> null
+        }
+        ready.social?.pushIfShared(id, note)
+    }
 
     Page(o.category.label, onBack, action = {
         if (o.lifecycle == Lifecycle.ACTIVE) {
@@ -153,102 +169,170 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                 SibButton("Cancel", { title = o.title; editingTitle = false }, kind = ButtonKind.QUIET)
             }
         } else {
-            Text(o.title, style = SibType.display, color = c.ink, modifier = Modifier.clickable(role = Role.Button) { editingTitle = true }.semantics { contentDescription = "${o.title}. Tap to rename." })
+            Text(o.title, style = SibType.display, color = c.ink, modifier = Modifier.clickable(enabled = !locked, role = Role.Button) { editingTitle = true }.semantics { contentDescription = if (locked) o.title else "${o.title}. Tap to rename." })
         }
 
         Gap(24.dp)
         Choice(listOf(DetailTab.OVERVIEW to "Overview", DetailTab.STEPS to "Steps", DetailTab.HISTORY to "History"), tab, { tab = it })
 
         if (tab == DetailTab.OVERVIEW) {
-        // ---- when ----
-        SectionHeader("When")
-        val fog = o.fog
-        val due = o.due
-        if (fog != null) {
-            Text("Somewhere ${fmt.range(fog.earliest, fog.latest)}", style = SibType.headline, color = c.ink)
-            More("The exact day is not announced. S-IB plans for the earliest day, ${fmt.dayShort(fog.earliest)}, so you are never caught short.", label = "How is it planned?")
-            Spacer(Modifier.height(8.dp))
-            SibButton("The date is now known", { pickDate = "set" }, kind = ButtonKind.QUIET)
-        } else if (due != null) {
-            val dateOnly = due.precision == Precision.DATE_ONLY
-            val mine = if (dateOnly) due.local else due.instant(st.zone).atZone(st.zone).toLocalDateTime()
-            Text(fmt.due(mine, dateOnly), style = SibType.headline, color = c.ink)
-            v.dueInstant?.let { Text(fmt.countdown(st.now, it, st.zone), style = SibType.body, color = c.inkSoft) }
-            if (!dateOnly && !due.floating && due.zone != st.zone) {
-                Spacer(Modifier.height(4.dp))
-                Text("Written as ${fmt.due(due.local, false)} in ${due.zone.id}. Shown above in your time.", style = SibType.small, color = c.inkSoft)
-            }
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (o.lifecycle == Lifecycle.ACTIVE) SibButton("Change the date", { pickDate = "move" }, kind = ButtonKind.QUIET)
-                if (o.lifecycle == Lifecycle.ACTIVE) SibButton("Add to calendar", {
-                    val start = due.instant(st.zone).toEpochMilli()
-                    context.startActivity(
-                        Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
-                            .putExtra(CalendarContract.Events.TITLE, o.title)
-                            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
-                            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, start + 30 * 60_000L)
-                            .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, dateOnly),
-                    )
-                }, kind = ButtonKind.QUIET)
-            }
-            if (o.lifecycle == Lifecycle.ACTIVE) {
-                Spacer(Modifier.height(8.dp))
-                SibButton("Share with friends", { Sharing.share(context, listOf(o), st.zone) }, kind = ButtonKind.QUIET)
-                More("Sends the title and date as a calendar file. No account needed, and your notes and progress stay private.", label = "What is shared?")
-            }
-        } else {
-            Text("No date. This stays on your list until you finish it.", style = SibType.body, color = c.inkSoft)
-        }
-
-        // ---- how tight ----
-        if (o.lifecycle == Lifecycle.ACTIVE && o.effort != null) {
-            SectionHeader("How tight")
-            PressureBar(v.pressure, v.urgency)
-            Spacer(Modifier.height(4.dp))
-            Text(pressureWords(v.pressure), style = SibType.body, color = c.ink)
-            v.latestStart?.let {
-                Spacer(Modifier.height(6.dp))
-                Row {
-                    Text("Latest safe start", style = SibType.small, color = c.inkSoft, modifier = Modifier.width(130.dp))
-                    Text(fmt.dayShort(it) + "  ·  " + fmt.daysFrom(st.today, it), style = SibType.bodyStrong, color = c.ink)
+            val fog = o.fog
+            val due = o.due
+            val effort = o.effort
+            val active = o.lifecycle == Lifecycle.ACTIVE
+            val tone = stateColor(v.urgency)
+            val dateOnly = due?.precision == Precision.DATE_ONLY
+            Gap(20.dp)
+            // ---- the date, large, tinted by how close it is ----
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(tone.copy(alpha = 0.10f))
+                    .border(1.dp, tone.copy(alpha = 0.30f), RoundedCornerShape(28.dp)).padding(22.dp),
+            ) {
+                if (fog != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SibIconView(SibIcon.CALENDAR, size = 20.dp, tint = tone, accent = tone)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Date to be announced", style = SibType.bodyStrong, color = c.ink)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Somewhere ${fmt.range(fog.earliest, fog.latest)}", style = SibType.headline, color = c.ink)
+                    More("The exact day is not announced. H-sib Reminder plans for the earliest day, ${fmt.dayShort(fog.earliest)}, so you are never caught short.", label = "How is it planned?")
+                } else if (due != null) {
+                    val mine = if (dateOnly) due.local else due.instant(st.zone).atZone(st.zone).toLocalDateTime()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SibIconView(SibIcon.CALENDAR, size = 20.dp, tint = tone, accent = tone)
+                        Spacer(Modifier.width(8.dp))
+                        Text(fmt.due(mine, dateOnly), style = SibType.bodyStrong, color = c.ink)
+                    }
+                    v.dueInstant?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(fmt.countdown(st.now, it, st.zone), style = SibType.headline, color = c.ink)
+                    }
+                    if (!dateOnly && !due.floating && due.zone != st.zone) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Written as ${fmt.due(due.local, false)} in ${due.zone.id}. Shown above in your time.", style = SibType.small, color = c.inkSoft)
+                    }
+                } else {
+                    Text("No date. This stays on your list until you finish it.", style = SibType.body, color = c.inkSoft)
                 }
-                More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
-            } ?: Text(
-                if (v.atRiskMin > 0) "There is no longer a comfortable way to finish all of this. ${fmt.minutes(v.atRiskMin)} would not fit." else "No safe start can be worked out yet.",
-                style = SibType.small, color = c.vermilion,
-            )
-            if (v.blocks.isNotEmpty()) {
-                Spacer(Modifier.height(6.dp))
-                Text("Planned: ${v.blocks.size} ${if (v.blocks.size == 1) "session" else "sessions"}, ${fmt.minutes(v.blocks.sumOf { it.minutes })} in total.", style = SibType.small, color = c.inkSoft)
+                if (active && effort != null) {
+                    Spacer(Modifier.height(16.dp))
+                    PressureBar(v.pressure, v.urgency)
+                    Spacer(Modifier.height(6.dp))
+                    Text(pressureWords(v.pressure), style = SibType.small, color = c.inkSoft)
+                }
             }
-        }
+            if (locked) {
+                Spacer(Modifier.height(8.dp))
+                Text("Only ${shared.ownerName} can change the title and date. Ask in the chat.", style = SibType.small, color = c.inkSoft)
+            }
 
-        // ---- progress ----
-        val effort = o.effort
-        if (o.lifecycle == Lifecycle.ACTIVE && effort != null) {
-            SectionHeader("Progress")
-            val total = (effort.expectedMin * st.calibration).toInt().coerceAtLeast(1)
-            Text("${fmt.minutes(o.progressMin)} of about ${fmt.minutes(total)}", style = SibType.body, color = c.ink)
-            if (st.calibration > 1.05) More("Your past jobs ran longer than planned, so estimates are raised by ${((st.calibration - 1) * 100).toInt()}%.", label = "Estimates raised ${((st.calibration - 1) * 100).toInt()}%")
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (m in listOf(15, 30, 60)) SibButton("+${if (m == 60) "1 h" else "$m min"}", { scope.launch { ready.store.addProgress(id, m) } }, Modifier.weight(1f), ButtonKind.QUIET)
+            // ---- what you can do with it: icons, one word each ----
+            if (active) {
+                Gap(16.dp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (fog != null) {
+                        if (!locked) IconAction(SibIcon.CALENDAR, "Set date", Modifier.weight(1f), description = "The date is now known. Set it.") { pickDate = "set" }
+                    } else if (due != null) {
+                        if (!locked) IconAction(SibIcon.MOVE, "Move", Modifier.weight(1f), description = "Change the date") { pickDate = "move" }
+                        IconAction(SibIcon.CALENDAR_PLUS, "Calendar", Modifier.weight(1f), description = "Add to calendar") {
+                            val start = due.instant(st.zone).toEpochMilli()
+                            context.startActivity(
+                                Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
+                                    .putExtra(CalendarContract.Events.TITLE, o.title)
+                                    .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start)
+                                    .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, start + 30 * 60_000L)
+                                    .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, dateOnly),
+                            )
+                        }
+                        IconAction(SibIcon.SEND, "Send", Modifier.weight(1f), description = "Send as a calendar file. Notes and progress stay private.") { Sharing.share(context, listOf(o), st.zone) }
+                    }
+                    if (ready.social != null && o.space == Space.WORK) {
+                        IconAction(
+                            SibIcon.CHAT, if (shared == null) "Share" else "Chat", Modifier.weight(1f),
+                            description = if (shared == null) "Share with people" else "People and chat", badge = shared?.unread?.takeIf { it > 0 },
+                        ) { onPeople(id) }
+                    }
+                }
             }
-            if (adjust) {
-            Spacer(Modifier.height(14.dp))
-            Text("Effort", style = SibType.bodyStrong, color = c.ink)
-            Choice(listOf(30 to "30 min", 120 to "2 h", 240 to "4 h", 480 to "A day", 960 to "2 days"), listOf(30, 120, 240, 480, 960).minBy { kotlin.math.abs(it - effort.likelyMin) },
-                { scope.launch { save(o.copy(effort = Effort.fromLikely(it)), "estimate changed") } })
-            Spacer(Modifier.height(8.dp))
-            Text("Importance", style = SibType.bodyStrong, color = c.ink)
-            Choice(listOf(Importance.LOW to "Low", Importance.NORMAL to "Normal", Importance.HIGH to "High", Importance.CRITICAL to "Critical"), o.importance,
-                { scope.launch { save(o.copy(importance = it), "importance changed") } })
-            }
-        }
 
-        Gap(12.dp)
-        SibButton(if (adjust) "Fewer options" else "Adjust", { adjust = !adjust }, kind = ButtonKind.TEXT)
+            // ---- progress ----
+            if (active && effort != null) {
+                Gap(12.dp)
+                val total = (effort.expectedMin * st.calibration).toInt().coerceAtLeast(1)
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised).padding(18.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconBadge(SibIcon.CLOCK, size = 36.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Text("${fmt.minutes(o.progressMin)} of ${fmt.minutes(total)}", style = SibType.bodyStrong, color = c.ink)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(c.ink.copy(alpha = 0.08f))) {
+                        Box(Modifier.fillMaxWidth((o.progressMin.toFloat() / total).coerceIn(0.02f, 1f)).height(8.dp).clip(RoundedCornerShape(50)).background(c.verdigris))
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    val quick = listOf(Triple("15", "min", 15), Triple("30", "min", 30), Triple("1", "hr", 60))
+                    if (LocalDensity.current.fontScale > 1.15f) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for ((a, u, m) in quick) QuickAdd(a, u, Modifier.fillMaxWidth()) { scope.launch { ready.store.addProgress(id, m) } }
+                        }
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for ((a, u, m) in quick) QuickAdd(a, u, Modifier.weight(1f)) { scope.launch { ready.store.addProgress(id, m) } }
+                        }
+                    }
+                }
+            }
+
+            // ---- everything else stays folded until asked for ----
+            Group(null) {
+                if (active && effort != null) {
+                    FoldItem(SibIcon.GAUGE, "Plan", hint = v.latestStart?.let { "Start by " + fmt.dayShort(it) }) {
+                        v.latestStart?.let {
+                            Row {
+                                Text("Latest safe start", style = SibType.small, color = c.inkSoft, modifier = Modifier.width(130.dp))
+                                Text(fmt.dayShort(it) + "  ·  " + fmt.daysFrom(st.today, it), style = SibType.bodyStrong, color = c.ink)
+                            }
+                            More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
+                        } ?: Text(
+                            if (v.atRiskMin > 0) "There is no longer a comfortable way to finish all of this. ${fmt.minutes(v.atRiskMin)} would not fit." else "No safe start can be worked out yet.",
+                            style = SibType.small, color = c.vermilion,
+                        )
+                        if (v.blocks.isNotEmpty()) {
+                            Text("Planned: ${v.blocks.size} ${if (v.blocks.size == 1) "session" else "sessions"}, ${fmt.minutes(v.blocks.sumOf { it.minutes })} in total.", style = SibType.small, color = c.inkSoft)
+                        }
+                        if (st.calibration > 1.05) More("Your past jobs ran longer than planned, so estimates are raised by ${((st.calibration - 1) * 100).toInt()}%.", label = "Estimates raised ${((st.calibration - 1) * 100).toInt()}%")
+                    }
+                    GroupDivider()
+                    FoldItem(SibIcon.SLIDERS, "Tune") {
+                        Text("Effort", style = SibType.bodyStrong, color = c.ink)
+                        Choice(EffortChoices, listOf(30, 120, 240, 480, 960).minBy { kotlin.math.abs(it - effort.likelyMin) },
+                            { scope.launch { save(o.copy(effort = Effort.fromLikely(it)), "estimate changed") } })
+                        Spacer(Modifier.height(6.dp))
+                        Text("Importance", style = SibType.bodyStrong, color = c.ink)
+                        Choice(listOf(Importance.LOW to "Low", Importance.NORMAL to "Normal", Importance.HIGH to "High", Importance.CRITICAL to "Critical"), o.importance,
+                            { scope.launch { save(o.copy(importance = it), "importance changed") } })
+                    }
+                    GroupDivider()
+                }
+                if (active) {
+                    FoldItem(SibIcon.PAUSE, "Pause", hint = o.postponedUntil?.let { "Until " + fmt.dayShort(it) }) {
+                        val pausedUntil = o.postponedUntil
+                        if (pausedUntil != null) {
+                            Text("Paused until ${fmt.dayShort(pausedUntil)}. No work is planned before then.", style = SibType.body, color = c.ink)
+                            SibButton("Resume now", { scope.launch { ready.store.postpone(id, null) } }, kind = ButtonKind.QUIET)
+                        } else {
+                            Text("Pause planning without moving the date.", style = SibType.body, color = c.inkSoft)
+                            SibButton("Pause until a date", { pickDate = "pause" }, kind = ButtonKind.QUIET)
+                        }
+                    }
+                    GroupDivider()
+                }
+                FoldItem(SibIcon.MORE, "More") {
+                    if (!active) SibButton("Reopen", { scope.launch { ready.store.reopen(id); ready.social?.markDone(id, false) } }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                    SibButton("Delete this deadline", { confirmDelete = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER)
+                }
+            }
         }
         if (tab == DetailTab.STEPS) {
         // ---- steps ----
@@ -278,27 +362,11 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                             Text(s.title, style = SibType.body, color = if (s.done) c.inkSoft else c.ink)
                             Text(listOfNotNull(s.targetDay?.let { fmt.dayShort(it) }, fmt.minutes(s.minutes)).joinToString("  ·  "), style = SibType.small, color = c.inkSoft)
                         }
-                        Text("Remove", style = SibType.small, color = c.inkSoft, modifier = Modifier.clickable { scope.launch { ready.store.removeStep(s.id) } }.padding(8.dp))
+                        Box(Modifier.size(44.dp).clickable(role = Role.Button) { scope.launch { ready.store.removeStep(s.id) } }.semantics { contentDescription = "Remove step" }, contentAlignment = Alignment.Center) { SibIconView(SibIcon.CLOSE, size = 18.dp, tint = c.inkSoft) }
                     }
                 }
                 Spacer(Modifier.height(6.dp))
                 SibButton("Go back to suggested steps", { scope.launch { ready.store.saveSteps(id, emptyList()) } }, kind = ButtonKind.TEXT)
-            }
-        }
-
-        }
-        if (tab == DetailTab.OVERVIEW && adjust) {
-        // ---- pause ----
-        if (o.lifecycle == Lifecycle.ACTIVE) {
-            SectionHeader("Pause")
-            val pausedUntil = o.postponedUntil
-            if (pausedUntil != null) {
-                Text("Paused until ${fmt.dayShort(pausedUntil)}. No work is planned before then.", style = SibType.body, color = c.ink)
-                SibButton("Resume now", { scope.launch { ready.store.postpone(id, null) } }, kind = ButtonKind.QUIET)
-            } else {
-                Text("Pause planning without moving the date.", style = SibType.body, color = c.inkSoft)
-                Spacer(Modifier.height(6.dp))
-                SibButton("Pause until...", { pickDate = "pause" }, kind = ButtonKind.QUIET)
             }
         }
 
@@ -322,7 +390,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             excerpts.forEach { e ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.Top) {
                     Text("“${e.excerpt}”", style = SibType.small, color = c.ink, modifier = Modifier.weight(1f))
-                    Text("Delete", style = SibType.small, color = c.vermilion, modifier = Modifier.clickable { scope.launch { ready.store.deleteExcerpt(e.id) } }.padding(8.dp))
+                    Box(Modifier.size(44.dp).clickable(role = Role.Button) { scope.launch { ready.store.deleteExcerpt(e.id) } }.semantics { contentDescription = "Delete this excerpt" }, contentAlignment = Alignment.Center) { SibIconView(SibIcon.TRASH, size = 18.dp, tint = c.vermilion) }
                 }
             }
         }
@@ -337,29 +405,11 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
         }
         Spacer(Modifier.height(4.dp))
         More("Every change to this deadline is chained to the one before it, so an edit that was not recorded can be detected.", label = "How does this work?")
-        history.reversed().forEach { e ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                Text(fmt.dayShort(Instant.ofEpochSecond(e.atEpochSec).atZone(st.zone).toLocalDate()), style = SibType.small, color = c.inkSoft, modifier = Modifier.width(96.dp))
-                Column(Modifier.weight(1f)) {
-                    if (e.field == "created") Text("Created: ${e.newValue}", style = SibType.small, color = c.ink)
-                    else Text("${e.field.replaceFirstChar { it.uppercase() }}: ${e.oldValue}  →  ${e.newValue}", style = SibType.small, color = c.ink)
-                    Text(
-                        (if (e.actor == "USER") "by you" else "after you accepted a suggestion") + ", " + e.reason,
-                        style = SibType.small.copy(fontSize = 12.sp), color = c.inkSoft,
-                    )
-                }
-            }
+        Gap(12.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            history.reversed().forEach { e -> HistoryEntryCard(e, fmt, st.zone) }
         }
 
-        }
-        if (tab == DetailTab.OVERVIEW && adjust) {
-        // ---- danger zone ----
-        Spacer(Modifier.height(20.dp))
-        if (o.lifecycle != Lifecycle.ACTIVE) {
-            SibButton("Reopen", { scope.launch { ready.store.reopen(id) } }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
-            Spacer(Modifier.height(8.dp))
-        }
-        SibButton("Delete this deadline", { confirmDelete = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER)
         }
         Spacer(Modifier.height(40.dp))
     }
@@ -392,6 +442,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             val bytes = image?.let { readScaledJpeg(context, it) }
             ready.store.complete(id, note, bytes)
             ready.engine.refreshCalibration()
+            ready.social?.markDone(id, true)
         }
     }
 
@@ -400,8 +451,23 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             onDismissRequest = { confirmDelete = false },
             containerColor = c.raised,
             title = { Text("Delete this deadline?", style = SibType.title, color = c.ink) },
-            text = { Text("Its history, steps and receipts are deleted from this phone. Backups you already made keep their own copy.", style = SibType.body, color = c.inkSoft) },
-            confirmButton = { TextButton({ confirmDelete = false; scope.launch { ready.store.delete(id); onDeleted() } }) { Text("Delete", style = SibType.bodyStrong, color = c.vermilion) } },
+            text = {
+                Text(
+                    "Its history, steps and receipts are deleted from this phone. Backups you already made keep their own copy." +
+                        when {
+                            shared == null || shared.removed -> ""
+                            shared.isOwner -> " It is also deleted for everyone you shared it with."
+                            else -> " You also leave the shared deadline."
+                        },
+                    style = SibType.body, color = c.inkSoft,
+                )
+            },
+            confirmButton = {
+                TextButton({
+                    confirmDelete = false
+                    scope.launch { shared?.let { ready.social?.leaveOrDelete(it.roomId) }; ready.store.delete(id); onDeleted() }
+                }) { Text("Delete", style = SibType.bodyStrong, color = c.vermilion) }
+            },
             dismissButton = { TextButton({ confirmDelete = false }) { Text("Keep it", style = SibType.body, color = c.ink) } },
         )
     }

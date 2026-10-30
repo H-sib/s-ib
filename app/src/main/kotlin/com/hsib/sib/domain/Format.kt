@@ -36,6 +36,9 @@ class Fmt(context: Context, private val locale: Locale = Locale.getDefault()) {
     fun weekday(d: LocalDate): String = weekday.format(d)
 
     /** One letter for the month, in the phone's language, for tight spaces such as the year ribbon. */
+    /** A short month name such as "Oct", in the phone's language. */
+    fun monthShort(d: LocalDate): String = d.month.getDisplayName(TextStyle.SHORT, locale)
+
     fun monthInitial(d: LocalDate): String = d.month.getDisplayName(TextStyle.NARROW_STANDALONE, locale)
     fun monthYear(d: LocalDate): String = monthYear.format(d)
     fun time(t: java.time.LocalTime): String = time.format(t)

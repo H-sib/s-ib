@@ -88,6 +88,45 @@ Use Anthropic's "Cloud Code Security Review Scale"
   No tool or scale with that name was available in this environment, so none was run. Claude Code does have a
   /security-review command; run it yourself in a terminal from the project folder if you want an independent pass.
 
+Notification reading (added after the first pass)
+  The optional chat reader is a NotificationListenerService, which is the most sensitive thing the app can ask for, so it
+  was reviewed on its own.
+  - The service is exported only because Android requires it, and it is protected by BIND_NOTIFICATION_LISTENER_SERVICE,
+    which only the system can hold. No other app can bind to it.
+  - It is dormant until the owner does two things: switches S-IB on in Android's own notification access list, and ticks
+    apps inside S-IB. A prominent disclosure screen comes before Android's list opens.
+  - Only an allowlist of 16 known chat and mail packages can be offered, and only the ticked ones are read. Everything else
+    is dropped before its text is looked at. Ongoing, group-summary and S-IB's own notifications are ignored.
+  - Text is assembled once, capped at 4,000 characters, passed through the same on-device extractor as pasted text, and
+    never stored. A suggestion keeps only the sentence it came from. Nothing becomes a deadline without Review.
+  - No network permission exists, so the text cannot leave the phone. The permission check in the pipeline still fails
+    the build if INTERNET appears.
+  - The notification bar dashboard hides deadline titles on the lock screen unless the owner chooses otherwise.
+  - Covered by tests for assembly, the length cap, the chatter filter and the app list, plus rendering tests for the dashboard.
+
+Sharing and chat (designed and built behind a switch, not in release builds yet)
+  Reviewed as a design and as code, but only against an in memory server. Nothing here has met a real Firebase project.
+  - End to end sealing. Titles, dates, notes and chat are sealed on the phone with a per room 256 bit key
+    (XChaCha20-Poly1305, random nonce, padded to 64 byte steps). The room, field, sender, message id and key version are bound
+    in as associated data, so a value cannot be moved to another room, replayed under another id or relabelled. Tests flip every
+    bit of a sealed value and of a wrapped key, truncate, extend, and confirm none opens.
+  - Key distribution. The room key is sealed for each member's public key (ephemeral X25519, HKDF, XChaCha20-Poly1305). A low
+    order public key, which would make the shared secret all zeros, is refused. A new member gets the key through the invite,
+    sealed with a 100 bit secret that never reaches the server. Removing someone makes a new key version, seals it for everyone
+    who stays and seals the details again; the removed person cannot open anything new, and old invites stop working.
+  - Invite codes are 50 bits of public id plus 100 bits of secret plus a checksum, expire after a week, and can be cancelled.
+  - Hostile input. Everything from another phone (the shared deadline, a name, a message) is parsed defensively, cleaned and
+    bounded; a damaged date becomes no date, never a wrong one; a malformed or foreign message is skipped silently.
+  - Server rules. firebase\firestore.rules gives the server side of every permission (members only, owner only, one message a
+    second, size limits, no listing). Written and reviewed, NOT yet run in the emulator. The app tests run the same rules in
+    FakeBackend.
+  - Structure. A test fails the build if the notification reader, importer, backup or database code can reach the sharing code
+    or a network library, so notification text cannot be sent by construction.
+  - What is weaker than before, said plainly: with the INTERNET permission the app can no longer prove it "cannot" send data,
+    only that it does not and that the code is arranged so it does not. The server sees who is in which room, names, and message
+    times and sizes. A lost phone with no backed up key loses old chat. The rules cannot enforce the limit of rooms per person.
+  See docs\FRIENDS_AND_CHAT_DESIGN.txt and firebase\README.txt.
+
 ------------------------------------------------------------------------
 FIXES MADE DURING THIS REVIEW
 1. Calendar-file injection. A bare carriage return, a Unicode line separator or a control character inside a title or note
@@ -112,7 +151,9 @@ HONEST LIMITS AND WHAT IS LEFT
 - A dependency advisory scan (OWASP dependency-check or Google Play's pre-launch report) is worth running before launch.
 - The Google Play data safety form depends on this review staying true: no INTERNET permission, which the pipeline checks
   on every build.
-- Final build after these fixes: 218 tests pass (180 core, 38 app including 5 hostile-input tests), lint passes, the
+- Final build after these fixes: 234 tests pass (180 core, 54 app including 5 hostile-input tests), lint passes, the
   signed bundle was rebuilt, and the release manifest was re-checked (no INTERNET, not debuggable).
-- Claude Code's /security-review command was tried and could not run: it needs a git repository and this folder is not
-  one. After `git init` and a first commit it can review later changes.
+- Claude Code's /security-review command could not run earlier because the folder was not a git repository. It is one
+  now (a first commit exists), so you can run it yourself from a terminal to review later changes.
+- Notification access is a permission Google Play reviews closely. The listing and the disclosure screen explain why it is
+  needed; keep them true.

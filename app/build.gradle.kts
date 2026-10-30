@@ -1,3 +1,5 @@
+import com.android.build.api.artifact.SingleArtifact
+import groovy.json.JsonSlurper
 import java.util.Properties
 
 plugins {
@@ -13,6 +15,67 @@ val signingProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// The Firebase connection. The owner downloads google-services.json from the Firebase console into app/ (git-ignored).
+// Present: sharing and Google sign in are switched on and the network permissions are kept. Absent: sharing stays off and the
+// merged manifest has no network permission at all, which tools/consistency-check.py verifies against the privacy text.
+@Suppress("UNCHECKED_CAST")
+val firebase: Map<String, String>? = file("google-services.json").takeIf { it.exists() }?.let { f ->
+    val root = JsonSlurper().parse(f) as Map<String, Any?>
+    val project = root["project_info"] as Map<String, Any?>
+    val clients = (root["client"] as? List<Map<String, Any?>>).orEmpty()
+    val mine = clients.firstOrNull { c ->
+        (((c["client_info"] as? Map<String, Any?>)?.get("android_client_info")) as? Map<String, Any?>)?.get("package_name") == "com.hsib.sib"
+    }
+    if (mine == null) {
+        logger.warn("google-services.json has no Android app for com.hsib.sib: sharing stays off.")
+        null
+    } else {
+        val webId = (mine["oauth_client"] as? List<Map<String, Any?>>).orEmpty()
+            .firstOrNull { (it["client_type"] as? Number)?.toInt() == 3 }?.get("client_id") as? String
+        val key = ((mine["api_key"] as? List<Map<String, Any?>>)?.firstOrNull()?.get("current_key")) as? String
+        if (webId == null || key == null) {
+            logger.warn("google-services.json lacks a web client id or API key (turn on the Google sign in provider, then download it again): sharing stays off.")
+            null
+        } else {
+            mapOf(
+                "apiKey" to key,
+                "appId" to ((mine["client_info"] as Map<String, Any?>)["mobilesdk_app_id"] as String),
+                "projectId" to (project["project_id"] as String),
+                "webClientId" to webId,
+            )
+        }
+    }
+}
+
+/**
+ * Without a Firebase connection the finished manifest must contain no network permission, whatever the libraries ask for.
+ * This rewrites the merged manifest of a variant; with a connection it is not registered and the permissions stay.
+ */
+abstract class StripNetworkPermissions : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val merged: RegularFileProperty
+
+    @get:OutputFile
+    abstract val stripped: RegularFileProperty
+
+    @TaskAction
+    fun run() {
+        // A whole line such as:  <uses-permission android:name="android.permission.INTERNET" />  (any attributes or layout)
+        val permission = Regex("""[ \t]*<uses-permission(-sdk-23)?\s+android:name="android\.permission\.(INTERNET|ACCESS_NETWORK_STATE)"[^>]*/>[ \t]*\r?\n?""")
+        stripped.get().asFile.writeText(merged.get().asFile.readText().replace(permission, ""))
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        if (firebase == null) {
+            val task = tasks.register<StripNetworkPermissions>("${variant.name}StripNetworkPermissions")
+            variant.artifacts.use(task).wiredWithFiles(StripNetworkPermissions::merged, StripNetworkPermissions::stripped).toTransform(SingleArtifact.MERGED_MANIFEST)
+        }
+    }
+}
+
 android {
     namespace = "com.hsib.sib"
     compileSdk = 37
@@ -24,6 +87,11 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("boolean", "FIREBASE_READY", (firebase != null).toString())
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${firebase?.get("apiKey").orEmpty()}\"")
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${firebase?.get("appId").orEmpty()}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${firebase?.get("projectId").orEmpty()}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${firebase?.get("webClientId").orEmpty()}\"")
     }
 
     signingConfigs {
@@ -54,6 +122,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    // The exported database schemas, so the migration test can build any shipped version of the database (debug builds only).
+    sourceSets {
+        getByName("debug").assets.srcDir("$projectDir/schemas")
     }
 
     testOptions {
@@ -115,6 +188,17 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 
+    // Sharing and chat. Google sign in through Android's Credential Manager, accounts in Firebase Authentication, sealed
+    // data in Cloud Firestore, App Check so only this app can use the project. Dormant without google-services.json.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    debugImplementation(libs.firebase.appcheck.debug)
+
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
@@ -125,4 +209,5 @@ dependencies {
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.androidx.room.testing)
 }

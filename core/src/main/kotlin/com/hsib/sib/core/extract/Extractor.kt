@@ -86,7 +86,7 @@ class Extractor(
         val sourcePrior = when (source) {
             SourceType.MANUAL, SourceType.SHARE_TEXT, SourceType.PASTE, SourceType.SELECTION, SourceType.DEMO -> 1.0
             SourceType.CHAT_EXPORT, SourceType.FILE, SourceType.SHARE_PDF, SourceType.ICS -> 0.95
-            SourceType.SCAN, SourceType.SHARE_IMAGE -> 0.9
+            SourceType.SCAN, SourceType.SHARE_IMAGE, SourceType.NOTIFICATION -> 0.9
         }
 
         for (a in analysis.mentions) {

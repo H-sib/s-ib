@@ -115,7 +115,7 @@ class Importer(
         ImportResult(ex, ex.candidates, label, text.length)
     }
 
-    /** Only content:// sources are read. A file:// address would let another app point S-IB at its own private files. */
+    /** Only content:// sources are read. A file:// address would let another app point H-sib Reminder at its own private files. */
     private fun Uri.isContent() = scheme == ContentResolver.SCHEME_CONTENT
 
     suspend fun fromUri(uri: Uri, hintMime: String? = null): ImportResult = withContext(Dispatchers.IO) {
@@ -141,7 +141,7 @@ class Importer(
         } catch (e: DocText.TooLargeException) {
             fail("That file is too large or too complex to read safely.")
         } catch (e: SecurityException) {
-            fail("S-IB was not allowed to read that file.")
+            fail("H-sib Reminder was not allowed to read that file.")
         } catch (e: Exception) {
             fail("That file could not be read.")
         }

@@ -9,9 +9,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
@@ -52,12 +50,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import com.hsib.sib.BuildConfig
 import com.hsib.sib.Ready
@@ -70,6 +68,7 @@ import com.hsib.sib.data.DataCounts
 import com.hsib.sib.data.LockScreenDetail
 import com.hsib.sib.data.ThemeMode
 import com.hsib.sib.domain.AppState
+import com.hsib.sib.social.SocialState
 import com.hsib.sib.platform.Notifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -104,29 +103,47 @@ private fun LocalTime.hhmm() = "%02d:%02d".format(hour, minute)
 // ---- root ---------------------------------------------------------------------------------------
 
 @Composable
-fun SettingsHome(st: AppState, onNav: (String) -> Unit) {
+fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> Unit) {
     val c = SibTheme.colors
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
+    Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
-        NavRow("Reminders", "Your time each day, quiet hours, how many reminders", { onNav("settings/reminders") })
-        Hairline()
-        NavRow("Notifications and privacy", "What shows on the lock screen, the Today summary", { onNav("settings/notifications") })
-        Hairline()
-        NavRow("Sources", "What S-IB can read, and what it keeps", { onNav("settings/sources") })
-        Hairline()
-        NavRow("Backup and restore", if (st.settings.backupFolder != null) "On" else "Not set up", { onNav("settings/backup") })
-        Hairline()
-        NavRow("Privacy and data", "What is stored, what permissions S-IB has", { onNav("settings/privacy") })
-        Hairline()
-        NavRow("Security", if (st.settings.appLock) "App lock on" else "App lock off", { onNav("settings/security") })
-        Hairline()
-        NavRow("Close ones", if (st.settings.closeOnesEnabled) "On" else "Hidden", { onNav("settings/close") })
-        Hairline()
-        NavRow("Appearance", null, { onNav("settings/appearance") })
-        Hairline()
-        NavRow("Reminder health check", "Make sure reminders can reach you", { onNav("settings/health") })
-        Hairline()
-        NavRow("About", "Version ${BuildConfig.VERSION_NAME}", { onNav("settings/about") })
+        Group(null, Modifier.padding(top = 0.dp)) {
+            NavItem("Guide", "Everything the app can do, in a few lines", { onNav("settings/guide") })
+        }
+        if (social != null) {
+            Group("Account") {
+                NavItem("Friends", social.user?.let { "Signed in as ${it.displayName}" } ?: "Share a deadline and chat about it", { onNav("friends") })
+            }
+        }
+        Group("Daily use") {
+            NavItem("Reminders", "Your time each day, quiet hours, how many reminders", { onNav("settings/reminders") })
+            GroupDivider()
+            NavItem("Chats and notifications", if (st.settings.notificationReaderApps.isEmpty()) "Find deadlines in your chats" else "Reading ${st.settings.notificationReaderApps.size} apps", { onNav("settings/reader") })
+            GroupDivider()
+            NavItem("Notification dashboard", null, { onNav("settings/notifications") }, trailing = if (st.settings.todayNotification) "On" else "Off")
+            GroupDivider()
+            NavItem("Close ones", null, { onNav("settings/close") }, trailing = if (st.settings.closeOnesEnabled) "On" else "Hidden")
+            GroupDivider()
+            NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
+        }
+        Group("Data and safety") {
+            NavItem("Backup and restore", null, { onNav("settings/backup") }, trailing = if (st.settings.backupFolder != null) "On" else "Not set up")
+            GroupDivider()
+            NavItem("Security", null, { onNav("settings/security") }, trailing = if (st.settings.appLock) "App lock on" else "App lock off")
+            GroupDivider()
+            NavItem("Privacy and data", "What is stored and which permissions it has", { onNav("settings/privacy") })
+            GroupDivider()
+            NavItem("Sources", "What it can read, and what it keeps", { onNav("settings/sources") })
+            GroupDivider()
+            NavItem("Terms and security", "What you agreed to, and how data is protected", { onNav("settings/terms") })
+        }
+        Group("Help") {
+            NavItem("Reminder health check", "Make sure reminders can reach you", { onNav("settings/health") })
+            GroupDivider()
+            NavItem("Send feedback", "Tell the maker what to improve", { onNav("settings/feedback") })
+            GroupDivider()
+            NavItem("About", null, { onNav("settings/about") }, trailing = BuildConfig.VERSION_NAME)
+        }
         Spacer(Modifier.height(32.dp))
     }
 }
@@ -142,7 +159,7 @@ fun RemindersSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     Page("Reminders", onBack) {
         SectionHeader("Your time")
-        Explain("How much time you can usually give to your deadlines. S-IB spreads the work inside this, and tells you when it does not fit.")
+        Explain("How much time you can usually give to your deadlines. H-sib Reminder spreads the work inside this, and tells you when it does not fit.")
         Stepper("On a normal day", fmtMin(s.weekdayMinutes), { update { it.copy(weekdayMinutes = (s.weekdayMinutes - 15).coerceAtLeast(0)) } }, { update { it.copy(weekdayMinutes = (s.weekdayMinutes + 15).coerceAtMost(960)) } })
         Stepper("On a rest day", fmtMin(s.weekendMinutes), { update { it.copy(weekendMinutes = (s.weekendMinutes - 15).coerceAtLeast(0)) } }, { update { it.copy(weekendMinutes = (s.weekendMinutes + 15).coerceAtMost(960)) } })
         Text("Rest days", style = SibType.bodyStrong, color = SibTheme.colors.ink, modifier = Modifier.padding(top = 10.dp))
@@ -156,7 +173,7 @@ fun RemindersSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         Choice(listOf(DayOfWeek.MONDAY to "Monday", DayOfWeek.SATURDAY to "Saturday", DayOfWeek.SUNDAY to "Sunday"), s.weekStart, { update { cur -> cur.copy(weekStart = it) } })
         Text("A date like 03/04 means", style = SibType.bodyStrong, color = SibTheme.colors.ink, modifier = Modifier.padding(top = 14.dp))
         Choice(listOf(DateOrder.AUTO to "Phone default", DateOrder.DMY to "Day first", DateOrder.MDY to "Month first"), s.dateOrder, { update { cur -> cur.copy(dateOrder = it) } })
-        Explain("Used when a shared notice is ambiguous. S-IB always shows you the other reading too.")
+        Explain("Used when a shared notice is ambiguous. H-sib Reminder always shows you the other reading too.")
 
         SectionHeader("How often it speaks")
         Stepper("Reminders per day", s.dailyBudget.toString(), { update { it.copy(dailyBudget = (s.dailyBudget - 1).coerceAtLeast(0)) } }, { update { it.copy(dailyBudget = (s.dailyBudget + 1).coerceAtMost(10)) } },
@@ -170,7 +187,7 @@ fun RemindersSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         }
 
         SectionHeader("Quiet hours")
-        Explain("Nothing makes a sound between these times. A reminder that would land inside is moved to just after, or to just before if the deadline is too close.")
+        Explain("Nothing makes a sound between these times. A reminder that would land inside is moved to the minute quiet hours end, or to the minute they begin if the deadline is too close.")
         Stepper("Starts", s.quietStart.hhmm(), { update { it.copy(quietStart = s.quietStart.minusMinutes(30)) } }, { update { it.copy(quietStart = s.quietStart.plusMinutes(30)) } })
         Stepper("Ends", s.quietEnd.hhmm(), { update { it.copy(quietEnd = s.quietEnd.minusMinutes(30)) } }, { update { it.copy(quietEnd = s.quietEnd.plusMinutes(30)) } })
         Stepper("Morning reminders at", s.morning.hhmm(), { update { it.copy(morning = s.morning.minusMinutes(30)) } }, { update { it.copy(morning = s.morning.plusMinutes(30)) } })
@@ -204,9 +221,11 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
             }
         }
         SectionHeader("Screen privacy")
-        ToggleRow("Hide contents in the app switcher and screenshots", "Stops other people seeing your deadlines in the recents list.", st.settings.hideInRecents, { v -> scope.launch { ready.settings.update { it.copy(hideInRecents = v) } } })
+        ToggleRow("Block screenshots", "Also hides the app in the recent apps list. Off by default.", st.settings.hideInRecents, { v -> scope.launch { ready.settings.update { it.copy(hideInRecents = v) } } })
         SectionHeader("Motion")
-        ToggleRow("Reduce motion", "Skips the filling rings and other animations. S-IB also follows your phone's Remove animations setting.", st.settings.reduceMotion, { v -> scope.launch { ready.settings.update { it.copy(reduceMotion = v) } } })
+        ToggleRow("Reduce motion", "Skips the filling rings and other animations. H-sib Reminder also follows your phone's Remove animations setting.", st.settings.reduceMotion, { v -> scope.launch { ready.settings.update { it.copy(reduceMotion = v) } } })
+        SectionHeader("Opening")
+        Choice(com.hsib.sib.data.IntroSpeed.values().map { it to it.label }, st.settings.introSpeed, { v -> scope.launch { ready.settings.update { it.copy(introSpeed = v) } } })
         Gap(40.dp)
     }
 }
@@ -251,12 +270,14 @@ fun CloseOnesSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
     Page("Close ones", onBack) {
         Explain("A private space for the dates that matter to the people closest to you: anniversaries, birthdays, date nights and gifts. It has its own colours and its own gentle reminders.")
         ToggleRow("Show Close ones on Today", "Turn this off to hide the entry. Your dates stay saved and their reminders keep working.", st.settings.closeOnesEnabled, { v -> scope.launch { ready.settings.update { it.copy(closeOnesEnabled = v) } } })
-        SectionHeader("How it is kept private")
-        SourceRow("Lock screen", "Reminders from Close ones never show a title or a name on the lock screen, whatever you chose for deadlines. They read \"A reminder\" until you unlock.")
-        Hairline()
-        SourceRow("Everywhere else", "Close ones are left out of the widget, the Quick Settings tile, the daily summary, the calendar export and sharing.")
-        Hairline()
-        SourceRow("Backups", "They are included in your encrypted backup, so a new phone gets them back.")
+        Group("How it is kept private") {
+            ExpandItem("Lock screen", "Reminders from Close ones never show a title or a name on the lock screen, whatever you chose for deadlines. They read \"A reminder\" until you unlock.")
+            GroupDivider()
+            ExpandItem("Everywhere else", "Close ones are left out of the widget, the Quick Settings tile, the daily summary, the calendar export and sharing.")
+            GroupDivider()
+            ExpandItem("Backups", "They are included in your encrypted backup, so a new phone gets them back.")
+        }
+        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -270,11 +291,26 @@ fun NotificationSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         SectionHeader("Lock screen")
         Choice(listOf(LockScreenDetail.HIDDEN to "Hide details", LockScreenDetail.TITLES to "Show titles"), st.settings.lockScreenDetail, { v -> scope.launch { ready.settings.update { it.copy(lockScreenDetail = v) } } })
         Explain("With details hidden, a locked phone only shows that a reminder exists. The same choice applies to the home-screen widget and the Quick Settings tile.")
-        SectionHeader("Today summary in the notification shade")
-        ToggleRow("Keep a Today summary", "One quiet notification that shows what is overdue, due and ready to start. You can swipe it away; S-IB respects that and turns it off.", st.settings.todayNotification, { v -> scope.launch { ready.settings.update { it.copy(todayNotification = v) } } })
-        Explain("Android does not allow an interactive dashboard in the shade, and its Live Updates feature is not permitted for upcoming events. This single notification, the Quick Settings tile and the widget are the closest that apps may offer.")
+        SectionHeader("Notification bar card")
+        ToggleRow("Show my next deadline", "A card in the notification bar whenever something needs you. Swipe it away whenever you like; it comes back tomorrow, or sooner if the date gets closer.", st.settings.todayNotification, { v -> scope.launch { ready.settings.update { it.copy(todayNotification = v) } } })
+        Gap(8.dp)
+        DashboardPreview(3, "Signals lab report", "Fri, Oct 16  ·  in 3 days", expanded = true)
+        Explain("The colour warms from violet to amber to coral as the date gets close, and one step faster for a critical deadline. Pull the card down to see the next deadlines, Open and Done.")
+        Gap(8.dp)
+        var confirmKeep by remember { mutableStateOf(false) }
+        ToggleRow("Keep it after Clear all", "Stays even when you clear all notifications, so your next deadline is always one pull away. It is your choice, and you can turn it off here. Newer versions of Android may still let you swipe it away.", st.settings.todayPinned, { v -> if (v) confirmKeep = true else scope.launch { ready.settings.update { it.copy(todayPinned = false) } } })
+        if (confirmKeep) {
+            val c = SibTheme.colors
+            AlertDialog(
+                onDismissRequest = { confirmKeep = false }, containerColor = c.raised,
+                title = { Text("Keep the card after Clear all?", style = SibType.title, color = c.ink) },
+                text = { Text("Clear all will no longer remove it. You can turn this off here at any time, and the card still disappears by itself when nothing needs you.", style = SibType.body, color = c.inkSoft) },
+                confirmButton = { TextButton({ confirmKeep = false; scope.launch { ready.settings.update { it.copy(todayPinned = true) } } }) { Text("Keep it", style = SibType.bodyStrong, color = c.violet) } },
+                dismissButton = { TextButton({ confirmKeep = false }) { Text("Not now", style = SibType.body, color = c.ink) } },
+            )
+        }
         SectionHeader("Quick Settings tile and widget")
-        Explain("Pull the shade down twice, tap the pencil, and drag the S-IB tile into your panel. Long-press your home screen, choose Widgets, and add Next up.")
+        Explain("Pull the shade down twice, tap the pencil, and drag the H-sib Reminder tile into your panel. Long-press your home screen, choose Widgets, and add Next up.")
         Spacer(Modifier.height(8.dp))
         SibButton("Open system notification settings", {
             ctx.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName))
@@ -289,43 +325,36 @@ fun SourcesSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val dismissed by produceState(0, st.pending.size) { value = withContext(Dispatchers.IO) { ready.store.counts().dismissed } }
     Page("Sources", onBack) {
-        Explain("S-IB never reads other apps by itself. It only reads what you hand it, and it reads it on this phone. Nothing here needs the internet.")
-        SectionHeader("What you can hand it")
-        SourceRow("Share from any app", "Text, screenshots, photos and PDFs. Choose S-IB in the share menu.")
-        Hairline()
-        SourceRow("Copied messages", "Tap Paste when adding. S-IB reads the clipboard only when you tap it.")
-        Hairline()
-        SourceRow("Photos and scans", "Pick a picture, or scan a notice. Text is read on the phone and the picture is not kept.")
-        Hairline()
-        SourceRow("Documents", "PDF, Word and Excel files, read with strict size limits.")
-        Hairline()
-        SourceRow("Calendar files", ".ics files give exact dates and times.")
-        Hairline()
-        SourceRow("Chat exports", "Export one chat from a messaging app and open it in S-IB. Relative dates like tomorrow are read against when each message was sent, and sender names are not kept.")
-        SectionHeader("What S-IB will not do")
-        Explain("It will not read your messages, email or notifications in the background, and it has no accessibility service. Those routes need powers that are not worth giving to a reminder app.")
-        SectionHeader("What it keeps")
-        Stepper("Forget old suggestions after", "${st.settings.candidateTtlDays} days", { scope.launch { ready.settings.update { it.copy(candidateTtlDays = (st.settings.candidateTtlDays - 7).coerceAtLeast(7)) } } }, { scope.launch { ready.settings.update { it.copy(candidateTtlDays = (st.settings.candidateTtlDays + 7).coerceAtMost(90)) } } })
-        ToggleRow("Keep the sentence as evidence by default", "Off by default. You can choose per deadline too.", st.settings.keepExcerptsByDefault, { v -> scope.launch { ready.settings.update { it.copy(keepExcerptsByDefault = v) } } })
-        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Dismissed suggestions remembered: $dismissed", style = SibType.body, color = SibTheme.colors.ink, modifier = Modifier.weight(1f))
-            if (dismissed > 0) SibButton("Forget", { scope.launch(Dispatchers.IO) { ready.db.dismissed().clear() } }, kind = ButtonKind.QUIET)
+        Text("It only reads what you hand it, on this phone. Nothing here needs the internet.", style = SibType.body, color = SibTheme.colors.inkSoft)
+        Group("What you can hand it") {
+            ExpandItem("Share from any app", "Text, screenshots, photos and PDFs. Choose H-sib Reminder in the share menu.")
+            GroupDivider()
+            ExpandItem("Copied messages", "Tap Paste when adding. H-sib Reminder reads the clipboard only when you tap it.")
+            GroupDivider()
+            ExpandItem("Photos and scans", "Pick a picture, or scan a notice. Text is read on the phone and the picture is not kept.")
+            GroupDivider()
+            ExpandItem("Documents", "PDF, Word and Excel files, read with strict size limits.")
+            GroupDivider()
+            ExpandItem("Calendar files", ".ics files give exact dates and times.")
+            GroupDivider()
+            ExpandItem("Chat exports", "Export one chat from a messaging app and open it in H-sib Reminder. Relative dates like tomorrow are read against when each message was sent, and sender names are not kept.")
         }
-        Explain("Only an unreadable fingerprint is kept for each, so the same suggestion is not shown twice. Never the text.")
-    }
-}
-
-/** A titled fact. The detail opens on tap so the page stays a short list. */
-@Composable
-private fun SourceRow(title: String, body: String) {
-    val c = SibTheme.colors
-    var open by rememberSaveable(title) { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(20.dp)).background(c.raised).bounceClick(role = Role.Button) { open = !open }.padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text(title, style = SibType.title, color = c.ink)
-        if (open) {
-            Spacer(Modifier.height(6.dp))
-            Text(body, style = SibType.body, color = c.ink)
+        Group("What it will not do") {
+            TextItem("It does not read your messages, email or notifications in the background unless you switch that on, and it has no accessibility service. Those routes need powers that are not worth giving to a reminder app.")
         }
+        Group("What it keeps") {
+            GroupPad { Stepper("Forget old suggestions after", "${st.settings.candidateTtlDays} days", { scope.launch { ready.settings.update { it.copy(candidateTtlDays = (st.settings.candidateTtlDays - 7).coerceAtLeast(7)) } } }, { scope.launch { ready.settings.update { it.copy(candidateTtlDays = (st.settings.candidateTtlDays + 7).coerceAtMost(90)) } } }) }
+            GroupDivider()
+            GroupPad { ToggleRow("Keep the sentence as evidence by default", "Off by default. You can choose per deadline too.", st.settings.keepExcerptsByDefault, { v -> scope.launch { ready.settings.update { it.copy(keepExcerptsByDefault = v) } } }) }
+            GroupDivider()
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Dismissed suggestions remembered: $dismissed", style = SibType.body, color = SibTheme.colors.ink, modifier = Modifier.weight(1f))
+                if (dismissed > 0) SibButton("Forget", { scope.launch(Dispatchers.IO) { ready.db.dismissed().clear() } }, kind = ButtonKind.QUIET, compact = true)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Only an unreadable fingerprint is kept for each dismissed suggestion, so it is not shown twice. Never the text.", style = SibType.small, color = SibTheme.colors.inkSoft)
+        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -335,23 +364,26 @@ private fun SourceRow(title: String, body: String) {
 fun SecuritySettings(st: AppState, ready: Ready, onBack: () -> Unit, onEnableLock: (Boolean) -> Unit) {
     val c = SibTheme.colors
     Page("Security", onBack) {
-        SectionHeader("App lock")
-        ToggleRow("Ask for fingerprint, face or screen lock", "Shown when you return to the app after a short break.", st.settings.appLock, onEnableLock)
-        Explain("The lock keeps people who pick up your phone out of the app. It is a screen in front of the app, not the encryption. Your data is encrypted whether the lock is on or off.")
-        SectionHeader("What protects your data")
-        SourceRow("On this phone", "The database is encrypted with AES-256. Its key is wrapped by a key that never leaves the phone's secure hardware where the phone has it.")
-        Hairline()
-        SourceRow("In backups", "Each backup is encrypted on this phone before it is saved anywhere. The storage app only receives scrambled data.")
-        Hairline()
-        SourceRow("Over the network", "S-IB asks for no internet permission, so it cannot send anything by itself.")
-        Hairline()
-        SourceRow("History", "Every change to a deadline is chained to the one before it, so changes that were not recorded can be detected.")
-        Gap(20.dp)
-        SourceRow(
-            "The honest limits",
-            "No app can protect you from a phone that is already compromised, from someone who knows your screen lock and your recovery key, or from malware that reads the screen while the app is open. " +
-                "If you lose both your phone and your recovery key, your backup cannot be opened by anyone, including the developer. That is by design.",
-        )
+        Group("App lock") {
+            GroupPad { ToggleRow("Ask for fingerprint, face or screen lock", "Shown when you return to the app after a short break.", st.settings.appLock, onEnableLock) }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("The lock keeps people who pick up your phone out of the app. It is a screen in front of the app, not the encryption. Your data is encrypted whether the lock is on or off.", style = SibType.small, color = c.inkSoft)
+        Group("What protects your data") {
+            ExpandItem("On this phone", "The database is encrypted with AES-256. Its key is wrapped by a key that never leaves the phone's secure hardware where the phone has it.")
+            GroupDivider()
+            ExpandItem("In backups", "Each backup is encrypted on this phone before it is saved anywhere. The storage app only receives scrambled data.")
+            GroupDivider()
+            ExpandItem("Over the network", if (BuildConfig.FIREBASE_READY) "The internet is used only if you sign in to share a deadline. What you share is sealed on your phone first, so the server cannot read it." else "This version asks for no internet permission, so it cannot send anything by itself.")
+            GroupDivider()
+            ExpandItem("History", "Every change to a deadline is chained to the one before it, so changes that were not recorded can be detected.")
+            GroupDivider()
+            ExpandItem(
+                "The honest limits",
+                "No app can protect you from a phone that is already compromised, from someone who knows your screen lock and your recovery key, or from malware that reads the screen while the app is open. " +
+                    "If you lose both your phone and your recovery key, your backup cannot be opened by anyone, including the developer. That is by design.",
+            )
+        }
         Spacer(Modifier.height(24.dp))
     }
 }
@@ -387,8 +419,7 @@ fun PrivacyScreen(st: AppState, ready: Ready, onBack: () -> Unit, onWiped: () ->
     var wiping by remember { mutableStateOf(false) }
 
     Page("Privacy and data", onBack) {
-        SectionHeader("The short version")
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(if (hasInternet) c.ochreWash else c.verdigrisWash).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(if (hasInternet) c.ochreWash else c.verdigrisWash).padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             UrgencyGlyph(if (hasInternet) UrgencyState.START_SOON else UrgencyState.DONE, size = 28.dp)
             Spacer(Modifier.width(12.dp))
             Column {
@@ -397,33 +428,41 @@ fun PrivacyScreen(st: AppState, ready: Ready, onBack: () -> Unit, onWiped: () ->
             }
         }
         Spacer(Modifier.height(10.dp))
-        Explain("Data leaves this phone only through two doors you open yourself: the backup folder you choose, and files you export or share. Both are explained below.")
+        Text("Data leaves this phone only through two doors you open yourself: the backup folder you choose, and files you export or share.", style = SibType.body, color = c.inkSoft)
 
-        SectionHeader("What S-IB holds right now")
-        val k = counts
-        if (k == null) Text("Counting...", style = SibType.small, color = c.inkSoft) else {
-            CountLine("Deadlines", k.obligations); CountLine("Suggestions waiting", k.candidates); CountLine("Steps", k.steps)
-            CountLine("Receipts kept", k.receipts); CountLine("Sentences kept as evidence", k.excerpts); CountLine("History entries", k.historyEntries)
-            CountLine("Dismissed fingerprints", k.dismissed)
+        Group("What it holds right now") {
+            val k = counts
+            if (k == null) TextItem("Counting") else {
+                ValueItem("Deadlines", k.obligations.toString()); GroupDivider()
+                ValueItem("Suggestions waiting", k.candidates.toString()); GroupDivider()
+                ValueItem("Steps", k.steps.toString()); GroupDivider()
+                ValueItem("Receipts kept", k.receipts.toString()); GroupDivider()
+                ValueItem("Sentences kept as evidence", k.excerpts.toString()); GroupDivider()
+                ValueItem("History entries", k.historyEntries.toString())
+            }
         }
-        Explain("Since you installed S-IB it has read ${stats.first} shared items and ${stats.second} chat messages. It kept none of the original text or images.")
+        Spacer(Modifier.height(8.dp))
+        Text("Since you installed it, it has read ${stats.first} shared items and ${stats.second} chat messages, and kept none of the original text or images.", style = SibType.small, color = c.inkSoft)
 
-        SectionHeader("Permissions this app asked for")
-        val listed = requested.mapNotNull(::friendlyPermission)
-        if (listed.isEmpty()) Text("None beyond the basics.", style = SibType.small, color = c.inkSoft)
-        listed.forEach { Text("• $it", style = SibType.body, color = c.ink) }
-        Explain("There is no permission for contacts, messages, location, the calendar, the microphone, storage or the internet. Files are opened through the system file picker, which only shares the file you pick.")
+        Group("Permissions") {
+            val listed = requested.mapNotNull(::friendlyPermission)
+            if (listed.isEmpty()) TextItem("None beyond the basics.")
+            listed.forEachIndexed { i, p -> if (i > 0) GroupDivider(); TextItem(p, strong = true) }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("It has no permission for contacts, messages, location, the calendar, the microphone or storage. Files are opened through the system file picker, which only shares the file you pick.", style = SibType.small, color = c.inkSoft)
 
-        SectionHeader("Where your data can go")
-        SourceRow("Your backup folder", "Only if you turn on backup. Encrypted before it leaves S-IB. Whatever app provides that folder cannot read it.")
-        Hairline()
-        SourceRow("Files you export", "A calendar file is plain text: anyone who gets it can read it. An encrypted export needs your passphrase.")
-        Hairline()
-        SourceRow("Android's own backup", "Switched off for S-IB. S-IB's keys cannot be restored onto another phone, so its backup is its own.")
+        Group("Where your data can go") {
+            ExpandItem("Your backup folder", "Only if you turn on backup. Encrypted before it leaves the app. Whatever app provides that folder cannot read it.")
+            GroupDivider()
+            ExpandItem("Files you export", "A calendar file is plain text: anyone who gets it can read it. An encrypted export needs your passphrase.")
+            GroupDivider()
+            ExpandItem("Android's own backup", "Switched off. The app's keys cannot be restored onto another phone, so its backup is its own.")
+        }
 
-        SectionHeader("Delete everything")
-        Explain("Removes all deadlines, history, receipts and settings from this phone and turns off backup. Backups you already made stay in your folder until you delete them there.")
-        if (!wiping) SibButton("Delete everything...", { wiping = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER) else {
+        Group("Delete everything") { TextItem("Removes all deadlines, history, receipts and settings from this phone and turns off backup. Backups you already made stay in your folder until you delete them there.") }
+        Spacer(Modifier.height(12.dp))
+        if (!wiping) SibButton("Delete everything", { wiping = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER) else {
             Field("Type DELETE to confirm", confirmText, { confirmText = it }, keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done))
             Spacer(Modifier.height(10.dp))
             SibButton("Delete everything now", {
@@ -436,14 +475,6 @@ fun PrivacyScreen(st: AppState, ready: Ready, onBack: () -> Unit, onWiped: () ->
             }, Modifier.fillMaxWidth(), ButtonKind.DANGER, enabled = confirmText.trim() == "DELETE")
         }
         Spacer(Modifier.height(32.dp))
-    }
-}
-
-@Composable
-private fun CountLine(label: String, n: Int) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
-        Text(label, style = SibType.body, color = SibTheme.colors.ink, modifier = Modifier.weight(1f))
-        Text(n.toString(), style = SibType.bodyStrong, color = SibTheme.colors.ink)
     }
 }
 
@@ -468,16 +499,18 @@ fun HealthScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
     var testSent by remember { mutableStateOf(false) }
 
     Page("Reminder health check", onBack) {
-        Explain("A reminder only helps if it can reach you. These checks look at your phone's settings, which can silently stop apps from notifying you.")
-        HealthRow("Notifications are allowed", enabled, if (enabled) "S-IB can show reminders." else "Android is blocking all notifications from S-IB.")
-        HealthRow("Reminder channels are on", !blocked, if (!blocked) "Both reminder channels can notify." else "A reminder channel is switched off in system settings.")
-        HealthRow("Do Not Disturb is off", !dnd, if (!dnd) "Nothing is silencing notifications right now." else "Do Not Disturb is on, so reminders may be silent until it ends.", warnOnly = true)
-        HealthRow("Battery saving will not hold back S-IB", unrestricted, if (unrestricted) "S-IB is exempt from battery limits." else "Battery saving can delay reminders by several minutes. Some phone makers also close apps that are not in use; if reminders stop, look for an Autostart or Protected apps setting.", warnOnly = true)
-        HealthRow("Reminders are queued", upcoming > 0 || st.active.isEmpty(), if (upcoming > 0) "$upcoming upcoming reminders are scheduled." else if (st.active.isEmpty()) "Nothing is waiting, because there are no active deadlines." else "None are queued yet. Reopen the app and try again.")
+        Text("A reminder only helps if it can reach you. These checks look at your phone's settings, which can silently stop apps from notifying you.", style = SibType.body, color = c.inkSoft)
+        Group("Checks") {
+            HealthRow("Notifications are allowed", enabled, if (enabled) "H-sib Reminder can show reminders." else "Android is blocking all notifications from H-sib Reminder."); GroupDivider()
+            HealthRow("Reminder channels are on", !blocked, if (!blocked) "Both reminder channels can notify." else "A reminder channel is switched off in system settings."); GroupDivider()
+            HealthRow("Do Not Disturb is off", !dnd, if (!dnd) "Nothing is silencing notifications right now." else "Do Not Disturb is on, so reminders may be silent until it ends.", warnOnly = true); GroupDivider()
+            HealthRow("Battery saving will not hold back reminders", unrestricted, if (unrestricted) "The app is exempt from battery limits." else "Battery saving can delay reminders by several minutes. Some phone makers also close apps that are not in use; if reminders stop, look for an Autostart or Protected apps setting.", warnOnly = true); GroupDivider()
+            HealthRow("Reminders are queued", upcoming > 0 || st.active.isEmpty(), if (upcoming > 0) "$upcoming upcoming reminders are scheduled." else if (st.active.isEmpty()) "Nothing is waiting, because there are no active deadlines." else "None are queued yet. Reopen the app and try again.")
+        }
         Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SibButton("Notification settings", { ctx.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)) }, Modifier.weight(1f), ButtonKind.QUIET)
-            SibButton("Battery settings", { ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }, Modifier.weight(1f), ButtonKind.QUIET)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SibButton("Notification settings", { ctx.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)) }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+            SibButton("Battery settings", { ctx.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
         }
         SectionHeader("Try it")
         Explain("Send yourself a test reminder in 15 seconds. Lock the phone and wait. If it does not arrive, one of the settings above is the reason.")
@@ -497,7 +530,7 @@ fun HealthScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
 private fun HealthRow(title: String, ok: Boolean, detail: String, warnOnly: Boolean = false) {
     val c = SibTheme.colors
     val state = if (ok) UrgencyState.DONE else if (warnOnly) UrgencyState.START_SOON else UrgencyState.OVERDUE
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.Top) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp), verticalAlignment = Alignment.Top) {
         UrgencyGlyph(state, size = 24.dp)
         Spacer(Modifier.width(12.dp))
         Column {
@@ -505,40 +538,60 @@ private fun HealthRow(title: String, ok: Boolean, detail: String, warnOnly: Bool
             Text(detail, style = SibType.small, color = c.inkSoft)
         }
     }
-    Hairline()
 }
 
 // ---- about ---------------------------------------------------------------------------------------------
 
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
+fun AboutScreen(onBack: () -> Unit, onTerms: () -> Unit = {}) {
     val c = SibTheme.colors
     val ctx = LocalContext.current
+    var showNotices by remember { mutableStateOf(false) }
     var showLicense by remember { mutableStateOf(false) }
     Page("About", onBack) {
-        Text("S-IB", style = SibType.display, color = c.ink)
-        Text("Version ${BuildConfig.VERSION_NAME}. Made by H-sib.", style = SibType.body, color = c.inkSoft)
-        SectionHeader("Why S-IB?")
-        Text("Say it as \"sib\".", style = SibType.bodyStrong, color = c.ink)
-        Spacer(Modifier.height(6.dp))
-        SourceRow("Start It Before", "That is the whole idea. Begin early enough that a deadline never turns into a surprise.")
-        Hairline()
-        SourceRow("One who counts", "It is the closing sound of the maker's name, Hasib, which can mean one who counts or reckons. Counting the days, and the hours they hold, is what the app does.")
-        Hairline()
-        SourceRow("Someone close", "In English a sib is a brother or sister. That is the spirit of Close ones, the private space for the people who matter most.")
-        SectionHeader("How it works")
-        SourceRow("Finding dates", "S-IB reads the text you hand it with rules and a very small model that runs on your phone. It tells you why it picked each date, and it ignores publication dates, history and sale offers.")
-        Hairline()
-        SourceRow("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit.")
-        Hairline()
-        SourceRow("Reminding", "Few reminders, placed with care, never inside quiet hours. A confirmed deadline never changes by itself.")
-        SectionHeader("Privacy policy")
-        Text("https://h-sib.github.io/s-ib/privacy.html", style = SibType.body, color = c.ink, modifier = Modifier.clickable { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } }.padding(vertical = 10.dp))
-        SectionHeader("Open source notices")
-        Explain("S-IB is built on AndroidX and Jetpack Compose, Room, WorkManager and Glance (Apache License 2.0), Google Tink (Apache License 2.0), SQLCipher (BSD-style licence), Google ML Kit text recognition and document scanning (Google terms), and kotlinx libraries (Apache License 2.0).")
-        Explain("The Sora typeface is by The Sora Project Authors under the SIL Open Font License 1.1.")
-        SibButton("Read the font licence", { showLicense = true }, kind = ButtonKind.QUIET)
+        Gap(8.dp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HsibMark(72.dp)
+            Spacer(Modifier.width(18.dp))
+            Column {
+                AppName(size = 26.sp)
+                Text("Version ${BuildConfig.VERSION_NAME}", style = SibType.body, color = c.inkSoft)
+                Text("Made by H-sib", style = SibType.small, color = c.inkSoft)
+            }
+        }
+        Group("How it works") {
+            ExpandItem("Finding dates", "It reads the text you hand it with rules and a very small model that runs on your phone. It tells you why it picked each date, and it ignores publication dates, history and sale offers.")
+            GroupDivider()
+            ExpandItem("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit.")
+            GroupDivider()
+            ExpandItem("Reminding", "Few reminders, placed with care, never inside quiet hours. A confirmed deadline never changes by itself.")
+            GroupDivider()
+            ExpandItem("The name", "In H-sib, the letters s, i and b stand for Start It Before. They are also the closing sound of the maker's name, Hasib, which can mean one who counts. A sib is a brother or sister, the spirit of Close ones.")
+        }
+        Group("Legal") {
+            NavItem("Privacy policy", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } })
+            GroupDivider()
+            NavItem("Terms of use", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/terms.html"))) } })
+            GroupDivider()
+            NavItem("Terms and security", null, onTerms)
+            GroupDivider()
+            NavItem("Open source notices", null, { showNotices = true })
+        }
         Spacer(Modifier.height(32.dp))
+    }
+    if (showNotices) {
+        AlertDialog(
+            onDismissRequest = { showNotices = false }, containerColor = c.raised,
+            title = { Text("Open source notices", style = SibType.title, color = c.ink) },
+            text = {
+                Text(
+                    "Built on AndroidX and Jetpack Compose, Room, WorkManager and Glance (Apache License 2.0), Google Tink (Apache License 2.0), SQLCipher (BSD-style licence), Google ML Kit text recognition and document scanning (Google terms), Firebase and Google Play services (Google terms), and kotlinx libraries (Apache License 2.0).\n\nThe Sora typeface is by The Sora Project Authors under the SIL Open Font License 1.1.",
+                    style = SibType.body, color = c.inkSoft, modifier = Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
+            confirmButton = { TextButton({ showNotices = false }) { Text("Close", style = SibType.bodyStrong, color = c.ink) } },
+            dismissButton = { TextButton({ showNotices = false; showLicense = true }) { Text("Font licence", style = SibType.body, color = c.ink) } },
+        )
     }
     if (showLicense) {
         val text = remember { ctx.assets.open("licenses/Sora-OFL.txt").bufferedReader().use { it.readText() } }
@@ -603,7 +656,7 @@ fun BackupScreen(st: AppState, ready: Ready, onBack: () -> Unit, onRestore: () -
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(c.raised).padding(14.dp)) { Text(it, style = SibType.body, color = c.ink) }
         }
         SectionHeader("Moving to a new phone")
-        Explain("Install S-IB, choose Restore, pick the same folder and type your recovery key.")
+        Explain("Install H-sib Reminder, choose Restore, pick the same folder and type your recovery key.")
         SibButton("Restore from a backup", onRestore, Modifier.fillMaxWidth(), ButtonKind.QUIET)
         SectionHeader("Export")
         Explain("A calendar file is not encrypted. An encrypted file needs a passphrase that only you know. Choose a long one.")
@@ -679,7 +732,7 @@ private fun BackupSetup(ready: Ready, onClose: () -> Unit, onDone: (String) -> U
 
     Page("Set up backup", onClose) {
         SectionHeader("1. Where to keep it")
-        Explain("Choose a folder in a storage app you trust, for example Google Drive, or a folder on your phone that you sync elsewhere. S-IB only ever writes scrambled files there.")
+        Explain("Choose a folder in a storage app you trust, for example Google Drive, or a folder on your phone that you sync elsewhere. H-sib Reminder only ever writes scrambled files there.")
         SibButton(if (folder == null) "Choose a folder" else "Folder chosen. Change it", { picker.launch(null) }, Modifier.fillMaxWidth(), if (folder == null) ButtonKind.PRIMARY else ButtonKind.QUIET)
         folder?.let { Text(it.lastPathSegment.orEmpty(), style = SibType.small, color = c.inkSoft) }
 
@@ -764,9 +817,41 @@ fun RestoreScreen(st: AppState, ready: Ready, onBack: () -> Unit, onRestored: ()
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(if (r.ok) c.verdigrisWash else c.vermilionWash).padding(14.dp)) {
                 Text(r.message, style = SibType.bodyStrong, color = c.ink)
                 r.notes.forEach { Text(it, style = SibType.small, color = c.ink) }
-                if (r.ok) { Spacer(Modifier.height(8.dp)); SibButton("Open S-IB", onRestored) }
+                if (r.ok) { Spacer(Modifier.height(8.dp)); SibButton("Open H-sib Reminder", onRestored) }
             }
         }
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+// ---- feedback ----------------------------------------------------------------------------------------
+
+private fun deviceLine() = "H-sib Reminder ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}), Android ${Build.VERSION.RELEASE}, ${Build.MANUFACTURER} ${Build.MODEL}"
+
+/**
+ * Feedback in any language. It is handed to whichever app the person picks (a chat, mail, anything), with the app version and
+ * the phone model added so the maker can reproduce a problem. Nothing is sent by the app itself.
+ */
+@Composable
+fun FeedbackScreen(onBack: () -> Unit) {
+    val c = SibTheme.colors
+    val ctx = LocalContext.current
+    var text by remember { mutableStateOf("") }
+    Page("Send feedback", onBack) {
+        Text("Write in English, Bangla, Hindi or any language you like.", style = SibType.body, color = c.inkSoft)
+        Gap(20.dp)
+        Field("Your feedback", text, { text = it.take(4000) }, singleLine = false, minLines = 6, keyboard = KeyboardOptions(imeAction = ImeAction.Default))
+        Gap(12.dp)
+        Text("The app you choose sends it, with this line added: " + deviceLine(), style = SibType.small, color = c.inkSoft)
+        Gap(20.dp)
+        ActionButton(
+            "Send",
+            {
+                val body = text.trim() + "\n" + "\n" + deviceLine()
+                ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_SUBJECT, "H-sib Reminder feedback").putExtra(Intent.EXTRA_TEXT, body), "Send feedback"))
+            },
+            Modifier.fillMaxWidth(), enabled = text.isNotBlank(),
+        )
+        Gap(40.dp)
     }
 }

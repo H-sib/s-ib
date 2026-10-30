@@ -45,7 +45,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -231,8 +230,8 @@ private fun OccasionRow(occ: Occasion, fmt: Fmt, today: LocalDate, onClick: () -
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(o.title, style = SibType.title, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (sub.isNotEmpty()) Text(sub, style = SibType.small, color = c.inkSoft, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(o.title, style = SibType.title, color = c.ink)
+            if (sub.isNotEmpty()) Text(sub, style = SibType.small, color = c.inkSoft)
         }
         Spacer(Modifier.width(8.dp))
         Text(whenText, style = SibType.label, color = if (away <= 7) c.vermilion else c.inkSoft)
@@ -311,7 +310,7 @@ fun CloseHomeScreen(st: AppState, onBack: () -> Unit, onOpen: (String) -> Unit, 
                 Spacer(Modifier.width(18.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Next", style = SibType.bodyStrong, color = c.vermilion)
-                    Text(o.title, style = SibType.headline, color = c.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(o.title, style = SibType.headline, color = c.ink)
                     o.person.takeIf { it.isNotBlank() }?.let { Text(it, style = SibType.body, color = c.inkSoft) }
                     Text(fmt.dayLong(hero.day), style = SibType.small, color = c.inkSoft)
                     milestone(o, hero.day)?.let { Spacer(Modifier.height(6.dp)); Chip(it, Tone.ALERT) }

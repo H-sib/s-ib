@@ -1,43 +1,79 @@
 DATA SAFETY, CONTENT RATING AND POLICY ANSWERS FOR PLAY CONSOLE
-Prepared 2026-10-14 for S-IB version 1.0.0. Check each answer against the build you upload; the build is the truth.
+Prepared 2026-10-14, rewritten 2026-10-30 for H-sib Reminder version 1.0.0 WITH optional sharing and chat (Firebase).
+Check each answer against the build you upload; the build is the truth. Google changes the form wording, so read each question on the day.
 
 DATA SAFETY FORM
-Does your app collect or share any of the required user data types?   NO
-  Reason: the app has no INTERNET permission (checked in the merged manifest on every build, see offline-report.txt),
-  has no accounts, analytics, ads or crash reporting, and nothing leaves the phone except what the user explicitly
-  shares through the system share sheet or saves to a folder they choose.
-Is all of the user data collected by your app encrypted in transit?   Not applicable (nothing is collected).
-Do you provide a way for users to request that their data is deleted?   Not applicable. For completeness: Settings >
-  Privacy and data > erase everything, and uninstalling removes all data.
+Does your app collect or share any of the required user data types?   YES, only for people who sign in and share.
+  Everything is local and optional until the person signs in with Google. After that, only what they share leaves the phone,
+  and it leaves sealed (end to end encrypted), so the developer and the host cannot read titles, dates, notes or chat.
+Data types collected (only after sign in, for app functionality and account management):
+  Personal info
+    Name                     Collected. The display name the person chooses. Shown to the people in their shared deadlines.
+    Email address            Collected by the sign in service (Firebase Authentication). Used to sign in. Not shown to friends.
+    User IDs                 Collected. The account id.
+  Messages
+    Other in-app messages    Collected. Chat messages. Sealed on the phone; the server holds only sealed text.
+  App activity
+    Other user-generated content   Collected. Title, date and notes of a deadline the person chooses to share, sealed.
+  Device or other IDs        Collected. A Firebase installation identifier, used by App Check to confirm the request comes from the
+                             genuine app. Re-check what the Firebase and Google Play services libraries add on the day you submit.
+  Location, contacts, calendar, photos, files, audio, health, financial: not collected.
+Is data shared with third parties?   Data is processed by Google (Firebase) as the service provider that hosts it. Play treats a
+  service provider acting on the developer's behalf as not "sharing". Nothing is sold. Nothing is used for advertising or analytics.
+  There is no analytics library and no crash reporting.
+Is all of the user data collected by your app encrypted in transit?   Yes (TLS to Firebase).
+Is data encrypted at rest?   Yes on the phone (SQLCipher with a Keystore wrapped key); on the server the shared text is sealed
+  before it is sent, in addition to the provider's own encryption.
+Do you provide a way for users to request that their data is deleted?   YES. In the app: Friends, Account, Delete my account.
+  On the web: https://h-sib.github.io/s-ib/delete-account.html (site\delete-account.html). Deleting removes the person's messages,
+  memberships, profile and the rooms they own. Enter the web link in the Data deletion field.
+Committed to follow the Play Families policy?   No. The app is not for children (13 and over for sharing).
+Independent security review?   No.
+Optional notification reading: the app can read notification text from apps the owner ticks, after the owner grants
+  notification access in Android and after an in-app plain-language disclosure (ReaderScreen). The text is processed on the
+  device only, is not stored, and has no path to the network code (the architecture test fails the build if one is added), so it
+  is not collected or shared. Before submitting, re-read Google Play's current policy on notification access, and be ready to
+  explain in review that it is core to the app, optional, and disclosed before Android's screen is opened.
 Third-party components to be aware of when answering:
   - ML Kit text recognition is the bundled model and runs fully on the device.
   - The Scan button uses Google's document scanner from Google Play services, which runs on the device. Google's
     documentation for ML Kit describes on-device processing; re-read it on the day you submit, because Google may change it.
-Privacy policy URL:   https://h-sib.github.io/s-ib/privacy.html   (publish site\ with GitHub Pages first)
+  - Firebase Authentication, Cloud Firestore and App Check (Play Integrity) are used only for sharing and chat.
+Privacy policy URL:   https://h-sib.github.io/s-ib/privacy.html   (publish site\ with GitHub Pages first, including delete-account.html)
 
 APP CONTENT
 Ads:                         No ads.
-App access:                  All functionality is available without a login or special access.
+App access:                  Everything except sharing and chat is available without a login. Sharing and chat need a Google
+                             account. If Play asks for review access, give the reviewer a Google test account and the steps in
+                             firebase\SETUP_STEPS.txt, section F.
 Target audience:             18 and over. Reason: Close ones covers partner relationships; choosing adults avoids the
-                             Families policy obligations. Not designed for children.
+                             Families policy obligations. The community rules set 13 as the minimum age for sharing and chat.
 News app / COVID / health / government / financial features / gambling:   No to all.
-User-generated content:      None in version 1 (no chat, no public sharing, no accounts).
-Data deletion / account deletion URL:   Not applicable, there are no accounts.
+User-generated content:      YES. Chat in shared deadlines. Describe four things: terms and community rules accepted before the
+                             first share, join or message (docs\drafts\terms-of-use.txt); an in-app way to report a person or a
+                             message; a way to block a person; and the developer reviews reports. Tick the UGC declaration.
 Advertising ID:              The app does not use it. Declare "No".
 
 PERMISSIONS DECLARATIONS
-Declared in the release build:   POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, USE_BIOMETRIC, USE_FINGERPRINT (from the
-  biometric library), WAKE_LOCK (from WorkManager).
-Not used and not declared:   INTERNET, SCHEDULE_EXACT_ALARM, USE_EXACT_ALARM, any foreground service permission,
-  READ_EXTERNAL_STORAGE and other storage permissions, camera, location, contacts, SMS, notification listener, accessibility.
+Declared in the release build:   INTERNET and ACCESS_NETWORK_STATE (sharing, chat and the app check only), POST_NOTIFICATIONS,
+  the NotificationReaderService (protected by BIND_NOTIFICATION_LISTENER_SERVICE, used only after the owner switches it on),
+  RECEIVE_BOOT_COMPLETED, USE_BIOMETRIC, USE_FINGERPRINT (from the biometric library), WAKE_LOCK (from WorkManager).
+Not used and not declared:   SCHEDULE_EXACT_ALARM, USE_EXACT_ALARM, any foreground service permission,
+  READ_EXTERNAL_STORAGE and other storage permissions, camera, location, contacts, SMS, accessibility.
 No sensitive-permission declaration form is needed for this set.
 
 CONTENT RATING QUESTIONNAIRE (IARC)
-Answer No to violence, fear, sexual content, language, controlled substances, gambling, user interaction (no chat),
-location sharing, and purchases. Expected result: Everyone / PEGI 3 / equivalent. Category for the questionnaire:
-"Utility, productivity, communication or other". If the questionnaire asks whether the app shares user-generated
-content or allows users to interact, the answer is No in version 1.
+Answer No to violence, fear, sexual content, language, controlled substances, gambling, location sharing, and purchases.
+Answer YES to user interaction and to users sharing user-generated content (chat in shared deadlines, with reporting and blocking).
+Expect a higher rating than Everyone because users can interact. Category for the questionnaire: "Utility, productivity,
+communication or other".
 
 TARGET API AND TECHNICAL REQUIREMENTS (verified when written)
-New apps must target Android 16 (API 36) or higher from 31 August 2026; S-IB targets API 36. 64-bit and 16 KB page size support are required;
+New apps must target Android 16 (API 36) or higher from 31 August 2026; H-sib Reminder targets API 36. 64-bit and 16 KB page size support are required;
 the pipeline checks zip alignment for 16 KB and the bundle uses uncompressed native libraries. Upload an Android App Bundle.
+
+BEFORE THIS IS SUBMITTED
+  - The owner has accepted the moderation duty in docs\FRIENDS_AND_CHAT_DESIGN.txt, section 8, and can answer reports quickly.
+  - The two-account test and the rules emulator tests (firebase\tests) have passed; App Check enforcement is decided.
+  - The delete-account page and the answer to "within 30 days" in it can really be met.
+  - A lawyer has read docs\drafts\terms-of-use.txt and site\privacy.html.

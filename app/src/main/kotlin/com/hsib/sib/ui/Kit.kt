@@ -72,7 +72,7 @@ fun Modifier.bounceClick(enabled: Boolean = true, role: Role = Role.Button, onCl
         }
 }
 
-enum class TileIcon { ADD, PASTE, PHOTO, SCAN, LIST, CLOSE }
+enum class TileIcon { ADD, PASTE, PHOTO, SCAN, LIST, CLOSE, CHAT, PERSON }
 
 /** Icons are drawn here instead of imported, so they stay crisp at any size and follow the palette. */
 @Composable
@@ -118,6 +118,21 @@ fun TileGlyph(icon: TileIcon, color: Color, modifier: Modifier = Modifier, size:
                     drawCircle(color, sw * 0.7f, Offset(w * 0.2f, y))
                     drawLine(color, Offset(w * 0.36f, y), Offset(w * 0.84f, y), sw, StrokeCap.Round)
                 }
+            }
+            TileIcon.CHAT -> {
+                val bubble = Path().apply {
+                    moveTo(w * 0.2f, w * 0.25f); lineTo(w * 0.8f, w * 0.25f); lineTo(w * 0.8f, w * 0.62f)
+                    lineTo(w * 0.5f, w * 0.62f); lineTo(w * 0.32f, w * 0.8f); lineTo(w * 0.32f, w * 0.62f); lineTo(w * 0.2f, w * 0.62f); close()
+                }
+                drawPath(bubble, color, style = line)
+                drawCircle(color, sw * 0.6f, Offset(w * 0.36f, w * 0.44f))
+                drawCircle(color, sw * 0.6f, Offset(w * 0.5f, w * 0.44f))
+                drawCircle(color, sw * 0.6f, Offset(w * 0.64f, w * 0.44f))
+            }
+            TileIcon.PERSON -> {
+                drawCircle(color, w * 0.15f, Offset(w / 2, w * 0.33f), style = line)
+                val shoulders = Path().apply { moveTo(w * 0.2f, w * 0.84f); cubicTo(w * 0.22f, w * 0.56f, w * 0.78f, w * 0.56f, w * 0.8f, w * 0.84f) }
+                drawPath(shoulders, color, style = line)
             }
             TileIcon.CLOSE -> Unit
         }

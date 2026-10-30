@@ -181,78 +181,85 @@ fun LoadHorizon(
         if (peakMin > 0) append("Busiest day ${fmt.dayShort(peakDay!!)}, ${fmt.minutes(peakMin)}. ") else append("No work planned yet. ")
         plan.shortfall?.let { append("Shortfall: ${fmt.minutes(it.missingMin)} between ${fmt.dayNoWeek(it.fromDay)} and ${fmt.dayNoWeek(it.toDay)}.") }
     }
-    Canvas(modifier.fillMaxWidth().height(184.dp).semantics { contentDescription = summary }) {
+    Canvas(modifier.fillMaxWidth().height(192.dp).semantics { contentDescription = summary }) {
         val labelH = 22.dp.toPx()
-        val topPad = 32.dp.toPx()
+        val topPad = 36.dp.toPx()
         val chartH = size.height - labelH - topPad
-        val slot = size.width / days
-        val barW = slot * 0.62f
+        val gap = 10.dp.toPx()
+        // The days, grouped into weeks. Every week is its own outlined panel and the panels are kept apart by a clear gap,
+        // so it is obvious where one week ends and the next begins.
+        val weeks = ArrayList<IntRange>()
+        var from = 0
+        while (from < days) {
+            val ws = dates[from].with(TemporalAdjusters.previousOrSame(weekStart))
+            var to = from
+            while (to + 1 < days && dates[to + 1].with(TemporalAdjusters.previousOrSame(weekStart)) == ws) to++
+            weeks += from..to
+            from = to + 1
+        }
+        val slot = (size.width - gap * (weeks.size - 1)) / days
+        val barW = slot * 0.56f
+        val weekOf = IntArray(days).also { arr -> weeks.forEachIndexed { w, r -> for (i in r) arr[i] = w } }
+        fun leftOf(i: Int) = i * slot + weekOf[i] * gap
         val scale = chartH / (max(maxCap, previewMinutes.values.maxOrNull()?.let { m -> dates.maxOf { (plan.loadByDay[it] ?: 0) + (previewMinutes[it] ?: 0) } } ?: 0) * 1.08f)
-        // Each week is its own rounded panel with a gap between panels, so the weeks read as separate blocks.
-        val gap = 6.dp.toPx()
         val thisWeek = today.with(TemporalAdjusters.previousOrSame(weekStart))
-        var first = 0
-        while (first < days) {
-            val ws = dates[first].with(TemporalAdjusters.previousOrSame(weekStart))
-            var last = first
-            while (last + 1 < days && dates[last + 1].with(TemporalAdjusters.previousOrSame(weekStart)) == ws) last++
-            val left = first * slot + (if (first > 0) gap / 2f else 0f)
-            val right = (last + 1) * slot - (if (last < days - 1) gap / 2f else 0f)
+        val corner = CornerRadius(16.dp.toPx())
+        for (r in weeks) {
+            val ws = dates[r.first].with(TemporalAdjusters.previousOrSame(weekStart))
+            val left = leftOf(r.first)
+            val right = leftOf(r.last) + slot
             val current = ws == thisWeek
-            drawRoundRect(if (current) c.violetWash else c.raised, Offset(left, 0f), Size(right - left, size.height), CornerRadius(16.dp.toPx()))
+            drawRoundRect(if (current) c.violetWash else c.raised, Offset(left, 0f), Size(right - left, size.height), corner)
+            drawRoundRect(if (current) c.violet.copy(alpha = 0.7f) else c.rule, Offset(left, 0f), Size(right - left, size.height), corner, style = Stroke(1.5.dp.toPx()))
             val style = SibType.label.copy(color = if (current) c.violet else c.ink)
-            // A narrow first panel (the week is nearly over) gets the short word.
             var name = measurer.measure(if (current) "This week" else fmt.dayNoWeek(ws), style)
-            if (current && name.size.width >= right - left - 14.dp.toPx()) name = measurer.measure("Now", style)
-            if (name.size.width < right - left - 14.dp.toPx()) drawText(name, topLeft = Offset(left + 10.dp.toPx(), 9.dp.toPx()))
-            first = last + 1
+            if (current && name.size.width >= right - left - 16.dp.toPx()) name = measurer.measure("Now", style)
+            if (name.size.width < right - left - 16.dp.toPx()) drawText(name, topLeft = Offset(left + 12.dp.toPx(), 11.dp.toPx()))
+            drawLine(c.rule, Offset(left + 8.dp.toPx(), topPad + chartH), Offset(right - 8.dp.toPx(), topPad + chartH), 1.5f)
         }
         translate(top = topPad) {
-        drawLine(c.rule, Offset(0f, chartH), Offset(size.width, chartH), 1.5f)
-        dates.forEachIndexed { i, d ->
-            val x0 = i * slot + (slot - barW) / 2f
-            val weekend = d.dayOfWeek.value >= 6
-            val cap = plan.capacityByDay[d] ?: 0
-            val load = plan.loadByDay[d] ?: 0
-            if (load > 0) {
-                val over = cap in 1 until load
-                val barBrush = if (over) Brush.verticalGradient(listOf(c.vermilion, c.vermilion)) else Brush.verticalGradient(listOf(c.glowB, c.glowA), startY = chartH - load * scale, endY = chartH)
-                drawRoundRect(barBrush, Offset(x0, chartH - load * scale), Size(barW, load * scale), CornerRadius(barW / 3f))
+            dates.forEachIndexed { i, d ->
+                val x0 = leftOf(i) + (slot - barW) / 2f
+                val weekend = d.dayOfWeek.value >= 6
+                val cap = plan.capacityByDay[d] ?: 0
+                val load = plan.loadByDay[d] ?: 0
+                if (load > 0) {
+                    val over = cap in 1 until load
+                    val barBrush = if (over) Brush.verticalGradient(listOf(c.vermilion, c.vermilion)) else Brush.verticalGradient(listOf(c.glowB, c.glowA), startY = chartH - load * scale, endY = chartH)
+                    drawRoundRect(barBrush, Offset(x0, chartH - load * scale), Size(barW, load * scale), CornerRadius(barW / 3f))
+                }
+                val extra = previewMinutes[d] ?: 0
+                if (extra > 0) {
+                    val top = chartH - (load + extra) * scale
+                    drawRect(c.vermilion, Offset(x0, top), Size(barW, extra * scale), style = Stroke(1.6f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 4f))))
+                }
+                if (cap > 0) {
+                    val startsWeek = i == 0 || d.dayOfWeek == weekStart
+                    val endsWeek = i == days - 1 || d.plusDays(1).dayOfWeek == weekStart
+                    val l = leftOf(i) + (if (startsWeek) 6.dp.toPx() else 1.dp.toPx())
+                    val rr = leftOf(i) + slot - (if (endsWeek) 6.dp.toPx() else 1.dp.toPx())
+                    drawLine(c.ochre, Offset(l, chartH - cap * scale), Offset(rr, chartH - cap * scale), 1.5.dp.toPx(), StrokeCap.Round)
+                }
+                val letter = fmt.weekday(d).take(1).uppercase()
+                val lay = measurer.measure(letter, SibType.small.copy(fontSize = 10.sp, color = if (weekend) c.inkSoft else c.ink))
+                drawText(lay, topLeft = Offset(leftOf(i) + (slot - lay.size.width) / 2f, chartH + 4.dp.toPx()))
             }
-            val extra = previewMinutes[d] ?: 0
-            if (extra > 0) {
-                val top = chartH - (load + extra) * scale
-                drawRect(c.vermilion, Offset(x0, top), Size(barW, extra * scale), style = Stroke(1.6f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 4f))))
+            // The shortfall is a stretch of days, shown as a hatched band under the axis and named in words below.
+            plan.shortfall?.let { s ->
+                val a = ChronoUnit.DAYS.between(today, s.fromDay).toInt().coerceIn(0, days - 1)
+                val b = ChronoUnit.DAYS.between(today, s.toDay).toInt().coerceIn(0, days - 1)
+                val left = leftOf(a)
+                val right = leftOf(b) + slot
+                val y0 = chartH - 5.dp.toPx()
+                drawRect(c.vermilion.copy(alpha = 0.14f), Offset(left, 0f), Size(right - left, chartH))
+                var hx = left
+                while (hx < right) {
+                    drawLine(c.vermilion.copy(alpha = 0.7f), Offset(hx, chartH), Offset(min(hx + 8.dp.toPx(), right), y0), 1.5f)
+                    hx += 6.dp.toPx()
+                }
+                drawLine(c.vermilion, Offset(left, 0f), Offset(left, chartH), 1.5f)
+                drawLine(c.vermilion, Offset(right, 0f), Offset(right, chartH), 1.5f)
             }
-            if (cap > 0) {
-                // Keep the time line inside its week panel: pull it in from the edges where a week begins or ends.
-                val edge = gap / 2f + 3.dp.toPx()
-                val startsWeek = i == 0 || d.dayOfWeek == weekStart
-                val endsWeek = i == days - 1 || d.plusDays(1).dayOfWeek == weekStart
-                val l = i * slot + (if (startsWeek) edge else 2.dp.toPx())
-                val r = (i + 1) * slot - (if (endsWeek) edge else 2.dp.toPx())
-                drawLine(c.ochre, Offset(l, chartH - cap * scale), Offset(r, chartH - cap * scale), 1.5.dp.toPx(), StrokeCap.Round)
-            }
-            val letter = fmt.weekday(d).take(1).uppercase()
-            val lay = measurer.measure(letter, SibType.small.copy(fontSize = 10.sp, color = if (weekend) c.inkSoft else c.ink))
-            drawText(lay, topLeft = Offset(i * slot + (slot - lay.size.width) / 2f, chartH + 4.dp.toPx()))
-        }
-        // The shortfall is a stretch of days, shown as a hatched band under the axis and named in words below.
-        plan.shortfall?.let { s ->
-            val a = ChronoUnit.DAYS.between(today, s.fromDay).toInt().coerceIn(0, days - 1)
-            val b = ChronoUnit.DAYS.between(today, s.toDay).toInt().coerceIn(0, days - 1)
-            val left = a * slot
-            val right = (b + 1) * slot
-            val y0 = chartH - 5.dp.toPx()
-            drawRect(c.vermilion.copy(alpha = 0.14f), Offset(left, 0f), Size(right - left, chartH))
-            var hx = left
-            while (hx < right) {
-                drawLine(c.vermilion.copy(alpha = 0.7f), Offset(hx, chartH), Offset(min(hx + 8.dp.toPx(), right), y0), 1.5f)
-                hx += 6.dp.toPx()
-            }
-            drawLine(c.vermilion, Offset(left, 0f), Offset(left, chartH), 1.5f)
-            drawLine(c.vermilion, Offset(right, 0f), Offset(right, chartH), 1.5f)
-        }
         }
     }
 }

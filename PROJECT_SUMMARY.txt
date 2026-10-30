@@ -1,9 +1,9 @@
-S-IB: PROJECT SUMMARY
+H-sib Reminder: PROJECT SUMMARY
 
 1. OVERVIEW
 
-S-IB is an Android phone app that helps people stop missing deadlines. Most of us hear about dates in a notice, a
-group chat or a screenshot, and by the time a date matters it is buried. S-IB lets you share or paste that message,
+H-sib Reminder is an Android phone app that helps people stop missing deadlines. Most of us hear about dates in a notice, a
+group chat or a screenshot, and by the time a date matters it is buried. H-sib Reminder lets you share or paste that message,
 finds the dates in it, and shows you what it found and why, so you stay in charge. Nothing is saved as a deadline
 until you say yes.
 
@@ -15,6 +15,10 @@ It also has a private space called Close ones for the dates that matter to the p
 anniversaries, birthdays and date nights. It reminds you early enough to plan something, keeps the details off your
 lock screen, and keeps them out of everything else the app shows.
 
+If you want, it can also watch the chat apps you pick for messages that mention a deadline and offer them to you for
+review, and it can pin a small card in the notification bar showing your next deadline, how many days are left and a
+Done button. Both are off until you turn them on, and the app tells you what each one does before it asks.
+
 Your information stays on your phone. The app has no permission to use the internet, and backups are locked with a
 key only you hold.
 
@@ -25,7 +29,7 @@ The name is pronounced "sib". It stands for Start It Before, it is the closing s
 
 Stack: Kotlin, Jetpack Compose (Material 3 with a custom design system), Room with SQLCipher, WorkManager,
 AlarmManager, Glance widget, Quick Settings tile, Android Keystore, Google Tink, ML Kit (on-device text recognition),
-Gradle with three modules. About 13,000 non-blank lines of Kotlin in 76 files.
+Gradle with three modules. About 14,300 non-blank lines of Kotlin in 85 files, of which about 2,100 are tests.
 
 Architecture (checklist items 1 and 2): the hard logic lives in a pure JVM module that is forbidden, by a build rule, to
 import anything from Android, so it is tested without a phone. A separate command-line module generates training
@@ -41,14 +45,20 @@ Algorithmic depth (item 1):
 - A reminder planner with an attention budget, quiet hours and hysteresis on urgency states.
 - Repeating dates computed from the original date so they never drift (31st of a month, 29 February).
 
+Platform integration: an opt-in notification listener (allowlist of 16 chat and mail apps, on-device extraction, no
+notification text stored, a consent screen before Android's own access list), and a custom notification bar dashboard
+built from RemoteViews with a progress ring, theme-aware cards and lock-screen privacy.
+
 Security engineering: a key hierarchy (Keystore-wrapped master, HKDF-derived keys per purpose), an encrypted database,
 end-to-end encrypted backups in a bounded, chunked XChaCha20-Poly1305 container with a recovery key and a snapshot
 chain, a tamper-evident HMAC hash chain over each deadline's history, no network permission (checked on every
 build), and Android Auto Backup switched off.
 
-Testing (item 4): 218 tests with no failures: 180 unit tests on the core, including adversarial tests that alter every byte of
-a backup, truncate, reorder and splice it, and 38 app tests (33 UI render tests that draw the main screens in all four themes on a
-simulated Android and write images for visual review and check that each screen composes, not pixel differences, plus 5 tests of hostile input to the store, importer and deep links); an evaluation harness for the date reader (95.8% role accuracy and no
+Testing (item 4): 234 tests with no failures: 180 unit tests on the core, including adversarial tests that alter every byte of
+a backup, truncate, reorder and splice it, and 54 app tests (UI render tests that draw the main screens in all four themes on a
+simulated Android and write images for visual review and check that each screen composes, not pixel differences; tests
+of the notification reader, the notification bar dashboard (drawn in every theme) and the readable history; and 5 tests of
+hostile input to the store, importer and deep links); an evaluation harness for the date reader (95.8% role accuracy and no
 false prompts on a held-out set of 71 mentions, from a same-author gold set so the figure is optimistic); lint and a
 build pipeline script that checks the merged manifest, signing and style rules. Store and reminder logic in the app layer
 still needs its own tests.
@@ -64,7 +74,7 @@ battery rules and needs real-device testing. The date reader understands English
 3. FUTURE SCOPE AND UPGRADE OPPORTUNITIES
 
 Realistic next steps, in a sensible order:
-- Version 1.1: real-device test pass on two or three phone brands; screenshot tests; localisation of the interface
+- Version 1.1: real-device test pass on two or three phone brands; localisation of the interface
   (dates already follow the phone's language, wording does not); a second language for the date reader, starting with
   the languages ML Kit text recognition supports.
 - Wear OS or notification actions for completing a task from a watch.

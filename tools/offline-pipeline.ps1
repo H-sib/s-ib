@@ -78,18 +78,19 @@ $manifests = Get-ChildItem -Path (Join-Path $root 'app\build\intermediates\merge
 foreach ($m in $manifests) {
     $perms = Select-String -Path $m.FullName -Pattern 'uses-permission[^>]*android:name="([^"]+)"' -AllMatches | ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
     Log ("PERMISSIONS in " + $m.FullName.Replace($root, '.') + ': ' + ($perms -join ', '))
-    if ($perms -contains 'android.permission.INTERNET') { Log 'FAIL  INTERNET is present in a merged manifest. S-IB promises not to have it; remove it with tools:node="remove".' }
+    $connected = Test-Path (Join-Path $root 'app\google-services.json')
+    if ($perms -contains 'android.permission.INTERNET' -and -not $connected) { Log 'FAIL  INTERNET is present but there is no app\google-services.json. The privacy text says this build has no network permission.' }
 }
 
 $aab = Get-ChildItem -Path (Join-Path $root 'app\build\outputs\bundle\release') -Filter *.aab -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($aab) {
     New-Item -ItemType Directory -Force (Join-Path $root 'release') | Out-Null
-    $dest = Join-Path $root 'release\s-ib-release.aab'
+    $dest = Join-Path $root 'release\h-sib-reminder-release.aab'
     Copy-Item $aab.FullName $dest -Force
     $hash = (Get-FileHash $dest -Algorithm SHA256).Hash
-    Log ("BUNDLE  release\s-ib-release.aab  {0:N1} MB  sha256 {1}" -f ((Get-Item $dest).Length / 1MB), $hash)
+    Log ("BUNDLE  release\h-sib-reminder-release.aab  {0:N1} MB  sha256 {1}" -f ((Get-Item $dest).Length / 1MB), $hash)
     $jarsigner = Join-Path $root '.toolchain\jdk17\bin\jarsigner.exe'
-    $verify = & $jarsigner -verify $dest 2>&1 | Select-Object -First 1
+    $verify = & $jarsigner -verify $dest 2>&1 | Where-Object { "$_".Trim() } | Select-Object -First 1
     Log ("SIGNATURE  " + $verify)
 } else {
     Log 'No release bundle was produced.'
@@ -107,6 +108,12 @@ $py = Get-Command python -ErrorAction SilentlyContinue
 if ($py) {
     Log 'HYGIENE'
     & python -I (Join-Path $root 'tools\hygiene.py') 2>&1 | ForEach-Object { Log ('   ' + $_) }
+    Log 'CONTRAST'
+    & python -I (Join-Path $root 'tools\contrast-check.py') 2>&1 | ForEach-Object { Log ('   ' + $_) }
+    Log 'WORDS'
+    & python -I (Join-Path $root 'tools\words-check.py') 2>&1 | ForEach-Object { Log ('   ' + $_) }
+    Log 'RELEASE GATE'
+    & python -I (Join-Path $root 'tools\release-gate.py') 2>&1 | ForEach-Object { Log ('   ' + $_) }
 }
 
 Log 'Offline pipeline finished. Read this file, then open offline-logs\ for any step marked FAIL.'

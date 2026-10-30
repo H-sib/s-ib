@@ -29,7 +29,7 @@ private const val SHOWN_CHARS = 1400
 
 /**
  * The text that was read, with every date marked and a plain sentence under it saying why each one was taken or
- * left alone. This is the feature that lets someone check S-IB instead of trusting it.
+ * left alone. This is the feature that lets someone check H-sib Reminder instead of trusting it.
  */
 @Composable
 fun ExplainedText(extraction: Extraction, modifier: Modifier = Modifier) {

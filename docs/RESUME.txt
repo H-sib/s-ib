@@ -1,61 +1,61 @@
-S-IB: WHERE THINGS STAND AND WHAT IS LEFT
-Written 2026-10-14 so work can continue after a pause. Plain text on purpose (no .md files).
+H-SIB REMINDER: WHERE THINGS STAND (rewritten 2026-10-30). Plain text on purpose, no .md files.
+Read first: C:\Users\lordhasib\Desktop\Projects\Create An App H-sib\APP_QUALITY_STANDARD.txt, docs\QUALITY_GAP_REPORT.txt,
+docs\DECISIONS.txt, memory notes. Maker's rule: keep tokens low (short output, no polling, batch builds).
 
-RUN THIS FIRST, NO AI NEEDED
-  powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1
-It runs the core tests, the debug build, the app tests, lint, creates the upload key once, builds the signed release
-bundle, checks the merged manifest for the INTERNET permission, checks 16 KB alignment and scans for em dashes and
-unused imports. Read offline-report.txt afterwards. Full Gradle logs are in offline-logs\.
-To build by hand: & .\tools\gw.ps1 <gradle arguments>   (the log lands in build-log.txt)
+ONE COMMAND:  powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1   then read offline-report.txt
+(core tests, eval, debug build, app tests, lint, signed bundle and apk, permissions, 16 KB alignment, hygiene, contrast,
+words, release gate). Builds by hand: & .\tools\gw.ps1 <args> from a Terminal panel tab. Screenshots: -Precord=true.
+The phone (Sony SOV43, USB debugging): .toolchain\android-sdk\platform-tools\adb.exe; if it lists nothing run kill-server
+then start-server. Never tap terms or attestations for the maker.
 
-DONE AND COMPILING
-  core (pure JVM): dates, planner, urgency, reminders, backup format, seal, Close ones reminders, repeats
-  eval: generator, trainer, evaluation harness
-  app: database, store, engine, notifications, widget, tile, backup, import, every screen, navigation,
-       app lock, share receiver, Close ones (home, detail, editor, theme), repeating series, share with friends,
-       Why S-IB in About, Close ones settings page
-  Last confirmed: :core:test passes, :app:compileDebugKotlin passes with no warnings.
+WHAT EXISTS: the planner, reader, reminders, widget, tile, dashboard card, notification reader, Close ones, four themes,
+Sora, intro (H-sib wordmark, long once then short, Settings can change it), terms and security gate at first run, Guide,
+What's new, backups, sharing with friends and chat (code complete; see docs\FRIENDS_AND_CHAT_DESIGN.txt and firebase\README.txt).
+The app is named H-sib Reminder (store title "H-sib Reminder: Deadlines"). applicationId com.hsib.sib.
 
-ALSO DONE (2026-10-14, later the same day)
-  Lint errors fixed (StrongBox crash on Android 8, theme attributes, locale, tile). INTERNET, ACCESS_NETWORK_STATE and the
-  foreground service permission are removed in app\src\main\AndroidManifest.xml and confirmed absent from the merged
-  release manifest. A signed release bundle was built (about 29 MB). Written: store\listing.txt,
-  store\data-safety-and-policy-answers.txt, store\play-console-checklist.txt, store\CV_AND_PORTFOLIO_DESCRIPTION.txt,
-  site\privacy.html, PROJECT_SUMMARY.txt. tools\store-check.py checks the listing limits, tools\hygiene.py the style rules.
+FIREBASE: needs the owner. Put google-services.json into app\ (git-ignored); the build then keeps the network permissions and
+switches sharing on. Without it the merged manifest has no network permission and the app is fully offline. Debug builds
+without it show a practice mode with a pretend friend. Real sign in and the rules emulator tests have never been run.
 
-INTRO AND SCREENSHOT TESTS (added later on 2026-10-14)
-  ui\Intro.kt plays on a cold start (axis draws, deadline lands, start marker travels, dashed arc, S-IB resolves, a tap
-  skips; it is skipped when opened from a notification and respects Reduce motion). app\src	est\...\IntroShotTest.kt
-  renders it at six moments in light and dark: gradlew :app:testDebugUnitTest -Precord=true writes appuild\shots\*.png.
-  The motion and layout work, but the look (cream paper, book serif, thin lines) is the old editorial style the owner
-  rejected, so restyle it as part of the redesign. The screenshot setup is ready to reuse for every other screen.
+MEASURED ON THE PHONE (see the gap report): cold start about 1.6 s (release), opening animation was 80 percent janky and was
+reduced; Today, Plan and Guide scrolling not yet measured because the first run needs the maker to tap Accept on the terms.
 
-STILL TO DO, IN ORDER
-  0. (Mostly done, see section 7 of docs\DESIGN_REDO.txt) The owner rejected the first visual design. Read docs\DESIGN_REDO.txt and rebuild the UI to it
-     (bold tiles, little text, whitespace, layered screens, graded colour, no pale grey text, a distinctive
-     typeface, a very cool animated intro). Ask before downloading any font. This outranks everything below.
-  1. Read offline-report.txt (the 16 KB alignment line and the release APK step were still running when this was written).
-     Re-run the pipeline after any code change. Run lint again: the earlier lint run predates the fixes.
-  2. (Ready now takes its database and tests build one in memory, see app\src	est\...\TestReady.kt.) Write the
-     Robolectric logic tests: Store (seal chain, repeats advance, rollRepeats,
-     snapshot round trip with the new Close ones fields), Engine (Close ones kept out of the plan), SettingsCodec,
-     DocText limits. Update the test count in PROJECT_SUMMARY.txt and store\CV_AND_PORTFOLIO_DESCRIPTION.txt afterwards.
-  3. Roborazzi screenshots of Today, Plan, Review, Close ones home, Close ones detail, Detail, Onboarding in light
-     and dark. Look at them and fix layout problems. These become the Play screenshots.
-  4. App icon check at 512 px, feature graphic 1024 x 500.
-  5. Add site\index.html (a one-page landing for GitHub Pages) if wanted.
-  6. Final honest report to the owner: what was verified by tests, what was never run on a phone.
+STILL TO DO, IN ORDER: 1 maker taps Accept on the phone, then measure Today, Plan, Guide frames and run a 30 minute monkey run.
+2 Screen reader and right to left pass. 3 Languages the real users read (decision). 4 Share card. 5 Firebase project and two
+account tests. 6 Lawyer reads terms and privacy. 7 Second copy of the signing key off this computer (hard stop H7).
+Not committed: everything since the first commit is uncommitted; commit only when asked, as the maker only, no co-author line.
 
-THINGS ONLY THE OWNER CAN DO
-  - Create the Google Play Console developer account and pay the one time fee.
-  - Publish the privacy policy page (GitHub repository H-sib/s-ib, Pages on).
-  - Closed test: 12 testers for 14 days before production access on a personal account.
-  - Test reminders on a real phone, ideally from two different brands, and with the phone idle overnight.
-  - Keep a safe copy of release\upload-keystore.p12 and release\keystore.properties. With Play App Signing the
-    upload key can be reset, but only through Play support.
-  - Check the name "S-IB" against trademarks in the countries you care about, and register a domain if wanted.
-    Note that SIB is also the abbreviation of several banks, which is why the store title is "S-IB: Deadline Planner".
+STATUS 2026-10-30 (settings and chart pass)
+ - Load chart: weeks are separate outlined panels with a gap and their own baseline (ui/Charts.kt LoadHorizon). Checked in the recorded shot.
+ - Settings, About, Sources, Privacy, Health, Security, Close ones: grouped cards with dividers (ui/Groups.kt). Checked Home and About shots.
+ - Pipeline 0 failures: contrast 0 below floor, words 0, dashes 0, release gate 0, network permission absent without google-services.json.
+ - Still not seen by a person: Sources, Privacy, Health, Security shots (recorded, not viewed), new icon on the phone.
+ - Owner next: follow firebase/SETUP_STEPS.txt, drop app/google-services.json, unlock the phone and tap Accept on the terms screen.
 
-DELIBERATELY NOT IN VERSION 1
-  Friends, groups, in-app chat and GIFs (need a server and Play's user generated content rules), Gmail or
-  notification reading, exact alarms, any network permission.
+STATUS 2026-10-30 (Firebase on, two-account test on one phone)
+ - Firebase project h-sib-reminder (owner account chr.siam7@gmail.com) is wired in: app/google-services.json present, Google sign in works, rules published, App Check debug token "my phone" registered. Enforcement still OFF (no verified-request metric yet; turn on after more testing).
+ - Tested on the Sony phone with two Google accounts taking turns: share a deadline, create an invite code, join with the code, chat both ways (sealed text decrypts for the other account), re-sync after sign out and in. All worked against the real server.
+ - Scroll hint (ui/ScrollCue.kt): faint fade, a few words and a small arrow, in short bursts, only when a page can scroll further; static with Reduce motion. Used by Page, Home tabs, Onboarding, Terms, Settings home via Modifier.cuedVerticalScroll(). No horizontal scrollers exist yet; add an axis if one is ever built.
+ - OPEN BUG (not fixed): on one phone, an account that was never in a shared room still sees that room in Friends as "You are no longer in this" after switching accounts. SocialRepository.signIn already clears rooms when the uid differs from social.uid, yet the row stays. Reproduce: A shares a deadline, sign out, sign in as C (not a member), open Friends. Clearing rooms at sign out is NOT the fix: re-finding a room (adoptRoom) creates a new local deadline, so same-account sign out and in would duplicate deadlines. Next step: log signIn/clearLocal/sync order on the device.
+ - Release gate fails on purpose while the build has INTERNET: replace site/privacy.html and the store texts with docs/drafts online versions (owner to read them first), then re-run.
+
+STATUS 2026-10-30 later (privacy swap, quiet chat)
+ - Online texts are live in the repo: site/privacy.html, site/delete-account.html, store/listing.txt, store/data-safety-and-policy-answers.txt, CV text. Old drafts in docs/drafts are marked SUPERSEDED. Release gate passes with INTERNET present. Onboarding chip no longer says "No internet permission" when Firebase is on. Owner still to read the texts and confirm the 30 day deletion promise.
+ - Chat redesigned (ui/ChatUi.kt, used by ChatScreen in ui/Room.kt): one tone for page and bubbles, thin outlines only, violet outline for own messages, grouped corners, outlined avatars, slim header, send arrow appears only with text. Seen in dark and light shots (app/build/shots/chat-*.png), not yet on the phone.
+ - Ideas not done: make ui/Social.kt AccountScreen use the grouped Group/NavItem layout like Settings; the owner loves the Home screen and the current week view, so leave those alone.
+ - An unattended job was started: scratchpad overnight.ps1 runs the full pipeline, re-records all shots, installs the debug build on the phone. Read offline-logs/overnight-summary.txt.
+
+STATUS 2026-10-30 night (account switch fixed, icons, calmer deadline page)
+ - FIXED the account switching leak: SocialRepository.forgetRoomsOfOtherAccount runs first in every sync under the lock, and signIn finishes in NonCancellable (the screen that started sign in was cancelled as soon as the account appeared, so the old cleanup never ran). Test: SocialRepositoryTest.anotherAccountOnTheSamePhoneNeverSeesTheFirstOnesRooms. Checked on the phone: a third account sees no shared deadlines. Side effect to know: a room re-found on a phone creates a new local deadline for it (adoptRoom).
+ - Own icon set: ui/Icons.kt (SibIcon enum drawn from SVG path data on a 24 grid, one accent dot on some, SibIconView, IconBadge, iconFor(title) picks the icon of a settings row from its title). Group rows (NavItem, ExpandItem) show icons automatically. ui/Tiles.kt has IconAction (round icon button with a one word label) and FoldItem (icon row that opens in place).
+ - Deadline page (ui/Detail.kt Overview tab) rebuilt: tinted date tile with big countdown and pressure bar, four icon actions (Move, Calendar, Send, Share or Chat), a progress tile, then folded rows Plan, Tune, Pause, More. Steps and History tabs only got icon buttons for remove and delete. Add screen: Paste, Photo, Scan, File are icon actions. Account page uses grouped cards.
+ - Still without icons: Plan and Review tabs, settings toggle rows, Guide, People screen buttons. Home was left alone on purpose.
+ - SocialShotTest now finds the share and chat buttons by content description (they are icon buttons).
+
+STATUS 2026-10-30 late (release preparation)
+ - Consent record: the community rules acceptance is written once per version to Firestore users/{uid}/consent/rules-N (server time, app version) by SocialRepository.recordConsentIfNeeded; the rules for it are PUBLISHED in the console (5:12 pm). Local record: termsAcceptedAt (first screen) and social.termsAt (rules). Terms and privacy pages rewritten (site/terms.html, site/privacy.html, site/delete-account.html, site/index.html) with retention, basis, consent record, rights, limits of liability, governing law Bangladesh (owner to confirm).
+ - Notification bar card rebuilt: platform/DashboardArt.kt draws the card (Sora font, tone gradient by urgency and critical importance, ring, day dots, list, Open and Done); platform/Dashboard.kt builds it; default ON; swipe hides it for that deadline and tone until tomorrow (settings dashboardHidden); Keep it after Clear all = settings todayPinned (ongoing) with a confirm dialog.
+ - Intro redesigned (ui/Intro.kt): dots roll in, become the H-sib mark, marker lands with a ring, then name and Start It Before. Name styling: ui/Groups.kt AppName puts "sib" first (big, heavy, gradient) everywhere the name is a title; the feature graphic and web pages do the same.
+ - Progress buttons are QuickAdd pills (ui/Tiles.kt), one line each, stacked at large font sizes. Health page buttons stacked.
+ - Store: store/graphics (icon-512, feature-1024x500, 7 screenshots at 1080x2160) made by tools/store-graphics.py; .github/workflows/pages.yml publishes site/ to GitHub Pages; store/PLAY_CONSOLE_RELEASE_GUIDE.txt has every Play Console value and step.
+ - Owner next: create the GitHub repo H-sib/s-ib and push, enable Pages (Actions), make the second copy of the signing key, create the Play account, follow the guide.

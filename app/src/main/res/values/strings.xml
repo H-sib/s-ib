@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">S-IB</string>
+    <string name="app_name">H-sib Reminder</string>
     <string name="widget_description">The next deadlines on your list.</string>
-    <string name="tile_label">S-IB</string>
-    <string name="share_label">Find deadlines in S-IB</string>
+    <string name="tile_label">H-sib</string>
+    <string name="share_label">Find deadlines in H-sib Reminder</string>
 </resources>

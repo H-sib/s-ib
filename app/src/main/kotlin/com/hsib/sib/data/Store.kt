@@ -90,6 +90,9 @@ class HistoryKeys(private val settings: SettingsStore) {
 
 fun ByteArray.toHex() = joinToString("") { "%02x".format(it) }
 
+/** Where the phone's chat key pair is kept. It is the only social setting that travels in the encrypted backup. */
+const val SOCIAL_DEVICE_KEY = "social.deviceKey"
+
 data class DataCounts(val obligations: Int, val candidates: Int, val steps: Int, val receipts: Int, val excerpts: Int, val historyEntries: Int, val dismissed: Int)
 
 data class CandidateEdit(
@@ -347,13 +350,16 @@ class Store(
             evidence = db.evidence().all().map { EvidenceDto(it.id, it.obligationId, it.excerpt, it.at) },
             seal = db.seals().all().map { SealDto.from(it.obligationId, it.toEntry()) },
             dismissed = db.dismissed().fingerprints(),
-            settings = settings + ("historyKeys" to keys.serialized()),
+            settings = settings + ("historyKeys" to keys.serialized()) +
+                (db.settings().all().firstOrNull { it.key == SOCIAL_DEVICE_KEY }?.let { mapOf(SOCIAL_DEVICE_KEY to it.value) } ?: emptyMap()),
         )
     }
 
     /** Replaces or merges. Returns merge statistics when merging. Settings are handled by the caller. */
     suspend fun importSnapshot(snap: BackupSnapshot, merge: Boolean, localSettings: Map<String, String>): MergeResult? {
         snap.settings["historyKeys"]?.split(",")?.mapNotNull(HistoryKeys::unhex)?.let { keys.adopt(it) }
+        snap.settings[SOCIAL_DEVICE_KEY]?.takeIf { db.settings().all().none { it.key == SOCIAL_DEVICE_KEY } }
+            ?.let { db.settings().upsert(SettingEntity(SOCIAL_DEVICE_KEY, it)) }
         val target: BackupSnapshot
         var stats: MergeResult? = null
         if (merge) {
@@ -386,6 +392,7 @@ class Store(
     /** Deletes everything the app holds except the vault itself. */
     suspend fun wipeAll() = db.withTransaction {
         wipeRows()
+        db.rooms().clear(); db.roomKeys().clear(); db.roomMembers().clear(); db.roomMessages().clear(); db.blocked().clear()
         db.settings().all().filter { it.key != "historyKeys" }.forEach { db.settings().delete(it.key) }
         blobs.deleteAll()
     }

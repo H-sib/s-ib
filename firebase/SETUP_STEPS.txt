@@ -1,0 +1,57 @@
+H-SIB REMINDER: CREATE THE FIREBASE PROJECT, STEP BY STEP (about 15 minutes, free plan, no card)
+Written 2026-10-30. Do these in a browser signed in to the Google account that should own the project (use your H-sib account).
+Console screens change names now and then; if a button is called something close, it is the same step.
+
+A. THE PROJECT
+ 1. Open https://console.firebase.google.com and choose Create a project (or Add project).
+ 2. Name it: H-sib Reminder.  Continue.
+ 3. Google Analytics: turn it OFF (the app uses no analytics). Create project. Wait, then Continue.
+
+B. THE ANDROID APP
+ 4. On the project home page click the Android icon (Add app).
+ 5. Android package name: com.hsib.sib      App nickname: H-sib Reminder
+    Debug signing certificate SHA-1 (optional box, but fill it): 18:99:30:20:FF:35:F2:48:52:60:85:12:4D:72:F5:87:B4:ED:8B:CC
+    Click Register app.
+ 6. SKIP the "Add Firebase SDK" and "Download" screens for now (click Next, Next, Continue to console). The SDK is already in the app.
+ 7. Project settings (gear icon) > General > your Android app > Add fingerprint. Add these three (SHA-1 and SHA-256 each if it asks):
+    Upload key SHA-1:   4F:3B:69:F1:AC:CE:6C:C5:15:C3:FB:E6:E6:F7:85:A8:B5:AC:49:A7
+    Upload key SHA-256: 3D:94:8D:4F:1D:E6:59:83:DC:8F:AE:9B:F0:43:44:AC:28:DE:74:76:A5:D3:B3:60:9A:F4:29:A7:B3:21:12:D6
+    Debug SHA-256:      38:18:B5:32:B7:AD:CD:CD:60:E2:E9:7A:4F:F7:73:F8:C4:96:DC:CB:AB:02:0D:91:4B:08:7F:6E:C2:2E:65:98
+    (Later, after the first Play upload, also add the "App signing key certificate" fingerprints from Play Console,
+     Test and release > App integrity. Without that one, Google sign in fails for people who install from Play.)
+
+C. GOOGLE SIGN IN
+ 8. Build > Authentication > Get started > Sign-in method > Google > Enable.
+    Public-facing name: H-sib Reminder.  Support email: your address.  Save.
+ 9. IMPORTANT: now go back to Project settings > General > your Android app and click Download google-services.json.
+    Download it AFTER enabling Google sign in; an older copy lacks the web client id the app needs.
+
+D. THE DATABASE
+ 10. Build > Firestore Database > Create database > Standard edition > location. THE LOCATION CANNOT BE CHANGED LATER.
+     For friends in Bangladesh and India choose asia-south1 (Mumbai). Pick Production mode > Create.
+ 11. Firestore > Rules tab > select everything, delete it, paste the whole content of firebase\firestore.rules from this project,
+     click Publish. (The rules have never been run in the emulator; they are the server side of the permissions.)
+
+E. KEEP OUT OTHER APPS (App Check)
+ 12. Build > App Check > Apps > your Android app > Play Integrity > Save. Do not turn ON enforcement yet.
+ 13. Run a debug build once; the log prints "Enter this debug secret into the allow list". Add that under
+     App Check > Apps > the three dots > Manage debug tokens. Only then turn on enforcement for Authentication and Firestore.
+
+F. CONNECT IT TO THE APP
+ 14. Copy the downloaded google-services.json into the folder  app\  of this project (next to app\build.gradle.kts).
+     It is git-ignored. It holds project identifiers, not passwords, but keep it out of the repository.
+ 15. Build and install:   & .\tools\gw.ps1 :app:assembleDebug   (Terminal panel tab), then install on the phone.
+     The merged manifest now keeps the network permissions and the Friends screens use the real server.
+ 16. Test with two phones and two different Google accounts: sign in on both, share a deadline on one, join with the code on the
+     other, chat, remove a person, leave, delete the account. Tell me what happens and I will fix what breaks.
+
+G. BEFORE ANYONE ELSE USES IT
+ - Replace site\privacy.html and the store texts with the online versions in docs\drafts\ (the release gate fails until they match).
+ - Read docs\drafts\terms-of-use.txt and decide how fast you can answer reports (you are the moderator).
+ - Optional later: Blaze plan only if you want instant chat notifications; it needs a card and a budget alert.
+
+IF SOMETHING GOES WRONG
+ - "Developer console is not set up correctly" or sign in does nothing: a fingerprint is missing (step 7) or google-services.json
+   was downloaded before step 8. Add the fingerprint, download the file again, rebuild.
+ - "Permission denied" in the app: the rules were not published (step 11) or App Check enforcement is on without a debug token (13).
+ - No Google account on the phone: add one in Android settings first.

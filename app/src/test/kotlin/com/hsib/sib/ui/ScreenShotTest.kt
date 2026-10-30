@@ -2,10 +2,14 @@ package com.hsib.sib.ui
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -13,6 +17,7 @@ import com.hsib.sib.core.model.Space
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.hsib.sib.core.seal.SealEntry
 import com.hsib.sib.data.ThemeMode
 import com.hsib.sib.domain.AppState
 import org.junit.Rule
@@ -43,7 +48,7 @@ class ScreenShotTest {
     }
 
     private fun today(st: AppState) = @Composable {
-        TodayScreen(st, noImport, {}, {}, {}, {}, {}, { _, _ -> }, {})
+        TodayScreen(st, noImport, {}, {}, {}, {}, {}, { _, _ -> }, {}, {})
     }
 
     @Test fun todaySoonDark() = shot("today-soon-dark", content = today(Fixtures.soon))
@@ -88,7 +93,47 @@ class ScreenShotTest {
 
     @Test fun onboardingDark() = shot("onboarding-dark") { Onboarding(Fixtures.today, { null }, {}, {}) }
 
+    @Test fun promptsDark() = shot("prompts-dark") {
+        Column(Modifier.padding(24.dp)) { PromptCard(true, {}); Spacer(Modifier.height(16.dp)); PromptCard(false, {}) }
+    }
+
+    @Test fun choicesDark() = shot("choices-dark") {
+        Column(Modifier.padding(24.dp)) {
+            Text("Effort", style = SibType.bodyStrong, color = SibTheme.colors.ink)
+            Spacer(Modifier.height(8.dp))
+            Choice(EffortChoices, 240, {})
+            Spacer(Modifier.height(20.dp))
+            Text("Importance", style = SibType.bodyStrong, color = SibTheme.colors.ink)
+            Spacer(Modifier.height(8.dp))
+            Choice(listOf("LOW" to "Low", "NORMAL" to "Normal", "HIGH" to "High", "CRITICAL" to "Critical"), "HIGH", {})
+        }
+    }
+
+    @Test fun historyDark() = shot("history-dark") {
+        val fmt = rememberFmt()
+        fun e(f: String, o: String, n: String, actor: String = "USER", r: String = "edited") = SealEntry(0, 1_760_000_000L, f, o, n, actor, r, "", "")
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            listOf(
+                e("due", "2026-10-16T00:00 UTC date_only", "2026-10-18T17:00 UTC date_time", r = "date changed"),
+                e("importance", "NORMAL", "HIGH", r = "importance changed"),
+                e("effort", "168/240/384", "300/420/660", r = "estimate changed"),
+                e("status", "ACTIVE", "COMPLETED", r = "marked done"),
+                e("created", "", "Signals lab report | 2026-10-16T00:00 UTC date_only", r = "created"),
+            ).forEach { HistoryEntryCard(it, fmt, Fixtures.zone) }
+        }
+    }
+
     @Test fun allDark() = shot("all-dark") { AllScreen(Fixtures.soon, {}, {}) }
 
     @Test fun barDark() = shot("bar-dark") { SibBottomBar(Tab.TODAY, {}, 3) }
+
+    @Test fun termsDark() = shot("terms-dark") { TermsScreen(false, null, {}, null) }
+
+    @Test fun termsLight() = shot("terms-light", ThemeMode.LIGHT) { TermsScreen(false, null, {}, null) }
+
+    @Test fun guideDark() = shot("guide-dark") { GuideScreen(false, {}) }
+
+    @Test fun whatsNewDark() = shot("whatsnew-dark") {
+        androidx.compose.foundation.layout.Box(Modifier.padding(24.dp)) { WhatsNewCard(WhatsNew.entries, {}) }
+    }
 }

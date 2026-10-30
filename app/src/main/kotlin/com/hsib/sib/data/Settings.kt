@@ -15,6 +15,9 @@ enum class ThemeMode(val label: String) { SYSTEM("Follow my phone"), LIGHT("Ligh
 
 enum class LockScreenDetail { HIDDEN, TITLES }
 
+/** How long the opening plays. AUTO is long the first time and short after. */
+enum class IntroSpeed(val label: String) { AUTO("Long once, then short"), LONG("Always long"), SHORT("Always short"), OFF("Skip it") }
+
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val dateOrder: DateOrder = DateOrder.AUTO,
@@ -29,19 +32,31 @@ data class AppSettings(
     val finalLeadMinutes: Int = 120,
     val remindOverdue: Boolean = true,
     val lockScreenDetail: LockScreenDetail = LockScreenDetail.HIDDEN,
-    val todayNotification: Boolean = false,
+    val todayNotification: Boolean = true,
+    val todayPinned: Boolean = false,
+    val dashboardHidden: String = "",
     val digestEnabled: Boolean = true,
     val digestHour: Int = 8,
     val learnDigestTime: Boolean = true,
     val preciseReminders: Boolean = false,
     val appLock: Boolean = false,
-    val hideInRecents: Boolean = true,
+    /** Off by default: blocking screenshots is a choice for the owner to make, not a surprise. */
+    val hideInRecents: Boolean = false,
     val reduceMotion: Boolean = false,
     val onboardingDone: Boolean = false,
     val candidateTtlDays: Int = 30,
     val keepExcerptsByDefault: Boolean = false,
     val notificationPermissionAsked: Boolean = false,
     val closeOnesEnabled: Boolean = true,
+    /** Packages whose notifications H-sib Reminder may read for deadlines. Empty means it reads none. Never restored from a backup. */
+    val notificationReaderApps: Set<String> = emptySet(),
+    val readerPromptDismissed: Boolean = false,
+    val dashboardPromptDismissed: Boolean = false,
+    val introSpeed: IntroSpeed = IntroSpeed.AUTO,
+    /** The version of the terms this phone accepted, 0 if none. Per device, never restored from a backup. */
+    val termsVersion: Int = 0,
+    /** The newest release whose What's new has been seen. Per device. */
+    val lastSeenVersion: Int = 0,
     // Backup bookkeeping. These never leave the device inside a backup.
     val backupFolder: String? = null,
     val backupAuto: Boolean = false,
@@ -58,7 +73,7 @@ data class AppSettings(
 
 object SettingsCodec {
     /** Keys that describe this device's backup setup and must not be restored onto another device. */
-    private val deviceOnly = setOf("backupFolder", "backupAuto", "backupLastAt", "backupSeq", "backupLineage", "backupHead", "notificationPermissionAsked")
+    private val deviceOnly = setOf("backupFolder", "backupAuto", "backupLastAt", "backupSeq", "backupLineage", "backupHead", "notificationPermissionAsked", "notificationReaderApps", "termsVersion", "lastSeenVersion", "dashboardHidden")
 
     fun encode(s: AppSettings): Map<String, String> = buildMap {
         put("theme", s.theme.name); put("dateOrder", s.dateOrder.name); put("weekStart", s.weekStart.name)
@@ -67,14 +82,18 @@ object SettingsCodec {
         put("morning", s.morning.toString()); put("quietStart", s.quietStart.toString()); put("quietEnd", s.quietEnd.toString())
         put("dailyBudget", s.dailyBudget.toString()); put("finalLeadMinutes", s.finalLeadMinutes.toString())
         put("remindOverdue", s.remindOverdue.toString()); put("lockScreenDetail", s.lockScreenDetail.name)
-        put("todayNotification", s.todayNotification.toString()); put("digestEnabled", s.digestEnabled.toString())
+        put("todayNotification", s.todayNotification.toString()); put("todayPinned", s.todayPinned.toString()); put("dashboardHidden", s.dashboardHidden); put("digestEnabled", s.digestEnabled.toString())
         put("digestHour", s.digestHour.toString()); put("learnDigestTime", s.learnDigestTime.toString())
         put("preciseReminders", s.preciseReminders.toString()); put("appLock", s.appLock.toString())
-        put("hideInRecents", s.hideInRecents.toString()); put("reduceMotion", s.reduceMotion.toString())
+        put("hideFromScreenshots", s.hideInRecents.toString()); put("reduceMotion", s.reduceMotion.toString())
         put("onboardingDone", s.onboardingDone.toString()); put("candidateTtlDays", s.candidateTtlDays.toString())
         put("keepExcerptsByDefault", s.keepExcerptsByDefault.toString())
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
+        put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
+        put("readerPromptDismissed", s.readerPromptDismissed.toString())
+        put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
+        put("introSpeed", s.introSpeed.name); put("termsVersion", s.termsVersion.toString()); put("lastSeenVersion", s.lastSeenVersion.toString())
         s.backupFolder?.let { put("backupFolder", it) }
         put("backupAuto", s.backupAuto.toString()); put("backupLastAt", s.backupLastAt.toString()); put("backupSeq", s.backupSeq.toString())
         s.backupLineage?.let { put("backupLineage", it) }
@@ -105,18 +124,26 @@ object SettingsCodec {
             remindOverdue = m.bool("remindOverdue", d.remindOverdue),
             lockScreenDetail = m.enum("lockScreenDetail", d.lockScreenDetail),
             todayNotification = m.bool("todayNotification", d.todayNotification),
+            todayPinned = m.bool("todayPinned", d.todayPinned),
+            dashboardHidden = m["dashboardHidden"] ?: d.dashboardHidden,
             digestEnabled = m.bool("digestEnabled", d.digestEnabled),
             digestHour = m.int("digestHour", d.digestHour, 0..23),
             learnDigestTime = m.bool("learnDigestTime", d.learnDigestTime),
             preciseReminders = m.bool("preciseReminders", d.preciseReminders),
             appLock = m.bool("appLock", d.appLock),
-            hideInRecents = m.bool("hideInRecents", d.hideInRecents),
+            hideInRecents = m.bool("hideFromScreenshots", d.hideInRecents),
             reduceMotion = m.bool("reduceMotion", d.reduceMotion),
             onboardingDone = m.bool("onboardingDone", d.onboardingDone),
             candidateTtlDays = m.int("candidateTtlDays", d.candidateTtlDays, 1..365),
             keepExcerptsByDefault = m.bool("keepExcerptsByDefault", d.keepExcerptsByDefault),
             notificationPermissionAsked = m.bool("notificationPermissionAsked", d.notificationPermissionAsked),
             closeOnesEnabled = m.bool("closeOnesEnabled", d.closeOnesEnabled),
+            notificationReaderApps = m["notificationReaderApps"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..160 }?.take(60)?.toSet() ?: d.notificationReaderApps,
+            readerPromptDismissed = m.bool("readerPromptDismissed", d.readerPromptDismissed),
+            dashboardPromptDismissed = m.bool("dashboardPromptDismissed", d.dashboardPromptDismissed),
+            introSpeed = m.enum("introSpeed", d.introSpeed),
+            termsVersion = m.int("termsVersion", d.termsVersion, 0..1000),
+            lastSeenVersion = m.int("lastSeenVersion", d.lastSeenVersion, 0..100000),
             backupFolder = m["backupFolder"],
             backupAuto = m.bool("backupAuto", false),
             backupLastAt = m["backupLastAt"]?.toLongOrNull() ?: 0,
@@ -142,4 +169,6 @@ class SettingsStore(private val dao: SettingDao) {
     suspend fun raw(key: String): String? = dao.all().firstOrNull { it.key == key }?.value
 
     suspend fun putRaw(key: String, value: String) = dao.upsert(SettingEntity(key, value))
+
+    suspend fun removeRaw(key: String) = dao.delete(key)
 }

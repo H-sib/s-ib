@@ -14,9 +14,13 @@ import com.hsib.sib.data.Vault
 import com.hsib.sib.domain.Engine
 import com.hsib.sib.platform.BackupService
 import com.hsib.sib.platform.Importer
+import com.hsib.sib.platform.NotificationReader
 import com.hsib.sib.platform.Notifier
 import com.hsib.sib.platform.ReminderSync
 import com.hsib.sib.platform.Surfaces
+import com.hsib.sib.social.SocialBuilder
+import com.hsib.sib.social.SocialConfig
+import com.hsib.sib.social.SocialRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +32,7 @@ import java.io.File
 import java.time.Clock
 
 /** Everything that needs the unlocked vault. Only exists once the vault has been opened. */
-class Ready(val context: Context, val db: SibDatabase, master: ByteArray, scope: CoroutineScope) {
+class Ready(val context: Context, val db: SibDatabase, master: ByteArray, scope: CoroutineScope, socialBuilder: SocialBuilder? = null) {
     val settings = SettingsStore(db.settings())
     val keys = HistoryKeys(settings)
     val blobs = BlobFiles(File(context.filesDir, "receipts"), KeyHierarchy.blobKey(master))
@@ -38,8 +42,12 @@ class Ready(val context: Context, val db: SibDatabase, master: ByteArray, scope:
     val importer = Importer(context, store, settings, extractor)
     val notifier = Notifier(context)
     val reminders = ReminderSync(context, db, store, settings, engine, notifier)
+    val reader = NotificationReader(context, settings, importer, notifier)
     val surfaces = Surfaces(context, notifier)
     val backup = BackupService(context, store, settings, keys)
+
+    /** Sharing and chat. Null when this build does not offer them. */
+    val social: SocialRepository? = socialBuilder?.build(db, settings, store, scope)
 
     suspend fun init() {
         keys.load()
@@ -74,7 +82,7 @@ class AppContainer(private val app: Context, private val scope: CoroutineScope) 
         scope.launch(Dispatchers.IO) {
             when (val s = vault.open()) {
                 is Vault.State.Ready -> {
-                    val ready = Ready(app, SibDatabase.open(app, s.master), s.master, scope)
+                    val ready = Ready(app, SibDatabase.open(app, s.master), s.master, scope, SocialConfig.builder(app))
                     ready.init()
                     _phase.value = Phase.Running(ready)
                 }
