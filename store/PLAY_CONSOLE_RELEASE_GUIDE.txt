@@ -72,10 +72,17 @@ Play Console, Create app.
      YOU: create a plain Google test account only for the reviewers and paste its email and password into the access form.
      Do not use your own account. Change its password after review.
 4.2  Ads                         "No, my app does not contain ads".
-4.3  Content rating              Start the questionnaire. Category: Utility, productivity, communication or other.
-     Violence, fear, sexual content, bad language, drugs, gambling: No.
-     Users can interact or share user-generated content: YES (chat inside shared deadlines, with report and block).
-     Users share their location: No.  Purchases: No.  Expect a rating higher than Everyone because of user interaction.
+4.3  Content rating              Category "All other app types". Answers, in the order Play asks:
+       Downloaded app has ratings-relevant content: No.
+       Users interact or exchange content natively (text chat): Yes.   Shared user content is the primary content: No.
+       Public sharing of nudity: No.   Public sharing of real-world graphic violence: No.
+       Can block users or content: Yes.   Can report users or content: Yes.
+       Includes chat moderation: Yes (reactive: reports are reviewed and people or shared deadlines can be removed; sealed chat cannot be read).
+       Interactions limited to invited friends only: Yes (invite code).
+       Online content that is not in the download: No.   Promotes or sells age-restricted items: No.
+       Shares precise location: No.   Digital goods purchases: No.   Cash rewards, gift cards, NFTs: No.
+       Web browser or search engine: No.   Primarily news or education: No.
+       Expect a low rating with a "Users Interact" notice; labels differ by region. If the result is much higher, check the answers first.
 4.4  Target audience             18 and over. The community rules set 16 as the minimum age for sharing and chat; that is allowed.
      Does the app appeal to children: No.
 4.5  Data safety                 Follow store\data-safety-and-policy-answers.txt line by line. Summary:
