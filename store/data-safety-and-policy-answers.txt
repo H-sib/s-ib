@@ -27,7 +27,7 @@ Is data encrypted at rest?   Yes on the phone (SQLCipher with a Keystore wrapped
 Do you provide a way for users to request that their data is deleted?   YES. In the app: Friends, Account, Delete my account.
   On the web: https://h-sib.github.io/s-ib/delete-account.html (site\delete-account.html). Deleting removes the person's messages,
   memberships, profile and the rooms they own. Enter the web link in the Data deletion field.
-Committed to follow the Play Families policy?   No. The app is not for children (13 and over for sharing).
+Committed to follow the Play Families policy?   No. The app is not for children (16 and over for sharing).
 Independent security review?   No.
 Optional notification reading: the app can read notification text from apps the owner ticks, after the owner grants
   notification access in Android and after an in-app plain-language disclosure (ReaderScreen). The text is processed on the
@@ -47,7 +47,7 @@ App access:                  Everything except sharing and chat is available wit
                              account. If Play asks for review access, give the reviewer a Google test account and the steps in
                              firebase\SETUP_STEPS.txt, section F.
 Target audience:             18 and over. Reason: Close ones covers partner relationships; choosing adults avoids the
-                             Families policy obligations. The community rules set 13 as the minimum age for sharing and chat.
+                             Families policy obligations. The community rules set 16 as the minimum age for sharing and chat.
 News app / COVID / health / government / financial features / gambling:   No to all.
 User-generated content:      YES. Chat in shared deadlines. Describe four things: terms and community rules accepted before the
                              first share, join or message (docs\drafts\terms-of-use.txt); an in-app way to report a person or a

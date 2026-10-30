@@ -67,7 +67,7 @@ object Terms {
         "You are responsible for your deadlines and for what you share.",
         "Your backup is only as safe as your recovery key. If you lose both your phone and the key, nobody can recover it.",
         "The app is provided as it is, without a warranty, as far as the law allows.",
-        "You must be 13 or older. Sharing with friends has its own community rules, which you accept the first time you use it.",
+        "You must be 13 or older to use the app, and 16 or older to share and chat. Sharing has its own community rules, which you accept the first time you use it.",
         "If these terms change in a way that matters, you will be asked again.",
         "The full terms of use and the privacy policy are online and linked from About. Tapping I accept means you agree to them, and the app keeps a record of when you did.",
     )

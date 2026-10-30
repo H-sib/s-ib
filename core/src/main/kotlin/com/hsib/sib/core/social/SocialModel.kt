@@ -95,7 +95,7 @@ object CommunityRules {
         "Only invite people you know. Share an invite code only with the people it is for.",
         "Everyone in a shared deadline can read its chat. Do not post what you would not want them to see.",
         "You can block a person or report a message at any time. Reports go to the developer, who may remove people or shared deadlines.",
-        "You must be 13 or older.",
+        "You must be 16 or older.",
     )
 }
 

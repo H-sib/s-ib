@@ -76,7 +76,7 @@ Play Console, Create app.
      Violence, fear, sexual content, bad language, drugs, gambling: No.
      Users can interact or share user-generated content: YES (chat inside shared deadlines, with report and block).
      Users share their location: No.  Purchases: No.  Expect a rating higher than Everyone because of user interaction.
-4.4  Target audience             18 and over. The community rules set 13 as the minimum age for sharing; that is allowed.
+4.4  Target audience             18 and over. The community rules set 16 as the minimum age for sharing and chat; that is allowed.
      Does the app appeal to children: No.
 4.5  Data safety                 Follow store\data-safety-and-policy-answers.txt line by line. Summary:
        Collects data: Yes, only after sign in for sharing. Types: name, email address, user IDs, other in-app messages,
@@ -111,7 +111,9 @@ more). Upload the icon, the feature graphic and the screenshots from store\graph
 6.4  Release notes (the "what's new" text for testers), paste from store\listing.txt, WHAT'S NEW.
 6.5  Testers: create an email list with your 12 or more testers, and tick it. Copy the opt-in link and send it to them. They must open
      the link, accept, and install from Play. They must stay opted in for 14 days.
-6.6  Countries: choose where testers live (Bangladesh, India, and any others).
+6.6  Countries: for the closed test choose where your testers live. For production choose all countries: the app is free, in English, and the
+     legal pages cover users worldwide (privacy policy section "People in other countries"). Google decides which countries are available to you.
+     Export laws: the app uses standard encryption (SQLCipher, Tink, TLS); tick the US export laws declaration as the form asks.
 6.7  Save, then Send for review. The first review can take several days. Watch your email and the Publishing overview.
 
 =====================================================================================================================

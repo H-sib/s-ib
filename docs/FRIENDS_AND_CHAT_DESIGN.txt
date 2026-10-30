@@ -179,7 +179,7 @@ With encryption the push never contains message text either way.
   Moderation is a real, ongoing duty for a solo developer. Reports land in the Firebase console, where someone has to
   read them and remove a member or room. The owner must decide whether they accept that duty before launch; I cannot
   do it for them.
-  Age: the app is not for children; the terms will say 13 or older and Google sign-in carries its own age rules.
+  Age: the app is not for children; the terms say 13 or older for the app and 16 or older for sharing and chat (many countries need a parent's agreement below 16), and Google sign-in carries its own age rules.
 
 ------------------------------------------------------------------------
 9. WHAT I CAN BUILD BEFORE THE FIREBASE PROJECT EXISTS
