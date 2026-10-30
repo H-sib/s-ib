@@ -59,3 +59,7 @@ STATUS 2026-10-30 late (release preparation)
  - Progress buttons are QuickAdd pills (ui/Tiles.kt), one line each, stacked at large font sizes. Health page buttons stacked.
  - Store: store/graphics (icon-512, feature-1024x500, 7 screenshots at 1080x2160) made by tools/store-graphics.py; .github/workflows/pages.yml publishes site/ to GitHub Pages; store/PLAY_CONSOLE_RELEASE_GUIDE.txt has every Play Console value and step.
  - Owner next: create the GitHub repo H-sib/s-ib and push, enable Pages (Actions), make the second copy of the signing key, create the Play account, follow the guide.
+
+STATUS 2026-10-30 (closed testing submitted)
+ - Play Console: store listing, category, contact and countries (178) done; closed track "Alpha" with email list "Closed testers" (28 people); release 1.0.0 (version code 1) uploaded from release\h-sib-reminder-release.aab and sent for review (Publishing overview, "Changes in review"). Privacy policy URL typo fixed (privacy.html). Native debug symbols warning ignored.
+ - Next: wait for review; when approved copy the opt-in link to testers; after the first upload add the Play app signing SHA-1 and SHA-256 to Firebase and link Play Integrity (guide section 7); keep 12+ testers opted in for 14 days; then apply for production.
