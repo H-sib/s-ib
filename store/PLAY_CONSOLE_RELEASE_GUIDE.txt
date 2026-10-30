@@ -180,3 +180,23 @@ Not proven yet, and why it matters:
  - The terms, privacy policy and consent record are written carefully in plain language but are not reviewed by a lawyer. They are
    a good faith attempt to protect you, not a guarantee. A lawyer's review later is still worth the money once the app has users.
  - The second copy of the signing key (2.3) is yours to make.
+
+=====================================================================================================================
+12. STATE AFTER THE FIRST UPLOAD (checked 2026-10-30)
+=====================================================================================================================
+Live: closed test "Alpha", release 1.0.0 (1), available to the email list "Closed testers", 178 countries.
+Tester opt-in link (works): https://play.google.com/apps/testing/com.hsib.sib   Feedback contact shown to testers: chr.siam7@gmail.com
+Play Integrity API is linked to the Cloud project H-sib Reminder (304248086) and enabled there. Protected with Play shows High protection.
+Firebase has all five fingerprints: upload SHA-1 and SHA-256, debug SHA-1 and SHA-256, Play app signing SHA-1 and SHA-256.
+  Play app signing SHA-1    CE:E9:0B:13:2B:B1:41:9D:F0:96:ED:C9:1D:43:D9:E9:0F:23:35:5D
+  Play app signing SHA-256  60:1B:5B:93:3C:40:24:5A:A1:92:36:64:2B:05:63:92:86:03:D8:2B:7A:FF:40:45:2B:40:41:E7:4E:1E:0F:D8
+Google sign in: the OAuth consent screen is In production, External. Android OAuth clients exist for the upload, debug and Play signing keys.
+
+STILL TO DO (owner, security settings kept by hand)
+ - Restrict the "Android key (auto created by Firebase)": Google Cloud console, project h-sib-reminder, APIs and services, Credentials,
+   open the key, Application restrictions, Android apps, Add: package com.hsib.sib with each SHA-1 (upload 4F:3B:69:F1:AC:CE:6C:C5:15:C3:FB:E6:E6:F7:85:A8:B5:AC:49:A7,
+   debug 18:99:30:20:FF:35:F2:48:52:60:85:12:4D:72:F5:87:B4:ED:8B:CC, Play signing CE:E9:0B:13:2B:B1:41:9D:F0:96:ED:C9:1D:43:D9:E9:0F:23:35:5D). Save.
+   Wait five minutes, then sign in once on a Play-installed copy and on the debug build to confirm nothing broke.
+ - Turn on App Check enforcement (Firestore, then Authentication) only after the Firebase App Check page shows verified requests from testers.
+ - Optional: OAuth branding (logo, app domain) and uploading native debug symbols.
+ - Keep 12 or more testers opted in for 14 days, then apply for production access.
