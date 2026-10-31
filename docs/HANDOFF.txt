@@ -125,7 +125,8 @@ Ideas not done: icons on Plan and Review tabs, Settings toggle rows, Guide and P
 ======================================================================================================================
 10. WORKING IN THE CLOUD SESSION (keep tokens low)
 ======================================================================================================================
-Start: bash tools/cloud-setup.sh (once per fresh machine), then ./gradlew --version. Read docs\FEEDBACK_LOG.txt and the last 60 lines of docs\RESUME.txt. Use Grep before Read; read only the
+Start: bash tools/cloud-setup.sh (once per fresh machine, Linux only), then ./gradlew --version. If a command is refused because it joins several commands, run each part as its own plain command.
+The cloud check done on 2026-10-31 ran on the owner's Windows PC by mistake, so cloud-setup.sh has NOT yet been proven on a real Linux cloud machine: if it fails there, fix the script first and tell the owner what happened. Read docs\FEEDBACK_LOG.txt and the last 60 lines of docs\RESUME.txt. Use Grep before Read; read only the
 function you need. Run one test class at a time: ./gradlew :app:testDebugUnitTest --tests "com.hsib.sib.ui.LayoutAuditTest" -q ; run everything once before the pull request:
 ./gradlew :core:test :app:testDebugUnitTest -q . Screenshots (only when a visual check is needed): add -Precord=true and look at the single image in app\build\shots, never all of them.
 You cannot reach his phone, Brave, Play Console or Firebase from the cloud: say what he must click. Commit often in small steps. When done, write 3 to 6 plain lines to the owner.
