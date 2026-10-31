@@ -22,6 +22,26 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            5, "1.2.0",
+            listOf(
+                "Make it yours: set the app up for your study, your work or your daily life. Edit it, save it and share it with friends.",
+                "Find a friend by username and chat first. They accept before anything is shared.",
+                "Own plan, your own hours, four Today styles and a light daily line to get you going.",
+                "A weekly class table for medical students, checklists of up to 50 items, and calendar reading.",
+                "A livelier look on Plan, Review, Messages and the Guide.",
+            ),
+        ),
+        Entry(
+            4, "1.1.1",
+            listOf(
+                "A weekly class routine for medical students, Saturday to Thursday, with colours, rooms and times.",
+                "A light line to get you going, written for the kind of deadline you have. Turn it off any time in Settings, Motivation.",
+                "Checklists now hold up to 50 items with your own names, and times move an hour at a time.",
+                "Optional: read Samsung or Google Calendar entries into Review, only with your permission.",
+                "One Plan section where you choose your own hours.",
+            ),
+        ),
+        Entry(
             3, "1.1.0",
             listOf(
                 "A version for medical students: exam types by prof, subjects, study steps, a class diary and its own colours. Turn it on in Settings.",
@@ -35,7 +55,7 @@ object WhatsNew {
             2, "1.0.1",
             listOf(
                 "A month view in Plan marks your deadlines on a calendar.",
-                "Split one deadline into parts, such as 7 assignments, and watch a battery fill as you tick them off.",
+                "Make a checklist inside one deadline, such as 7 assignments, and watch the progress bar fill as you tick them off.",
                 "Today now shows your next few deadlines, not only one.",
                 "Clearer words when there is not enough time, and for hours done.",
                 "Friend is now a choice in Close ones.",

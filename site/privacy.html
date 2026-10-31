@@ -23,7 +23,7 @@
 <body>
 <main>
 <h1><span class="fade">H-</span><span class="sib">sib</span><span class="fade"> Reminder</span> Privacy Policy</h1>
-<p class="soft">Effective 30 October 2026. Developer and data controller: H-sib (Chowdhury Hasibur Rahaman), an individual developer. See also the <a href="terms.html">terms of use</a>.</p>
+<p class="soft">Effective 1 November 2026 (updated for finding people by username and chat requests). Developer and data controller: H-sib (Chowdhury Hasibur Rahaman), an individual developer. See also the <a href="terms.html">terms of use</a>.</p>
 
 <h2>The short version</h2>
 <p>H-sib Reminder works fully on your phone, with no account. If you choose to share a deadline with friends, you sign in with
@@ -49,7 +49,7 @@ it from another app. It reads them on your phone. Text in pictures is recognised
 the app. If you use the Scan button, Google's document scanner is provided through Google Play services and runs on the
 phone; H-sib Reminder receives the scanned pages and does not send them anywhere. Google Play services is governed by Google's
 own privacy policy.</p>
-<p>The clipboard is read only when you tap Paste. H-sib Reminder does not read your email, contacts or calendar. It reads
+<p>The clipboard is read only when you tap Paste or paste a setup from a friend. H-sib Reminder does not read your email or contacts. It reads your phone's calendar only if you switch on Calendar in Settings and allow it, and then only to offer entries in Review. It never writes to your calendar. It reads
 notifications only if you switch on Chats and notifications, described below.</p>
 
 <h2>Reading notifications (optional, off by default)</h2>
@@ -68,6 +68,12 @@ H-sib Reminder then reads the title and text of notifications from only those ap
 <p>Sharing needs a Google account. Until you sign in and share, none of your deadlines, notes or messages leave your phone.
 Like most apps that use Google's services, H-sib Reminder may contact Google to confirm that a request comes from the genuine
 app (Firebase App Check, which uses Google Play services). That check carries no deadline, note or message.</p>
+<p>You can also choose a username. A username is public: anyone who types its exact text can find you and ask to chat. Usernames
+cannot be listed or browsed. If you switch it on, people can also find you by typing your exact email address; the service then
+keeps only a one way scrambled form (a hash) of your email, never the address, and you can switch this off at any time. A request
+to chat reaches only the person it is for. It holds the key of the new chat sealed for that person's own phone, so nobody else can
+open it, and the person can accept, decline or block. Nothing is shared with them until they accept. The first time you take
+part you are asked to accept the updated community rules.</p>
 <p>When you share a deadline, you invite people with a code. Only people who hold the code can join. Everyone in a shared deadline can
 see its title, date and notes, the chat, who is in it, and who has marked their part done. They each keep their own plan: effort,
 importance, reminders and progress are not shared. Before you share, join or send a message for the first time, you are asked to
@@ -77,6 +83,9 @@ accept the community rules, which include how to report or block a person.</p>
 <table>
   <tr><th>What</th><th>Who can read it</th></tr>
   <tr><td>Title, date and notes of a deadline you share, and the chat</td><td>Only you and the people in that shared deadline. They are sealed on your phone with a key that is passed on only to members. The service that stores them holds scrambled text.</td></tr>
+  <tr><td>Your username, if you choose one, and the scrambled form of your email, if you allow it</td><td>The username can be found by anyone who types it exactly. The scrambled email can only be matched by someone who already knows your exact email. Neither can be listed.</td></tr>
+  <tr><td>A request to chat, while it waits</td><td>Only the person it is for (and you). It holds your display name and a key that only that person's phone can open. It is removed when they accept, decline or block.</td></tr>
+  <tr><td>If you switch on the anonymous count of setups</td><td>The developer sees a number and the name of the setup, such as how many people use the same course. Nothing about you is attached to the number.</td></tr>
   <tr><td>Your display name and your Google account email</td><td>The name is shown to the people in your shared deadlines. The email is used only to sign you in and is not shown to others.</td></tr>
   <tr><td>Who is in which shared deadline, and when messages were sent and how long they are</td><td>The service that hosts the data, and the developer through it. This cannot be hidden while still delivering messages.</td></tr>
   <tr><td>A report you send about a person or a message</td><td>The developer. A report includes the text of a message only if you choose to include it.</td></tr>
@@ -130,6 +139,7 @@ sharing, and are left out of calendar export.</p>
   <tr><th>Permission</th><th>Why</th></tr>
   <tr><td>Internet and network state</td><td>Only for sharing and chat, after you sign in, and the app check described above.</td></tr>
   <tr><td>Notifications</td><td>To show your reminders. You are asked at the moment it is useful, and can say no.</td></tr>
+  <tr><td>Read calendar (optional)</td><td>Only if you switch on Calendar in Settings. Entries from the next 60 days are read on the phone and offered in Review. Nothing is written to the calendar and nothing is sent anywhere.</td></tr>
   <tr><td>Receive boot completed</td><td>To set your reminders again after the phone restarts.</td></tr>
   <tr><td>Biometric or screen lock</td><td>Only if you turn on the optional app lock.</td></tr>
   <tr><td>Notification access (optional)</td><td>Only if you turn on Chats and notifications. You grant it yourself in Android's notification access list; it is not a pop-up permission.</td></tr>

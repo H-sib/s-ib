@@ -107,6 +107,19 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
     val c = SibTheme.colors
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
+        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting.
+        Row(
+            Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(c.violet.copy(alpha = 0.14f))
+                .border(1.5.dp, c.violet.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).bounceClick { onNav("settings/course") }.padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconBadge(SibIcon.PALETTE, size = 52.dp)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Make it yours", style = SibType.title, color = c.ink)
+                Text(if (st.settings.medicalMode) "Set up for ${st.settings.course.name}. Tap to change" else "Study, work or daily life: set the app up for you", style = SibType.small, color = c.inkSoft)
+            }
+        }
         Group(null, Modifier.padding(top = 0.dp)) {
             NavItem("Guide", "Everything the app can do, in a few lines", { onNav("settings/guide") })
         }
@@ -124,8 +137,14 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
             GroupDivider()
             NavItem("Close ones", null, { onNav("settings/close") }, trailing = if (st.settings.closeOnesEnabled) "On" else "Hidden")
             GroupDivider()
-            NavItem("Medical student", "Exam types, subjects and a class diary", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
+            NavItem("Motivation", "A light line to get you going, for each kind of deadline", { onNav("settings/motivation") }, trailing = if (st.settings.motivationOn) "On" else "Off")
             GroupDivider()
+            NavItem("Calendar", "Offer entries from Samsung or Google Calendar in Review", { onNav("settings/calendar") })
+            GroupDivider()
+            if (!st.settings.medicalMode || !com.hsib.sib.core.medical.Courses.isWork(st.settings.course)) {
+                NavItem("Study tools", "Class routine, class diary and the study switch", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
+                GroupDivider()
+            }
             NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
         }
         Group("Data and safety") {
@@ -455,7 +474,7 @@ fun PrivacyScreen(st: AppState, ready: Ready, onBack: () -> Unit, onWiped: () ->
             listed.forEachIndexed { i, p -> if (i > 0) GroupDivider(); TextItem(p, strong = true) }
         }
         Spacer(Modifier.height(8.dp))
-        Text("It has no permission for contacts, messages, location, the calendar, the microphone or storage. Files are opened through the system file picker, which only shares the file you pick.", style = SibType.small, color = c.inkSoft)
+        Text("It has no permission for contacts, messages, location, the microphone or storage. It asks for the calendar only if you switch on Calendar in Settings. Files are opened through the system file picker, which only shares the file you pick.", style = SibType.small, color = c.inkSoft)
 
         Group("Where your data can go") {
             ExpandItem("Your backup folder", "Only if you turn on backup. Encrypted before it leaves the app. Whatever app provides that folder cannot read it.")
@@ -574,7 +593,7 @@ fun AboutScreen(onBack: () -> Unit, onTerms: () -> Unit = {}) {
             ExpandItem("The name", "In H-sib, the letters s, i and b stand for Start It Before. They are also the closing sound of the maker's name, Hasib, which can mean one who counts. A sib is a brother or sister, the spirit of Close ones.")
         }
         Group("Credits") {
-            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals and the class diary. Her feedback also shaped version 1.0.1 and 1.1.0: the month view, clearer wording, parts with a battery, more deadlines on Today, your own plan and Friend in Close ones. Thank you.")
+            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals and the class diary. Her feedback also shaped version 1.0.1 and 1.1.0: the month view, clearer wording, a checklist with a progress bar, more deadlines on Today, your own plan and Friend in Close ones. Thank you.")
         }
         Group("Legal") {
             NavItem("Privacy policy", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } })

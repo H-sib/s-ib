@@ -59,6 +59,21 @@ data class AppSettings(
     /** Medical student mode: MBBS exam types, subjects and a class diary. Off until the person asks for it. */
     val medicalMode: Boolean = false,
     val medicalAsked: Boolean = false,
+    /** The courses this person has saved and the one in use. Empty means the built in MBBS course. */
+    val courses: List<com.hsib.sib.core.medical.Course> = emptyList(),
+    val courseActive: String = "MBBS",
+    /** Off by default. When on and signed in, the setup in use is added once to an anonymous count of people using the same setup. */
+    val courseCount: Boolean = false,
+    /** Encouraging lines. [motivationOn] is the master switch; the others turn off one place or one kind of deadline. */
+    /** The class routine: which weekdays it covers (1 Monday to 7 Sunday, Saturday to Thursday by default) and how many classes a day has. */
+    val routineDays: Set<Int> = setOf(6, 7, 1, 2, 3, 4),
+    val routineLectures: Int = 4,
+    val routineTutorials: Int = 1,
+    val routineWards: Int = 1,
+    val motivationOn: Boolean = true,
+    val motivationShow: Boolean = true,
+    val motivationNotify: Boolean = true,
+    val motivationOff: Set<String> = emptySet(),
     val homeStyle: HomeStyle = HomeStyle.FOCUS,
     /** Packages whose notifications H-sib Reminder may read for deadlines. Empty means it reads none. Never restored from a backup. */
     val notificationReaderApps: Set<String> = emptySet(),
@@ -77,6 +92,9 @@ data class AppSettings(
     val backupLineage: String? = null,
     val backupHead: String? = null,
 ) {
+    /** The course in use: the saved one with the chosen name, or the built in MBBS course. */
+    val course: com.hsib.sib.core.medical.Course get() = courses.firstOrNull { it.name == courseActive } ?: com.hsib.sib.core.medical.Courses.mbbs
+
     fun reminder() = ReminderSettings(
         morning = morning, quietStart = quietStart, quietEnd = quietEnd, dailyBudget = dailyBudget,
         finalLeadMinutes = finalLeadMinutes, remindOverdue = remindOverdue,
@@ -102,7 +120,10 @@ object SettingsCodec {
         put("keepExcerptsByDefault", s.keepExcerptsByDefault.toString())
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
+        put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive); put("courseCount", s.courseCount.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
+        put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
+        put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -151,9 +172,20 @@ object SettingsCodec {
             keepExcerptsByDefault = m.bool("keepExcerptsByDefault", d.keepExcerptsByDefault),
             notificationPermissionAsked = m.bool("notificationPermissionAsked", d.notificationPermissionAsked),
             closeOnesEnabled = m.bool("closeOnesEnabled", d.closeOnesEnabled),
+            courses = m["courses"]?.let { com.hsib.sib.core.medical.Courses.listFromJson(it) } ?: d.courses,
+            courseActive = m["courseActive"]?.take(60) ?: d.courseActive,
+            courseCount = m.bool("courseCount", d.courseCount),
             medicalMode = m.bool("medicalMode", d.medicalMode),
             medicalAsked = m.bool("medicalAsked", d.medicalAsked),
             homeStyle = m.enum("homeStyle", d.homeStyle),
+            routineDays = m["routineDays"]?.split(",")?.mapNotNull { it.trim().toIntOrNull() }?.filter { it in 1..7 }?.toSet()?.takeIf { it.isNotEmpty() } ?: d.routineDays,
+            routineLectures = m.int("routineLectures", d.routineLectures, 0..8),
+            routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..2),
+            routineWards = m.int("routineWards", d.routineWards, 0..2),
+            motivationOn = m.bool("motivationOn", d.motivationOn),
+            motivationShow = m.bool("motivationShow", d.motivationShow),
+            motivationNotify = m.bool("motivationNotify", d.motivationNotify),
+            motivationOff = m["motivationOff"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..20 }?.take(10)?.toSet() ?: d.motivationOff,
             notificationReaderApps = m["notificationReaderApps"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..160 }?.take(60)?.toSet() ?: d.notificationReaderApps,
             readerPromptDismissed = m.bool("readerPromptDismissed", d.readerPromptDismissed),
             dashboardPromptDismissed = m.bool("dashboardPromptDismissed", d.dashboardPromptDismissed),

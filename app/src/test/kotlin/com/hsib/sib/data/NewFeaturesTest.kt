@@ -73,6 +73,41 @@ class NewFeaturesTest {
         scope.cancel()
     }
 
+    @Test fun theWeeklyRoutineIsKeptCopiedAndRemoved() = runBlocking {
+        val scope = CoroutineScope(Job())
+        val ready = TestReady.create(context, scope)
+        ready.store.saveRoutineSlot(RoutineSlot("a", 6, "Lecture", "", "Anatomy", "Gallery 2", 8 * 60, 9 * 60))
+        ready.store.saveRoutineSlot(RoutineSlot("b", 6, "Ward", "Morning", "Medicine", "", 10 * 60, 13 * 60))
+        assertEquals(2, ready.store.routine.first().size)
+        ready.store.replaceRoutineDay(7, ready.store.routine.first().filter { it.day == 6 })
+        val sunday = ready.store.routine.first().filter { it.day == 7 }
+        assertEquals(listOf("Anatomy", "Medicine"), sunday.map { it.subject })
+        ready.store.removeRoutineSlot("a")
+        assertEquals(1, ready.store.routine.first().count { it.day == 6 })
+        scope.cancel()
+    }
+
+    @Test fun routineChoicesAndMotivationSwitchesSurviveTheSettingsCodec() {
+        val s = AppSettings(routineDays = setOf(6, 7, 1, 5), routineLectures = 7, routineTutorials = 0, routineWards = 2, motivationOn = false, motivationOff = setOf("EXAM", "BILL"), medicalMode = true)
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(s.routineDays, back.routineDays)
+        assertEquals(7, back.routineLectures)
+        assertEquals(0, back.routineTutorials)
+        assertEquals(2, back.routineWards)
+        assertEquals(setOf("EXAM", "BILL"), back.motivationOff)
+        assertEquals(false, back.motivationOn)
+        assertEquals(true, back.medicalMode)
+    }
+
+    @Test fun savedCoursesSurviveTheSettingsCodec() {
+        val mine = com.hsib.sib.core.medical.Courses.mbbs.copy(name = "IUB test")
+        val s = AppSettings(courses = listOf(mine), courseActive = "IUB test")
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(listOf(mine), back.courses)
+        assertEquals("IUB test", back.course.name)
+        assertEquals("MBBS", AppSettings().course.name)
+    }
+
     @Test fun medicalCategoriesSurviveTheDatabase() = runBlocking {
         val scope = CoroutineScope(Job())
         val ready = TestReady.create(context, scope)

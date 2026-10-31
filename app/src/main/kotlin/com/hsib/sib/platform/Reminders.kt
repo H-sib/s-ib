@@ -108,6 +108,7 @@ class ReminderSync(
         db.reminders().deleteScheduled()
         sync(st)
         scheduleDigest(st.settings)
+        scheduleMotivation(st.settings)
     }
 
     /** Lets the user prove, on their own phone, that a reminder really arrives. */
@@ -163,6 +164,50 @@ class ReminderSync(
         alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toInstant().toEpochMilli(), digestIntent())
     }
 
+    // ---- one encouraging line a day, at a time that changes every day ---------------------------
+
+    private fun motivationIntent(): PendingIntent =
+        PendingIntent.getBroadcast(
+            context, 1, Intent(context, MotivationReceiver::class.java).setAction("com.hsib.sib.action.MOTIVATION").setData(Uri.parse("sib://motivation")),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+
+    /** Some minute between 11:00 and 17:59, different each day, so it arrives as a small surprise and never in quiet hours. */
+    internal fun motivationTime(day: LocalDate, zone: ZoneId): ZonedDateTime =
+        day.atStartOfDay(zone).plusMinutes(11 * 60L + Math.floorMod(day.toEpochDay() * 7919L, 7 * 60L))
+
+    suspend fun scheduleMotivation(s: AppSettings) {
+        alarms.cancel(motivationIntent())
+        if (!s.motivationOn || !s.motivationNotify) return
+        val zone = ZoneId.systemDefault()
+        val now = ZonedDateTime.now(zone)
+        var next = motivationTime(now.toLocalDate(), zone)
+        if (!next.isAfter(now.plusMinutes(1))) next = motivationTime(now.toLocalDate().plusDays(1), zone)
+        alarms.setAndAllowWhileIdle(AlarmManager.RTC, next.toInstant().toEpochMilli(), motivationIntent())
+    }
+
+    /** Picks one of the nearest deadlines (a different one on different days) and sends a line fitted to its kind. */
+    suspend fun fireMotivation(force: Boolean = false) {
+        val st = engine.snapshot()
+        val s = st.settings
+        if (force || (s.motivationOn && s.motivationNotify)) {
+            val today = LocalDate.now(st.zone)
+            val pool = (st.active + st.close)
+                .filter { it.dueInstant != null && it.o.category.let { c -> com.hsib.sib.core.motivation.Motivation.groupFor(c).name !in s.motivationOff } }
+                .sortedBy { it.dueInstant }
+            val upcoming = pool.filter { !it.dueInstant!!.isBefore(st.now) }.ifEmpty { pool.takeLast(3) }.take(3)
+            if (upcoming.isNotEmpty()) {
+                val v = upcoming[Math.floorMod(today.toEpochDay(), upcoming.size.toLong()).toInt()]
+                val group = com.hsib.sib.core.motivation.Motivation.groupFor(v.o.category)
+                val daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, v.dueInstant!!.atZone(st.zone).toLocalDate())
+                val started = v.o.progressMin > 0 || v.o.parts.any { it.done }
+                val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, v.o.id, today.toEpochDay() + if (force) System.nanoTime() % 1000 else 0, started, s.medicalMode && v.o.category.medical, group)
+                notifier.post(Notifier.ID_MOTIVATION, notifier.motivation(line))
+            }
+        }
+        scheduleMotivation(s)
+    }
+
     suspend fun fireDigest(hourForNext: Int) {
         val st = engine.snapshot()
         val today = LocalDate.now()
@@ -196,6 +241,12 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val key = intent.getStringExtra("key") ?: return
         runAsync(context) { it.reminders.fire(key) }
+    }
+}
+
+class MotivationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        runAsync(context) { it.reminders.fireMotivation() }
     }
 }
 

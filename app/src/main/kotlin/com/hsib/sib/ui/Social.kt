@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
+import com.hsib.sib.core.social.UserHit
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -213,7 +216,16 @@ fun AccountScreen(ready: Ready, onBack: () -> Unit, onSignedOut: () -> Unit) {
     var showRules by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(user?.uid) { if (social != null && user != null) name = social.displayName() }
+    var handle by remember(user?.uid) { mutableStateOf("") }
+    var handleSaved by remember(user?.uid) { mutableStateOf(false) }
+    var byEmail by remember(user?.uid) { mutableStateOf(false) }
+    LaunchedEffect(user?.uid) {
+        if (social != null && user != null) {
+            name = social.displayName()
+            social.username()?.let { handle = it; handleSaved = true }
+            byEmail = social.findableByEmail()
+        }
+    }
 
     Page("Account", onBack) {
         if (social == null || user == null) {
@@ -245,6 +257,31 @@ fun AccountScreen(ready: Ready, onBack: () -> Unit, onSignedOut: () -> Unit) {
             kind = ButtonKind.QUIET, enabled = name.isNotBlank() && !saved,
         )
         error?.let { Spacer(Modifier.size(8.dp)); Text(it, style = SibType.small, color = c.vermilion) }
+
+        Gap(20.dp)
+        InfoTitle("Username", "Your username lets friends find you and ask to chat, without a code. It is public, so do not put anything private in it. Use 3 to 20 letters, numbers, dots or underscores. Nobody can browse the names: a person is found only by typing the exact name.")
+        Field("Choose a username", handle, { handle = it.take(20); handleSaved = false })
+        Spacer(Modifier.size(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SibButton(if (handleSaved) "Saved" else "Save username", {
+                scope.launch {
+                    when (val r = social.setUsername(handle)) {
+                        is SocialResult.Ok -> { handle = r.value; handleSaved = true; error = null }
+                        is SocialResult.Err -> error = r.error.text
+                    }
+                }
+            }, kind = ButtonKind.QUIET, enabled = handle.isNotBlank() && !handleSaved)
+            if (handleSaved && handle.isNotBlank()) SibButton("Remove", { scope.launch { social.removeUsername(); handle = ""; handleSaved = false } }, kind = ButtonKind.TEXT)
+        }
+        Spacer(Modifier.size(12.dp))
+        ToggleRow("Let people find me by my email", "Off by default. When on, someone who already knows your exact email can ask to chat. The server keeps only a scrambled form of it, never the address.", byEmail, { on ->
+            scope.launch {
+                when (val r = social.setFindableByEmail(on)) {
+                    is SocialResult.Ok -> { byEmail = on; error = null }
+                    is SocialResult.Err -> error = r.error.text
+                }
+            }
+        })
 
         Group("Blocked people") {
             if (s.blocked.isEmpty()) {
@@ -295,15 +332,24 @@ fun AccountScreen(ready: Ready, onBack: () -> Unit, onSignedOut: () -> Unit) {
     }
 }
 
-/** The Messages tab: chats come first, joining with a code and the account are small options below. */
+/** The Messages tab: find a friend and start chatting, answer requests, then your chats. Joining with a code and the account are small options below. */
 @Composable
 fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJoin: () -> Unit, onAccount: () -> Unit) {
     val social = ready.social ?: return
     val s = rememberSocial(ready)
     val c = SibTheme.colors
+    val scope = rememberCoroutineScope()
+    val requests by social.requests.collectAsState()
+    val ask = rememberRulesGate(social, s.termsAccepted)
+    var query by remember { mutableStateOf("") }
+    var hits by remember { mutableStateOf<List<UserHit>?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var username by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(s.user?.uid) { if (s.user != null) { social.refreshRequestsNow(); username = social.username() } }
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
-        Text("Messages", style = SibType.display, color = c.ink)
+        ScreenHeader("Messages", if (requests.isNotEmpty()) "${requests.size} waiting for your answer" else "Chat with friends and shared deadlines", SibIcon.CHAT)
         Gap(16.dp)
         if (s.practice) PracticeBanner()
         if (s.user == null) {
@@ -311,14 +357,71 @@ fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJ
             Gap(40.dp)
             return@Column
         }
+        // ---- find a friend ----
+        Field("Find a friend", query, { query = it.take(80); hits = null; message = null }, placeholder = "Their username or email", keyboard = KeyboardOptions(imeAction = ImeAction.Search),
+            onDone = { if (query.isNotBlank()) scope.launch { busy = true; when (val r = social.findPeople(query)) { is SocialResult.Ok -> { hits = r.value; message = null }; is SocialResult.Err -> message = r.error.text }; busy = false } })
+        Spacer(Modifier.size(8.dp))
+        SibButton(if (busy) "Looking" else "Search", {
+            scope.launch { busy = true; when (val r = social.findPeople(query)) { is SocialResult.Ok -> { hits = r.value; message = null }; is SocialResult.Err -> message = r.error.text }; busy = false }
+        }, Modifier.fillMaxWidth(), ButtonKind.QUIET, enabled = query.isNotBlank() && !busy)
+        message?.let { Spacer(Modifier.size(6.dp)); Text(it, style = SibType.small, color = c.vermilion) }
+        hits?.let { list ->
+            Spacer(Modifier.size(10.dp))
+            if (list.isEmpty()) Text("Nobody found. Check the spelling. People appear only when you type their exact username, or their exact email if they allowed it.", style = SibType.small, color = c.inkSoft)
+            list.forEach { h ->
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.raised).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Avatar(h.displayName, h.uid, size = 44.dp)
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(h.displayName, style = SibType.bodyStrong, color = c.ink)
+                        h.username?.let { Text("@$it", style = SibType.small, color = c.inkSoft) }
+                    }
+                    SibButton("Message", {
+                        ask { scope.launch { busy = true; when (val r = social.startChat(h)) { is SocialResult.Ok -> { hits = null; query = ""; onOpenRoom(r.value) }; is SocialResult.Err -> message = r.error.text }; busy = false } }
+                    }, compact = true)
+                }
+            }
+        }
+        if (username == null) {
+            Spacer(Modifier.size(8.dp))
+            Text("Set a username in Account so friends can find you.", style = SibType.small, color = c.inkSoft)
+        }
+
+        // ---- requests ----
+        if (requests.isNotEmpty()) {
+            Gap(20.dp)
+            SectionHeader("Wants to chat", count = requests.size)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                requests.forEach { r ->
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.violetWash).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(r.fromName, r.fromUid, size = 40.dp)
+                            Spacer(Modifier.width(12.dp))
+                            Text("${r.fromName} wants to chat", style = SibType.bodyStrong, color = c.ink, modifier = Modifier.weight(1f))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SibButton("Accept", { ask { scope.launch { when (val x = social.acceptChat(r)) { is SocialResult.Ok -> onOpenRoom(x.value); is SocialResult.Err -> message = x.error.text } } } }, compact = true)
+                            SibButton("Decline", { scope.launch { social.declineChat(r, block = false) } }, kind = ButtonKind.QUIET, compact = true)
+                            SibButton("Block", { scope.launch { social.declineChat(r, block = true) } }, kind = ButtonKind.TEXT, compact = true)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- chats ----
+        Gap(24.dp)
         val rooms = s.rooms.values.sortedByDescending { it.unread }
         if (rooms.isEmpty()) {
-            Text("No chats yet. Open a deadline and tap Share to start one, or join a friend with a code.", style = SibType.body, color = c.inkSoft)
+            EmptyState(SibIcon.CHAT, "No chats yet. Find a friend above, open a deadline and tap Share, or join with a code.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 for (room in rooms) {
-                    val title = st.items.firstOrNull { it.o.id == room.obligationId }?.o?.title ?: "Shared deadline"
-                    val people = if (room.members.size == 1) "Only you" else "${room.members.size} people"
+                    val item = st.items.firstOrNull { it.o.id == room.obligationId }
+                    val direct = item?.o?.space == com.hsib.sib.core.model.Space.CHAT
+                    val other = room.members.firstOrNull { !it.isMe }?.name
+                    val title = if (direct) (other ?: item?.o?.title ?: "Chat") else item?.o?.title ?: "Shared deadline"
+                    val people = if (direct) (if (room.members.size < 2) "Waiting for an answer" else "Direct chat") else if (room.members.size == 1) "Only you" else "${room.members.size} people"
                     val sub = when {
                         room.removed -> "You are no longer in this"
                         room.unread > 0 -> "$people  ·  ${room.unread} new"
@@ -331,7 +434,7 @@ fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJ
         Gap(28.dp)
         NavRow("Join with a code", "A friend gave you a code", onJoin)
         Gap(12.dp)
-        NavRow("Account", "Name, blocked people, rules", onAccount)
+        NavRow("Account", "Name, username, blocked people, rules", onAccount)
         Gap(40.dp)
     }
 }

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
  * The words are written to be true of this build: [measures] and [network] describe what the code really does.
  */
 object Terms {
-    const val VERSION = 1
+    const val VERSION = 2
 
     /** Three cards: the things worth knowing before the first deadline is added. */
     val facts = listOf(

@@ -194,6 +194,7 @@ fun TodayScreen(
     onFriends: () -> Unit = {},
     whatsNew: List<WhatsNew.Entry> = emptyList(),
     onWhatsNewSeen: () -> Unit = {},
+    classes: List<com.hsib.sib.data.RoutineSlot> = emptyList(),
 ) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
@@ -228,6 +229,11 @@ fun TodayScreen(
                 if (dueToday > 0) StatPill(dueToday, "today", Tone.ALERT, onAll)
                 if (thisWeek > 0) StatPill(thisWeek, "this week", Tone.WARN, onAll)
             }
+        }
+
+        if (st.settings.medicalMode && classes.any { it.day == st.today.dayOfWeek.value }) {
+            Gap(16.dp)
+            TodayClasses(classes, st.today, fmt)
         }
 
         if (whatsNew.isNotEmpty()) {
@@ -397,10 +403,7 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
     var selected by remember { mutableStateOf(st.today) }
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Plan", style = SibType.display, color = c.ink, modifier = Modifier.weight(1f))
-            PlusButton(onClick = onAdd)
-        }
+        ScreenHeader("Plan", weekPhrase(st, fmt), SibIcon.GAUGE, action = { PlusButton(onClick = onAdd) })
         st.plan.shortfall?.let { s ->
             Gap(20.dp)
             ShortfallCard(s, st, fmt)
@@ -445,7 +448,7 @@ fun DayDetails(st: AppState, fmt: Fmt, selected: LocalDate, onOpen: (String) -> 
     val dayBlocks = st.plan.blocks.filter { it.day == selected }
     val dueThatDay = st.active.filter { it.dueInstant?.atZone(st.zone)?.toLocalDate() == selected }
     if (dayBlocks.isEmpty() && dueThatDay.isEmpty()) {
-        Text("Nothing on ${fmt.dayShort(selected)}", style = SibType.title, color = c.ink)
+        EmptyState(SibIcon.CALENDAR, "Nothing on ${fmt.dayShort(selected)}. A free day is a good day to get ahead.")
         return
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -525,9 +528,9 @@ fun ReviewScreen(
     val c = SibTheme.colors
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
-        Text("Review", style = SibType.display, color = c.ink)
+        ScreenHeader("Review", if (st.pending.isEmpty()) "Nothing is waiting for you" else "${st.pending.size} found for you to check", SibIcon.DOC_CHECK)
         if (st.pending.isEmpty()) {
-            Gap(64.dp)
+            Gap(40.dp)
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 HeroRing(null, null, size = 150.dp)
                 Gap(20.dp)
@@ -537,6 +540,7 @@ fun ReviewScreen(
                 SibButton("Add or import", onAdd, kind = ButtonKind.QUIET)
             }
         } else {
+            Gap(16.dp)
             Text("Confirm what is right.", style = SibType.body, color = c.inkSoft)
             Gap(20.dp)
             val routine = remember(st.pending) { com.hsib.sib.core.extract.ExamRoutine.find(st.pending) }
@@ -559,10 +563,10 @@ fun ReviewScreen(
 private fun RoutineCard(routine: List<Candidate>, onSeparate: () -> Unit, onOne: () -> Unit) {
     val c = SibTheme.colors
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(c.violetWash).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a part for each exam, and tick the parts off as you go.", style = SibType.title)
+        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a checklist item for each exam, and tick them off as you go.", style = SibType.title)
         Text("${routine.size} exams were found. How do you want to keep them?", style = SibType.body, color = c.ink)
         SibButton("${routine.size} separate deadlines", onSeparate, Modifier.fillMaxWidth())
-        SibButton("One deadline with ${routine.size} parts", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+        SibButton("One deadline, ${routine.size} checklist items", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
     }
 }
 

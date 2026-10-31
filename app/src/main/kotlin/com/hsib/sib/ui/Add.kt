@@ -143,9 +143,9 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
     Page("Add", onBack) {
         Spacer(Modifier.height(4.dp))
         if (st.settings.medicalMode) {
-            MedicalPicker(st.today) { kind, medTitle, parts, day ->
+            MedicalPicker(st.settings.course, st.today) { kind, medTitle, parts, day, hours ->
                 category = kind; touchedCategory = true; importance = Defaults.importance(kind)
-                if (!touchedEffort) effortMin = Defaults.effort(kind).likelyMin
+                if (!touchedEffort) effortMin = hours?.let { it * 60 } ?: Defaults.effort(kind).likelyMin
                 if (!touchedTitle) title = medTitle
                 medParts = parts
                 if (!touchedDate && day != null) date = day
@@ -212,14 +212,8 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
             }
         }
         if (date != null) {
-            ToggleRow("Include a time", null, time != null, { time = if (it) (time ?: LocalTime.of(23, 59)) else null; touchedDate = true })
-            time?.let { t ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    SibButton("− 15 min", { time = t.minusMinutes(15); touchedDate = true }, kind = ButtonKind.QUIET)
-                    Text(fmt.time(t), style = SibType.headline, color = c.ink, modifier = Modifier.padding(horizontal = 16.dp))
-                    SibButton("+ 15 min", { time = t.plusMinutes(15); touchedDate = true }, kind = ButtonKind.QUIET)
-                }
-            }
+            ToggleRow("Include a time", "Turn on if it is due at a certain hour, such as 10:00. Off means it is due any time that day.", time != null, { time = if (it) (time ?: LocalTime.of(23, 59)) else null; touchedDate = true })
+            time?.let { t -> TimePick(t, fmt) { time = it; touchedDate = true } }
         }
 
         Gap(12.dp)

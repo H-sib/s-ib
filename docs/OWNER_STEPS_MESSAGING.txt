@@ -1,0 +1,26 @@
+STEPS FOR THE OWNER: PUBLISH THE NEW SERVER RULES (needed once, before the new version reaches testers)
+Why: chat by username, chat requests and the optional anonymous count need new permissions on the server. Without them those
+parts say "You are not allowed" and everything else works as before. The new rules keep every old rule, so testers on the old
+app are not affected.
+
+1. On your PC open the project folder, then the folder  firebase  and open the file  firestore.rules  with Notepad.
+2. Press Ctrl and A to select everything, then Ctrl and C to copy.
+3. Open the Firebase console in your browser: https://console.firebase.google.com  and choose the project  h-sib-reminder.
+4. In the left menu click  Build , then  Firestore Database .
+5. Click the tab  Rules  (at the top).
+6. Click inside the big text box, press Ctrl and A, then Ctrl and V to replace everything with the new rules.
+7. Click the blue button  Publish .
+8. If the page shows a RED message (for example "Unexpected..."), do not click anything else: copy the exact red words and send them
+   to Claude. If it says Published, you are done with this part.
+9. Wait one minute, then upload the new app version as usual.
+
+What to check after the app update reaches your phone (two phones or two Google accounts are needed):
+ a. Account: type a username (for example your name with a dot) and tap Save username. It should say Saved.
+ b. On the other account: Messages, type that username in Find a friend, tap Search, then Message.
+ c. On the first account: Messages shows "wants to chat". Tap Accept. Write a message each way.
+ d. Optional: Account, "Let people find me by my email" on, then search the email from the other account. If this one fails with
+    "not allowed", tell Claude: only that one rule line needs a change.
+
+Play Console: open Policy, App content, Data safety and compare with store\data-safety-and-policy-answers.txt (updated). The new
+things: a public username (User IDs), an optional email lookup (hash only), and an optional calendar permission. Tell Claude if Play
+asks something that file does not cover.

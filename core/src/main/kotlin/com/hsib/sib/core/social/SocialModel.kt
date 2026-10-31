@@ -7,7 +7,25 @@ enum class RoomRole { OWNER, MEMBER }
 enum class MessageKind { TEXT, SYSTEM }
 
 /** A person's public profile. The public key is what other members seal the room key for. */
-data class Profile(val uid: String, val displayName: String, val publicKey: String)
+data class Profile(val uid: String, val displayName: String, val publicKey: String, val username: String? = null)
+
+/** A person found by searching, with only what is needed to start a chat. */
+data class UserHit(val uid: String, val displayName: String, val username: String?)
+
+/**
+ * A request to chat, waiting for the other person to accept. It holds the key of the new chat sealed for that person's own
+ * phone key, so nobody else can open it, and the id of an invite that lets them join.
+ */
+data class ChatRequest(
+    val fromUid: String,
+    val fromName: String,
+    val toUid: String,
+    val roomId: String,
+    val inviteId: String,
+    val wrappedKey: String,
+    val keyVersion: Int,
+    val createdAtMs: Long,
+)
 
 /** One shared deadline as the server holds it. The details are sealed; the server cannot read them. */
 data class RoomInfo(
@@ -95,12 +113,26 @@ object CommunityRules {
         "Only invite people you know. Share an invite code only with the people it is for.",
         "Everyone in a shared deadline can read its chat. Do not post what you would not want them to see.",
         "You can block a person or report a message at any time. Reports go to the developer, who may remove people or shared deadlines.",
+        "People can find you by your username, and by your email only if you allow it. You decide who you chat with, and you can block anyone.",
         "You must be 16 or older.",
     )
 }
 
 /** Cleaning, limits and the small decisions the rules make, kept as pure functions so they can be tested without a phone. */
 object SocialRules {
+    /** A username: lower case letters, digits, dots and underscores, 3 to 20 long. Null when it cannot be one. */
+    fun cleanUsername(raw: String): String? {
+        val s = raw.trim().removePrefix("@").lowercase()
+        return if (Regex("[a-z0-9_.]{3,20}").matches(s)) s else null
+    }
+
+    /** What the server stores to let people find an account by its email: a one way hash, never the address. */
+    fun emailHash(email: String): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(email.trim().lowercase().toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+
+    /** Tells an email from a username in one search box. */
+    fun looksLikeEmail(raw: String): Boolean = Regex("[^@\\s]+@[^@\\s]+\\.[^@\\s]+").matches(raw.trim())
+
     fun cleanName(raw: String): String? = Limits.line(raw, SocialLimits.DISPLAY_NAME_CHARS).ifEmpty { null }
 
     fun cleanMessage(raw: String): String? = Limits.text(raw, SocialLimits.MESSAGE_CHARS).ifEmpty { null }

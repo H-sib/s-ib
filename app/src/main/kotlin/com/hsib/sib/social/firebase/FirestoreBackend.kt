@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.Transaction
+import com.hsib.sib.core.social.ChatRequest
 import com.hsib.sib.core.social.InviteInfo
 import com.hsib.sib.core.social.MemberInfo
 import com.hsib.sib.core.social.MessageInfo
@@ -301,7 +302,74 @@ internal class FirestoreBackend(private val db: FirebaseFirestore, private val a
         usersRef().document(uid).collection(Fields.ROOMS).snapshot().documents.map { it.id }
     }
 
+    // ---- finding people and asking to chat -----------------------------------------------------------------
+
+    override suspend fun setUsername(name: String?, previous: String?) = call {
+        val batch = db.batch()
+        if (name != null && name != previous) batch.set(db.collection(Fields.USERNAMES).document(name), mapOf(Fields.UID to uid))
+        if (previous != null && previous != name) batch.delete(db.collection(Fields.USERNAMES).document(previous))
+        batch.commit().await()
+        Unit
+    }
+
+    override suspend fun userByUsername(name: String): String? = call {
+        (db.collection(Fields.USERNAMES).document(name).data()?.get(Fields.UID) as? String)?.takeIf { it.length in 1..128 }
+    }
+
+    override suspend fun userByEmailHash(hash: String): String? = call {
+        (db.collection(Fields.EMAIL_LOOKUP).document(hash).data()?.get(Fields.UID) as? String)?.takeIf { it.length in 1..128 }
+    }
+
+    override suspend fun setEmailLookup(hash: String, on: Boolean) = call {
+        val ref = db.collection(Fields.EMAIL_LOOKUP).document(hash)
+        if (on) { if (ref.data()?.get(Fields.UID) != uid) ref.set(mapOf(Fields.UID to uid)).await() } else ref.delete().await()
+        Unit
+    }
+
+    override suspend fun sendChatRequest(request: ChatRequest) = call {
+        if (request.fromUid != uid || request.toUid == uid) throw SocialException(SocialError.DENIED)
+        db.collection(Fields.CHAT_REQUESTS).document(request.toUid).collection(Fields.FROM).document(uid).set(
+            mapOf(
+                Fields.FROM_NAME to request.fromName, Fields.ROOM_ID to request.roomId, Fields.INVITE_ID to request.inviteId,
+                Fields.WRAPPED_KEY to request.wrappedKey, Fields.KEY_VERSION to request.keyVersion, Fields.CREATED_AT to now,
+            ),
+        ).await()
+        Unit
+    }
+
+    override suspend fun chatRequests(): List<ChatRequest> = call {
+        db.collection(Fields.CHAT_REQUESTS).document(uid).collection(Fields.FROM).snapshot().documents
+            .mapNotNull { FirestoreMapping.chatRequest(uid, it.id, it.data ?: return@mapNotNull null) }
+    }
+
+    override suspend fun deleteChatRequest(toUid: String, fromUid: String) = call {
+        db.collection(Fields.CHAT_REQUESTS).document(toUid).collection(Fields.FROM).document(fromUid).delete().await()
+        Unit
+    }
+
+    override suspend fun countCourseUse(courseHash: String, name: String) = call {
+        val parent = db.collection(Fields.COURSE_USE).document(courseHash)
+        val mine = parent.collection(Fields.USERS).document(uid)
+        // One transaction: the person is marked as counted and the number goes up by one. Counted already means refused.
+        db.runTransaction(
+            Transaction.Function { tx ->
+                if (tx.get(mine).exists()) return@Function null
+                val current = tx.get(parent)
+                tx.set(mine, mapOf(Fields.CREATED_AT to now))
+                if (current.exists()) tx.update(parent, Fields.COUNT, FieldValue.increment(1))
+                else tx.set(parent, mapOf(Fields.COUNT to 1, Fields.NAME to name.take(60)))
+                null
+            },
+        ).await()
+        Unit
+    }
+
     override suspend fun deleteMyData() = call {
+        // Names and lookups first, so nobody can find or ask this account while the rest is removed.
+        val handle = usersRef().document(uid).data()?.get(Fields.USERNAME) as? String
+        if (handle != null) db.collection(Fields.USERNAMES).document(handle).delete().await()
+        auth.currentUser?.email?.let { db.collection(Fields.EMAIL_LOOKUP).document(com.hsib.sib.core.social.SocialRules.emailHash(it)).delete().await() }
+        for (req in db.collection(Fields.CHAT_REQUESTS).document(uid).collection(Fields.FROM).snapshot().documents) req.reference.delete().await()
         for (roomId in usersRef().document(uid).collection(Fields.ROOMS).snapshot().documents.map { it.id }) {
             val data = try { roomRef(roomId).data() } catch (e: FirebaseFirestoreException) {
                 if (e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) null else throw e

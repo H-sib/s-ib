@@ -35,13 +35,26 @@ object Guide {
         )))
         if (medical) add(GuideTopic("Medical student mode", "Made for MBBS students.", listOf(
             "Tap [Add]. At the top, pick your prof, then the kind of exam, then the subject.",
-            "The title, the time needed and the study steps are filled in. A prof or term exam gets one part for each subject.",
-            "Open [More], [Settings], [Medical student], [Class diary] to write each class: subject, topic, faculty.",
+            "The title, the time needed and the study steps are filled in. A prof or term exam gets a checklist with one item for each subject.",
+            "Open [More], [Settings], [Medical student], [Class routine] and fill your week table: the subject and classroom of each lecture, tutorial and ward class, with its time.",
+            "Use [Class diary] to write each class: subject, topic, faculty.",
         ), listOf(
             "Item is the weekly class test, then card, then term, then prof. Practical, ward final and supplementary are kept apart.",
             "1st, 2nd and 3rd prof are in November, the 4th prof in May. Supplementary runs the other way round. Set the exact day yourself.",
+            "Choose the days and how many lectures, tutorials and ward classes each day has. Phases differ, so every number is yours to set.",
             "Turn the mode off in Settings and your deadlines stay.",
-        ), "Anatomy Card exam, 1st Prof\nNeeds 8 h  ·  Read, MCQ practice, Viva"))
+        ), "Anatomy Card, 1st Prof\nNeeds 8 h  ·  Read, MCQ practice, Viva"))
+        add(GuideTopic("Make it yours", "Set the app up for your life.", listOf(
+            "Open [More], then [Make it yours] at the top.",
+            "Choose [University and college], [Work and profession] or [Daily life], then pick the one that fits you.",
+            "In [Add] you now see your own kinds of deadline, with the usual hours filled in.",
+            "Something does not match? Tap [Edit] and change the areas, subjects, kinds of deadline and hours. Tap a subject to move it to another phase.",
+            "Tap [Share] to send your setup to friends or colleagues as a short piece of text. They paste it under [Take a setup from a friend].",
+        ), listOf(
+            "A setup holds only subjects or areas, kinds of deadline, hours and months. Nothing personal is shared.",
+            "You can make one for any college or job by answering a few questions.",
+            "Switch it off any time and your deadlines stay.",
+        ), "Engineering university: Year 1, Mathematics, Physics, Chemistry"))
         add(GuideTopic("Review suggestions", "Nothing becomes a deadline until you say yes.", listOf(
             "Dates found in what you shared wait in Review.",
             "Each one shows the sentence it came from and why it was chosen. Tap Check this for doubts.",
@@ -61,11 +74,11 @@ object Guide {
             "Tap the small eye next to a title to read what it means.",
             "[Log time] buttons add the time you really worked. Hours done count toward the estimate.",
         ), "Nov 3: 4 h   Nov 4: 2 h   Nov 5: none"))
-        add(GuideTopic("Parts and the battery", "One deadline, several pieces.", listOf(
-            "Open a deadline and find the [Parts] card. Choose how many pieces and tap [Split into parts].",
-            "Tap a name to rename it. Tap the circle when a piece is done.",
-            "The battery fills with each piece you finish.",
-        ), listOf("Exam timetables can be kept as one deadline with a part for each exam. The app asks after you scan one."), "3 of 7 done  ·  43%"))
+        add(GuideTopic("Checklist and progress bar", "One deadline, several pieces.", listOf(
+            "Open a deadline and find the [Checklist] card. Choose how many pieces, up to 50, and tap [Make a checklist].",
+            "Tap a name to give it your own, for example Renal Carcinoma. Tap the circle when a piece is done.",
+            "The progress bar, drawn in the shape of a battery, fills with each piece you finish.",
+        ), listOf("Exam timetables can be kept as one deadline with a checklist item for each exam. The app asks after you scan one."), "3 of 7 done  ·  43%"))
         add(GuideTopic("Month calendar", "See every deadline on a month.", listOf(
             "Open [Plan], then [Month].",
             "Days with a deadline have a dot: red when close or late, violet otherwise.",
@@ -140,7 +153,7 @@ fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false) {
     val topic = topics.getOrNull(open)
     if (topic == null) {
         Page("Guide", onBack) {
-            Text("Everything the app can do, in a few lines each.", style = SibType.body, color = c.inkSoft)
+            ScreenHeader("Guide", "Everything the app can do, in a few steps each", SibIcon.BOOK)
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }) }

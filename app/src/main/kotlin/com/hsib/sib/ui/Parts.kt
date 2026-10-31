@@ -41,9 +41,9 @@ import androidx.compose.ui.unit.dp
 import com.hsib.sib.core.model.Part
 import kotlin.math.roundToInt
 
-private const val MAX_PARTS = 30
+private const val MAX_PARTS = 50
 
-/** A battery that fills as parts are done. Each part is one cell, so seven parts show seven cells. */
+/** A progress bar in the shape of a battery. Each checklist item is one cell, so seven items show seven cells. */
 @Composable
 fun PartsBattery(done: Int, total: Int, modifier: Modifier = Modifier) {
     val c = SibTheme.colors
@@ -77,8 +77,8 @@ fun PartsTile(parts: List<Part>, onChange: (List<Part>) -> Unit) {
     var draft by remember { mutableStateOf("") }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised).padding(18.dp)) {
         if (parts.isEmpty()) {
-            InfoTitle("Parts", "Use parts when one deadline holds several pieces, such as 7 assignments or 5 exams. You name each part, tick it when done, and the battery shows how far you are.")
-            Text("Several pieces due on the same day, such as 7 assignments? Split them and tick each one off.", style = SibType.small, color = c.inkSoft)
+            InfoTitle("Checklist", "Use a checklist when one deadline holds several pieces, such as 7 assignments or 5 topics. Give each one your own name, tick it when done, and the progress bar, drawn in the shape of a battery, shows how far you are.")
+            Text("Several pieces due on the same day, such as 7 assignments or the topics of an exam? Make a checklist and tick each one off.", style = SibType.small, color = c.inkSoft)
             Spacer(Modifier.size(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SibButton("-", { count = (count - 1).coerceAtLeast(2) }, kind = ButtonKind.QUIET, compact = true)
@@ -86,7 +86,7 @@ fun PartsTile(parts: List<Part>, onChange: (List<Part>) -> Unit) {
                 SibButton("+", { count = (count + 1).coerceAtMost(MAX_PARTS) }, kind = ButtonKind.QUIET, compact = true)
             }
             Spacer(Modifier.size(12.dp))
-            SibButton("Split into $count parts", { onChange(List(count) { Part("Part ${it + 1}") }) }, kind = ButtonKind.QUIET)
+            SibButton("Make a checklist of $count", { onChange(List(count) { Part("Topic ${it + 1}") }) }, kind = ButtonKind.QUIET)
         } else {
             val done = parts.count { it.done }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -98,7 +98,7 @@ fun PartsTile(parts: List<Part>, onChange: (List<Part>) -> Unit) {
             Spacer(Modifier.size(12.dp))
             parts.forEachIndexed { i, p ->
                 if (editing == i) {
-                    Field("Name", draft, { draft = it.take(60) }, onDone = {
+                    Field("Name (up to 60 letters)", draft, { draft = it.take(60) }, onDone = {
                         onChange(parts.mapIndexed { j, q -> if (j == i) q.copy(name = draft.trim().ifEmpty { q.name }) else q })
                         editing = -1
                     })
@@ -120,8 +120,8 @@ fun PartsTile(parts: List<Part>, onChange: (List<Part>) -> Unit) {
             }
             Spacer(Modifier.size(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (parts.size < MAX_PARTS) SibButton("Add a part", { onChange(parts + Part("Part ${parts.size + 1}")) }, kind = ButtonKind.QUIET, compact = true)
-                SibButton("Remove parts", { onChange(emptyList()) }, kind = ButtonKind.TEXT, compact = true)
+                if (parts.size < MAX_PARTS) SibButton("Add one", { onChange(parts + Part("Topic ${parts.size + 1}")) }, kind = ButtonKind.QUIET, compact = true)
+                SibButton("Remove the checklist", { onChange(emptyList()) }, kind = ButtonKind.TEXT, compact = true)
             }
         }
     }

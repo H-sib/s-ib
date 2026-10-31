@@ -25,6 +25,7 @@ import com.hsib.sib.core.extract.PlainFingerprinter
 import com.hsib.sib.core.extract.fingerprintKey
 import com.hsib.sib.core.ingest.ChatExport
 import com.hsib.sib.core.ingest.Ics
+import com.hsib.sib.core.ingest.IcsItem
 import com.hsib.sib.core.model.Candidate
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Lifecycle
@@ -202,10 +203,14 @@ class Importer(
         }
     }
 
-    private suspend fun fromIcs(text: String): ImportResult = withContext(Dispatchers.Default) {
+    private suspend fun fromIcs(text: String): ImportResult = fromItems(Ics.parse(text, ZoneId.systemDefault()), "Calendar file", text.length)
+
+    /** Entries read from the phone's own calendar, with the person's permission. They wait in Review like everything else. */
+    suspend fun fromCalendarItems(items: List<IcsItem>): ImportResult = fromItems(items, "Phone calendar", items.size)
+
+    private suspend fun fromItems(items: List<IcsItem>, label: String, size: Int): ImportResult = withContext(Dispatchers.Default) {
         val s = settings.current()
         val zone = ZoneId.systemDefault()
-        val items = Ics.parse(text, zone)
         val existing = store.allObligations().filter { it.lifecycle == Lifecycle.ACTIVE }
         val dismissed = store.dismissedFingerprints()
         val today = ZonedDateTime.now(zone).toLocalDate()
@@ -226,7 +231,7 @@ class Importer(
             )
         }
         store.saveCandidates(out, s.candidateTtlDays)
-        ImportResult(null, out, "Calendar file", text.length)
+        ImportResult(null, out, label, size)
     }
 
     // ---- reading ----------------------------------------------------------------------------------
