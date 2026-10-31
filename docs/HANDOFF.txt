@@ -86,11 +86,11 @@ You (cloud session) must: fix the issue, add or update a test, bump versionCode 
 versionCode in app\src\main\kotlin\com\hsib\sib\ui\WhatsNew.kt (the release gate fails without it), keep the Play What's new text in store\listing.txt (max 500 characters) in step,
 run the narrow tests plus the full suite once, run the python checks, push a branch and open a pull request. If the change alters what a person agrees to, raise Terms.VERSION (ui\Terms.kt)
 and SocialLimits.TERMS_VERSION (core), and update site\terms.html and site\privacy.html first.
-The owner then: merges the pull request on GitHub, on his PC runs  git pull  then  powershell -ExecutionPolicy Bypass -File .\\tools\\offline-pipeline.ps1  (builds the signed bundle
-release\\h-sib-reminder-release.aab; the upload key and its properties live in release\\, git-ignored, backed up on his phone in Documents\\H-sib-signing-backup).
+The owner then: merges the pull request on GitHub, on his PC runs  git pull  then  powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1  (builds the signed bundle
+release\h-sib-reminder-release.aab; the upload key and its properties live in release\, git-ignored, backed up on his phone in Documents\H-sib-signing-backup).
 Then in Play Console: Test and release, Testing, Closed testing, Alpha, Create new release, drag the .aab in, paste release notes (wrapped in <en-GB> tags), Next, Save, then Publishing
 overview, Submit changes for review. Closed test updates usually appear within hours. Tell him each click in plain words if he asks.
-Never tell him to upload release\\s-ib-release.aab (old).
+Never tell him to upload release\s-ib-release.aab (old).
 
 ======================================================================================================================
 7. TESTER FEEDBACK INTAKE

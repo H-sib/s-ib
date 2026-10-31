@@ -65,3 +65,5 @@ STATUS 2026-10-30 (closed testing submitted)
  - Next: wait for review; when approved copy the opt-in link to testers; after the first upload add the Play app signing SHA-1 and SHA-256 to Firebase and link Play Integrity (guide section 7); keep 12+ testers opted in for 14 days; then apply for production.
 
 STATUS 2026-10-30 (audit of Play Console and Cloud): see store/PLAY_CONSOLE_RELEASE_GUIDE.txt section 12. All correct except the Android API key has no application restriction (owner to restrict). Play signing SHA-256 was missing in Firebase and has been added.
+
+STATUS 2026-10-31 (cloud handoff): a new Claude session should read CLAUDE.md, then docs/HANDOFF.txt (full context), docs/FEEDBACK_LOG.txt and this tail. Owner steps are in docs/CLOUD_START.txt. tools/cloud-setup.sh prepares a Linux cloud machine.
