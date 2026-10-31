@@ -375,7 +375,7 @@ private fun Running(
         composable("study/diary") { ClassDiaryScreen(st, ready, back) }
         composable("settings/reader") { ReaderScreen(st, ready, back) }
         composable("settings/feedback") { FeedbackScreen(back) }
-        composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back) }
+        composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back, medical = st.settings.medicalMode) }
         composable("settings/terms") {
             val on by produceState<String?>(null) { value = ready.settings.raw("termsAcceptedOn") }
             TermsScreen(online = BuildConfig.FIREBASE_READY, acceptedOn = on, onAccept = null, onBack = back)

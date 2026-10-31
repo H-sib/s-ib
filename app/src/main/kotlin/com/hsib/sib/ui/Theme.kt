@@ -130,7 +130,7 @@ private val NeonClose = SibColors(
  * violet look in Light and Twilight; Black and Neon stay as chosen.
  */
 private val MedicalLight = SibColors(
-    paper = Color(0xFFEEF9F7), raised = Color(0xFFFFFFFF), lifted = Color(0xFFDCF1ED), ink = Color(0xFF0A2A2B), inkSoft = Color(0xFF2F5658),
+    paper = Color(0xFFEEF9F7), raised = Color(0xFFFFFFFF), lifted = Color(0xFFDCF1ED), ink = Color(0xFF0A2A2B), inkSoft = Color(0xFF244A4C),
     rule = Color(0xFFBFE0DB), vermilion = Color(0xFFC0272D), ochre = Color(0xFF7D5200), verdigris = Color(0xFF0A7A55), violet = Color(0xFF0B7285),
     vermilionWash = Color(0xFFFFE1E1), ochreWash = Color(0xFFFFEBC4), verdigrisWash = Color(0xFFD3F4E8), violetWash = Color(0xFFD2F0F2),
     glowA = Color(0xFF2DD4BF), glowB = Color(0xFF38BDF8), onGlow = Color(0xFF06201F), action = Color(0xFF0B5560), onAction = Color(0xFFEEF9F7), dark = false,

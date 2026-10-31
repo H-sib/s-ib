@@ -406,6 +406,8 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
             ShortfallCard(s, st, fmt)
         }
         Gap(24.dp)
+        InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
+        Gap(8.dp)
         Choice(PlanView.values().map { it to it.label }, view, { view = it })
         Gap(24.dp)
         when (view) {
