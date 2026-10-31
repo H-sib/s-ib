@@ -16,6 +16,8 @@ data class Prof(
     val practicals: List<String>,
     /** What a normal week holds, in words. */
     val week: String,
+    /** How long the phase lasts, as the college describes it. */
+    val duration: String,
     val hasCards: Boolean,
     val hasItems: Boolean,
     val examMonth: Month,
@@ -27,22 +29,22 @@ object Medical {
         Prof(
             1, "1st Prof", listOf("Anatomy", "Physiology", "Biochemistry"),
             listOf("Written practical", "Assignment"),
-            "usually 2 lectures and 2 tutorials a day", hasCards = true, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
+            "usually 2 lectures and 2 tutorials a day", "Phase I, 1.5 years", hasCards = true, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
         ),
         Prof(
-            2, "2nd Prof", listOf("Forensic Medicine", "Pharmacology", "Microbiology", "Pathology"),
-            listOf("Written practical", "Assignment", "Postmortem report", "Certificates", "Case report (Pharmacology)"),
-            "usually 2 lectures, 1 tutorial and 1 ward or block class of 3 hours a day", hasCards = false, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
+            2, "2nd Prof", listOf("Pharmacology & Therapeutics", "Forensic Medicine & Toxicology"),
+            listOf("Written practical", "Assignment", "Postmortem report", "Certificates", "Case report (Pharmacology & Therapeutics)"),
+            "usually 2 lectures, 1 tutorial and 1 ward or block class of 3 hours a day", "Phase II, 1 year", hasCards = false, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
         ),
         Prof(
-            3, "3rd Prof", listOf("Microbiology", "Pathology", "Community Medicine"),
+            3, "3rd Prof", listOf("Pathology", "Microbiology", "Community Medicine & Public Health"),
             listOf("Written practical", "Assignment", "Day visit report", "RFST report", "Study tour report", "Case report (Pathology)", "Case report (Microbiology)"),
-            "usually 2 lectures, 1 tutorial and 1 ward or block class a day", hasCards = false, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
+            "usually 2 lectures, 1 tutorial and 1 ward or block class a day", "Phase III, 1 year", hasCards = false, hasItems = true, examMonth = Month.NOVEMBER, supplementaryMonth = Month.MAY,
         ),
         Prof(
-            4, "4th Prof", listOf("Medicine", "Surgery", "Obstetrics and Gynaecology"),
+            4, "4th Prof", listOf("Medicine & Allied Subjects", "Surgery & Allied Subjects", "Obstetrics & Gynaecology"),
             listOf("Short case", "Long case", "Case report"),
-            "usually 5 lectures and 2 ward or block classes (morning and evening) a day, no tutorials", hasCards = false, hasItems = false, examMonth = Month.MAY, supplementaryMonth = Month.NOVEMBER,
+            "usually 5 lectures and 2 ward or block classes (morning and evening) a day, no tutorials", "Phase IV, final phase, 1.5 years", hasCards = false, hasItems = false, examMonth = Month.MAY, supplementaryMonth = Month.NOVEMBER,
         ),
     )
 
@@ -86,7 +88,7 @@ object Medical {
 
     /** The structure in plain words, for the guide and the setup screen. */
     const val STRUCTURE =
-        "5 years of study and 1 year of internship. A prof holds 2 terms. In the 1st prof a term holds 3 cards. A card holds items, " +
+        "Phase I is 1.5 years, phase II 1 year, phase III 1 year and the final phase 1.5 years, then 1 year of internship. 5 years of study and 1 year of internship. A prof holds 2 terms. In the 1st prof a term holds 3 cards. A card holds items, " +
             "which are weekly class tests (every 2 weeks in the 1st prof). Items come first, then the card, then the term, then the professional exam. " +
             "1st, 2nd and 3rd prof are in November and the 4th prof is in May. Supplementary exams for the failed run the other way round."
 }

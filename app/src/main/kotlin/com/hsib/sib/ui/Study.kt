@@ -94,7 +94,7 @@ fun StudySettings(st: AppState, ready: Ready, onBack: () -> Unit, onDiary: () ->
                 ExpandItem("How the course is laid out", Medical.STRUCTURE)
                 for (p in Medical.profs) {
                     GroupDivider()
-                    ExpandItem(p.name, p.subjects.joinToString(", ") + ". Week: " + p.week + ". Practical work: " + p.practicals.joinToString(", ") + ".")
+                    ExpandItem(p.name + ", " + p.duration, p.subjects.joinToString(", ") + ". Week: " + p.week + ". Practical work: " + p.practicals.joinToString(", ") + ".")
                 }
             }
         }

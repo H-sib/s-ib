@@ -11,7 +11,9 @@ class MedicalTest {
     @Test fun fourProfsWithTheRightSubjects() {
         assertEquals(4, Medical.profs.size)
         assertEquals(listOf("Anatomy", "Physiology", "Biochemistry"), Medical.prof(1).subjects)
-        assertTrue("Community Medicine" in Medical.prof(3).subjects)
+        assertTrue("Community Medicine & Public Health" in Medical.prof(3).subjects)
+        assertEquals(listOf("Pharmacology & Therapeutics", "Forensic Medicine & Toxicology"), Medical.prof(2).subjects)
+        assertEquals(listOf("Medicine & Allied Subjects", "Surgery & Allied Subjects", "Obstetrics & Gynaecology"), Medical.prof(4).subjects)
     }
 
     @Test fun fourthProfHasNoItemsOrCardsButHasWardFinal() {
