@@ -12,7 +12,7 @@ enum class Kind { DEADLINE, EVENT, OPEN_ENDED }
 
 enum class Lifecycle { ACTIVE, COMPLETED, CANCELLED }
 
-enum class Category(val label: String, val close: Boolean = false) {
+enum class Category(val label: String, val close: Boolean = false, val medical: Boolean = false) {
     ASSIGNMENT("Assignment"),
     EXAM("Exam"),
     APPLICATION("Application"),
@@ -28,10 +28,19 @@ enum class Category(val label: String, val close: Boolean = false) {
     GIFT("Gift", true),
     TRIP("Trip", true),
     SPECIAL("Something special", true),
+    ITEM("Item (class test)", medical = true),
+    CARD("Card exam", medical = true),
+    TERM("Term exam", medical = true),
+    PROF("Prof exam", medical = true),
+    PRACTICAL("Practical", medical = true),
+    WARD_FINAL("Ward final", medical = true),
+    SUPPLEMENTARY("Supplementary exam", medical = true),
+    REPORT("Report or log book", medical = true),
     ;
 
     companion object {
-        val work: List<Category> get() = values().filter { !it.close }
+        val work: List<Category> get() = values().filter { !it.close && !it.medical }
+        val medical: List<Category> get() = values().filter { it.medical }
         val closeOnes: List<Category> get() = values().filter { it.close }
     }
 }

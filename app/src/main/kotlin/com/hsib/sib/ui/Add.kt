@@ -42,6 +42,7 @@ import com.hsib.sib.core.model.Effort
 import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Obligation
+import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
 import com.hsib.sib.core.model.Recurrence
 import com.hsib.sib.core.model.Repeat
@@ -102,6 +103,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
     var moreOptions by remember { mutableStateOf(false) }
     var seriesCount by remember { mutableStateOf(4) }
     var shareAsk by remember { mutableStateOf<List<Obligation>?>(null) }
+    var medParts by remember { mutableStateOf<List<String>>(emptyList()) }
     val context = LocalContext.current
 
     LaunchedEffect(text) {
@@ -130,6 +132,16 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
 
     Page("Add", onBack) {
         Spacer(Modifier.height(4.dp))
+        if (st.settings.medicalMode) {
+            MedicalPicker(st.today) { kind, medTitle, parts, day ->
+                category = kind; touchedCategory = true; importance = Defaults.importance(kind)
+                if (!touchedEffort) effortMin = Defaults.effort(kind).likelyMin
+                if (!touchedTitle) title = medTitle
+                medParts = parts
+                if (!touchedDate && day != null) date = day
+            }
+            Spacer(Modifier.height(12.dp))
+        }
         Field(
             "Describe it", text, { text = it }, placeholder = "Report due 18 Nov, 11:59 PM, about 6 hours",
             singleLine = false, minLines = 2, keyboard = KeyboardOptions(imeAction = ImeAction.Default),
@@ -199,7 +211,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
         Text("Kind", style = SibType.bodyStrong, color = c.ink)
         Spacer(Modifier.height(6.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Category.work.forEach { cat ->
+            (Category.work + if (st.settings.medicalMode) Category.medical else emptyList()).forEach { cat ->
                 SelectChip(cat.label, category == cat, { category = cat; touchedCategory = true; importance = Defaults.importance(cat); if (!touchedEffort) effortMin = Defaults.effort(cat).likelyMin })
             }
         }
@@ -249,6 +261,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
                     Obligation(
                         id = UUID.randomUUID().toString(), title = if (count > 1) "${title.trim()} (${i + 1} of $count)" else title.trim(), category = category,
                         kind = if (due == null) Kind.OPEN_ENDED else Kind.DEADLINE, due = due, importance = importance, effort = effort,
+                        parts = medParts.map { Part(it) },
                     )
                 }
                 scope.launch {

@@ -94,7 +94,7 @@ private fun Stepper(label: String, value: String, onMinus: () -> Unit, onPlus: (
 }
 
 @Composable
-private fun Explain(text: String) = More(text)
+fun Explain(text: String) = More(text)
 
 private fun fmtMin(m: Int) = if (m < 60) "$m min" else if (m % 60 == 0) "${m / 60} h" else "${m / 60} h ${m % 60} min"
 
@@ -123,6 +123,8 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
             NavItem("Notification dashboard", null, { onNav("settings/notifications") }, trailing = if (st.settings.todayNotification) "On" else "Off")
             GroupDivider()
             NavItem("Close ones", null, { onNav("settings/close") }, trailing = if (st.settings.closeOnesEnabled) "On" else "Hidden")
+            GroupDivider()
+            NavItem("Medical student", "Exam types, subjects and a class diary", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
             GroupDivider()
             NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
         }

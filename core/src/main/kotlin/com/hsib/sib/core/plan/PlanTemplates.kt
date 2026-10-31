@@ -51,7 +51,20 @@ object PlanTemplates {
         Stage("Review and finish", 0.20, true),
     )
 
+    private val medicalStudy = listOf(
+        Stage("Read the topic", 0.35, false),
+        Stage("MCQ and past questions", 0.40, true),
+        Stage("Viva and revision", 0.25, true),
+    )
+    private val medicalReport = listOf(
+        Stage("Collect the details", 0.30, false),
+        Stage("Write it up", 0.50, true),
+        Stage("Check and sign", 0.20, true),
+    )
+
     private fun stagesFor(c: Category) = when (c) {
+        Category.ITEM, Category.CARD, Category.TERM, Category.PROF, Category.SUPPLEMENTARY, Category.PRACTICAL, Category.WARD_FINAL -> medicalStudy
+        Category.REPORT -> medicalReport
         Category.ASSIGNMENT -> assignment
         Category.EXAM -> exam
         Category.APPLICATION -> application

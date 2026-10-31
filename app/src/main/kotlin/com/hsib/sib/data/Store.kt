@@ -103,6 +103,9 @@ data class CandidateEdit(
     val keepExcerpt: Boolean = false,
 )
 
+/** A class in the diary. [kind] is Lecture, Tutorial or Ward. */
+data class ClassNote(val id: String, val day: LocalDate, val subject: String, val topic: String, val faculty: String, val kind: String)
+
 class Store(
     private val db: SibDatabase,
     private val keys: HistoryKeys,
@@ -113,6 +116,11 @@ class Store(
     val obligations: Flow<List<Obligation>> = db.obligations().observeAll().map { l -> l.map { it.toModel() } }
     val candidates: Flow<List<StoredCandidate>> = db.candidates().observeAll().map { l -> l.map { it.toStored() } }
     val steps: Flow<List<UserStep>> = db.steps().observeAll().map { l -> l.map { it.toModel() } }
+    val classNotes: Flow<List<ClassNote>> = db.diary().observeAll().map { l -> l.map { ClassNote(it.id, LocalDate.parse(it.day), it.subject, it.topic, it.faculty, it.kind) } }
+    suspend fun addClassNote(n: ClassNote) =
+        db.diary().upsert(ClassNoteEntity(n.id.ifEmpty { newId() }, n.day.toString(), n.subject.take(60), n.topic.take(160), n.faculty.take(80), n.kind.take(30)))
+    suspend fun removeClassNote(id: String) = db.diary().delete(id)
+
     fun receipts(obligationId: String): Flow<List<Receipt>> = db.receipts().observeFor(obligationId).map { l -> l.map { it.toModel() } }
     fun excerpts(obligationId: String): Flow<List<Evidence>> = db.evidence().observeFor(obligationId).map { l -> l.map { it.toModel() } }
     fun history(obligationId: String): Flow<List<SealEntry>> = db.seals().observeFor(obligationId).map { l -> l.map { it.toEntry() } }
@@ -392,6 +400,7 @@ class Store(
     /** Deletes everything the app holds except the vault itself. */
     suspend fun wipeAll() = db.withTransaction {
         wipeRows()
+        db.diary().clear()
         db.rooms().clear(); db.roomKeys().clear(); db.roomMembers().clear(); db.roomMessages().clear(); db.blocked().clear()
         db.settings().all().filter { it.key != "historyKeys" }.forEach { db.settings().delete(it.key) }
         blobs.deleteAll()

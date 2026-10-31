@@ -82,12 +82,14 @@ private fun cachedTheme(context: Context): ThemeMode =
     runCatching { ThemeMode.valueOf(context.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE).getString("theme", null) ?: "SYSTEM") }.getOrDefault(ThemeMode.SYSTEM)
 
 @Composable
-private fun Themed(mode: ThemeMode, space: Space, reduceMotion: Boolean, content: @Composable () -> Unit) {
+private fun Themed(mode: ThemeMode, space: Space, reduceMotion: Boolean, medical: Boolean = false, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalMedical provides medical) {
     SibTheme(mode, space) {
         CompositionLocalProvider(LocalReduceMotion provides reduceMotion) {
             SystemBars()
             content()
         }
+    }
     }
 }
 
@@ -150,7 +152,7 @@ fun SibRoot(
     val introMs = remember { introDuration(prefs) }
     var introDone by rememberSaveable { mutableStateOf(route != null || introMs == 0) }
 
-    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion) {
+    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion, settingsKnown && st.settings.medicalMode) {
         val motion = rememberMotionEnabled()
         Crossfade(introDone, animationSpec = tween(if (motion) 520 else 0), label = "intro") { done ->
             when {
@@ -252,7 +254,7 @@ private fun Running(
         } else {
             Onboarding(
                 st.today, vm::demo, onRestore = { showRestore = true },
-                onFinish = { scope.launch { ready.settings.update { it.copy(onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE) } } },
+                onFinish = { med -> scope.launch { ready.settings.update { it.copy(onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE, medicalMode = med, medicalAsked = true) } } },
             )
         }
         return
@@ -369,6 +371,8 @@ private fun Running(
         composable("settings/health") { HealthScreen(st, ready, back) }
         composable("settings/about") { AboutScreen(back, onTerms = { nav.navigate("settings/terms") }) }
         composable("settings/close") { CloseOnesSettings(st, ready, back) }
+        composable("settings/study") { StudySettings(st, ready, back, onDiary = { nav.navigate("study/diary") }) }
+        composable("study/diary") { ClassDiaryScreen(st, ready, back) }
         composable("settings/reader") { ReaderScreen(st, ready, back) }
         composable("settings/feedback") { FeedbackScreen(back) }
         composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back) }

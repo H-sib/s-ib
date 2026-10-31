@@ -125,8 +125,30 @@ private val NeonClose = SibColors(
     glowA = Color(0xFFD17BFF), glowB = Color(0xFFFF5CA8), onGlow = Color(0xFF0A0510), action = Color(0xFFFF5CA8), onAction = Color(0xFF0A0510), dark = true, glowStrength = 1f,
 )
 
+/**
+ * Medical student mode: clinical teal and a mint white, with the red of a medical cross as the alert colour. It replaces the
+ * violet look in Light and Twilight; Black and Neon stay as chosen.
+ */
+private val MedicalLight = SibColors(
+    paper = Color(0xFFEEF9F7), raised = Color(0xFFFFFFFF), lifted = Color(0xFFDCF1ED), ink = Color(0xFF0A2A2B), inkSoft = Color(0xFF2F5658),
+    rule = Color(0xFFBFE0DB), vermilion = Color(0xFFC0272D), ochre = Color(0xFF7D5200), verdigris = Color(0xFF0A7A55), violet = Color(0xFF0B7285),
+    vermilionWash = Color(0xFFFFE1E1), ochreWash = Color(0xFFFFEBC4), verdigrisWash = Color(0xFFD3F4E8), violetWash = Color(0xFFD2F0F2),
+    glowA = Color(0xFF2DD4BF), glowB = Color(0xFF38BDF8), onGlow = Color(0xFF06201F), action = Color(0xFF0B5560), onAction = Color(0xFFEEF9F7), dark = false,
+)
+
+private val MedicalDark = SibColors(
+    paper = Color(0xFF061819), raised = Color(0xFF0D2527), lifted = Color(0xFF143437), ink = Color(0xFFEAFBF9), inkSoft = Color(0xFFBFE3DF),
+    rule = Color(0xFF1F4A4D), vermilion = Color(0xFFFF7A7F), ochre = Color(0xFFFFC25C), verdigris = Color(0xFF55E8BA), violet = Color(0xFF4FD8D0),
+    vermilionWash = Color(0xFF3B1B22), ochreWash = Color(0xFF38290F), verdigrisWash = Color(0xFF123C3A), violetWash = Color(0xFF0F3A3F),
+    glowA = Color(0xFF2DD4BF), glowB = Color(0xFF38BDF8), onGlow = Color(0xFF061819), action = Color(0xFFEAFBF9), onAction = Color(0xFF061819), dark = true,
+)
+
+val LocalMedical = staticCompositionLocalOf { false }
+
 /** The palette for a theme and space. SYSTEM is resolved by [SibTheme]; asked for directly it means Light. */
-fun paletteFor(mode: ThemeMode, space: Space = Space.WORK): SibColors = when (mode) {
+fun paletteFor(mode: ThemeMode, space: Space = Space.WORK, medical: Boolean = false): SibColors = if (medical && space == Space.WORK && (mode == ThemeMode.DARK || mode == ThemeMode.LIGHT || mode == ThemeMode.SYSTEM)) {
+    if (mode == ThemeMode.DARK) MedicalDark else MedicalLight
+} else when (mode) {
     ThemeMode.BLACK -> if (space == Space.CLOSE) BlackClose else BlackColors
     ThemeMode.NEON -> if (space == Space.CLOSE) NeonClose else NeonColors
     ThemeMode.DARK -> if (space == Space.CLOSE) CloseDark else DarkColors
@@ -200,7 +222,7 @@ private fun typography(c: SibColors): Typography = Typography(
 @Composable
 fun SibTheme(mode: ThemeMode = ThemeMode.SYSTEM, space: Space = Space.WORK, content: @Composable () -> Unit) {
     val resolved = if (mode == ThemeMode.SYSTEM) (if (isSystemInDarkTheme()) ThemeMode.DARK else ThemeMode.LIGHT) else mode
-    val colors = paletteFor(resolved, space)
+    val colors = paletteFor(resolved, space, LocalMedical.current)
     CompositionLocalProvider(LocalSibColors provides colors, LocalThemeMode provides resolved) {
         MaterialTheme(
             colorScheme = scheme(colors),
