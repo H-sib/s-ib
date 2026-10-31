@@ -58,6 +58,7 @@ import com.hsib.sib.core.plan.PlanTask
 import com.hsib.sib.core.plan.Remedy
 import com.hsib.sib.core.urgency.UrgencyState
 import com.hsib.sib.data.CandidateEdit
+import com.hsib.sib.data.HomeStyle
 import com.hsib.sib.domain.AppState
 import com.hsib.sib.domain.Fmt
 import com.hsib.sib.domain.ObligationView
@@ -208,11 +209,11 @@ fun TodayScreen(
         Text(weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
 
         Gap(24.dp)
-        NextCard(next, st, fmt, onOpen, onAdd, nextStep(st), onLog, shared = next != null && social?.roomFor(next.o.id) != null)
+        DeadlineDeck(st.settings.homeStyle, items, next, st, fmt, onOpen, onAdd, nextStep(st), onLog, social)
 
         // The hero shows the next one; the others wait right below it so nothing is hidden behind "All deadlines".
         val others = items.filter { it !== next && it.urgency != UrgencyState.MOVED }.take(3)
-        if (others.isNotEmpty()) {
+        if (others.isNotEmpty() && st.settings.homeStyle == HomeStyle.FOCUS) {
             Gap(20.dp)
             SectionHeader("Also coming up", count = others.size)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -303,7 +304,7 @@ fun TodayScreen(
 
 /** The hero: the next deadline as a graded ring with the days left in large figures. */
 @Composable
-private fun NextCard(
+internal fun NextCard(
     v: ObligationView?,
     st: AppState,
     fmt: Fmt,
@@ -377,9 +378,9 @@ fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, shared
     }
 }
 
-private data class NextStep(val id: String, val title: String, val day: LocalDate, val minutes: Int)
+internal data class NextStep(val id: String, val title: String, val day: LocalDate, val minutes: Int)
 
-private fun nextStep(st: AppState): NextStep? {
+internal fun nextStep(st: AppState): NextStep? {
     val b = st.plan.blocks.filter { !it.day.isBefore(st.today) }.minWithOrNull(compareBy({ it.day }, { -it.minutes })) ?: return null
     val v = st.items.firstOrNull { it.o.id == b.taskId } ?: return null
     val total = st.plan.blocks.filter { it.taskId == b.taskId && it.day == b.day }.sumOf { it.minutes }

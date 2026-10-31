@@ -222,6 +222,9 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
                 }
             }
         }
+        SectionHeader("Today style")
+        Choice(com.hsib.sib.data.HomeStyle.values().map { it to it.label }, st.settings.homeStyle, { v -> scope.launch { ready.settings.update { it.copy(homeStyle = v) } } })
+        Text(st.settings.homeStyle.hint, style = SibType.small, color = SibTheme.colors.inkSoft)
         SectionHeader("Screen privacy")
         ToggleRow("Block screenshots", "Also hides the app in the recent apps list. Off by default.", st.settings.hideInRecents, { v -> scope.launch { ready.settings.update { it.copy(hideInRecents = v) } } })
         SectionHeader("Motion")
