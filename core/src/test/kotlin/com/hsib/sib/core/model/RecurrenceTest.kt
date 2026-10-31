@@ -62,6 +62,6 @@ class RecurrenceTest {
     @Test fun categoriesSplitCleanlyBetweenSpaces() {
         assertTrue(Category.work.none { it.close })
         assertTrue(Category.closeOnes.all { it.close })
-        assertEquals(Category.values().size, Category.work.size + Category.closeOnes.size)
+        assertEquals(Category.values().size, Category.work.size + Category.closeOnes.size + Category.medical.size)
     }
 }

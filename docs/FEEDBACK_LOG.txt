@@ -24,3 +24,11 @@ Dr. Muser (closed tester), 6 items. DONE in 1.0.1 (versionCode 2):
  5 Only one deadline on Today: "Also coming up" shows the next three below the hero. Home hero and chart unchanged.
  6 Friend missing in Close ones: Friend and Best friend added.
  Credit: Settings, About, Credits.
+
+Dr. Muser and the owner, second round. DONE in 1.1.0 (versionCode 3):
+ - Plan editable: any hours (Hours and importance), own plan per day (My own plan), reminders 7, 6, 5 days ahead by default and editable (Reminder days).
+ - Today styles: Focus, Swipe, Stack, Collage (Settings, Appearance, Today style).
+ - Messages tab (chats first, join with a code and account below). NOT DONE: search a person by username and chat first, then share a deadline. Needs Firestore rules (owner must publish) and a terms and privacy update.
+ - Month calendar redesigned. Info eye next to features. Guide rewritten with steps, examples and tips.
+ - Files: attach by link only. Voice: Speak button uses the phone's speech window. Exam routine: choice of separate deadlines or one with parts.
+ - Medical student mode with its own theme, exam types by prof, subjects, practicals, quick start in Add, class diary. Source: Dr. Muser's video, told by the owner. Subject lists per prof are her college; unclear words were guessed (see docs/RESUME.txt).

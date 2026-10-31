@@ -73,3 +73,12 @@ STATUS 2026-10-31 (cloud session, version 1.0.1 code 2, branch fix/cloud-setup-j
  - If Maven Central answers 429 (rate limit): add ~/.gradle/init.d/mirror.gradle that swaps https://repo.maven.apache.org/maven2 for https://maven-central.storage-download.googleapis.com/maven2/ in pluginManagement and dependencyResolutionManagement repositories, and set JAVA_TOOL_OPTIONS with -Drobolectric.dependency.repo.url=https://maven-central.storage-download.googleapis.com/maven2 for Robolectric. Both are local only.
  - Dr. Muser feedback (6 items) done, see docs/FEEDBACK_LOG.txt. New: ui/Month.kt (Plan, Month), ui/Parts.kt (parts and battery), Room v3 (obligation.parts, auto migration 2 to 3, schema 3.json), Part in core model and backup, Also coming up on Today, Friend in Close ones, Credits in Settings About.
  - Not seen on a real phone: month grid look, battery look. :core:test and :app:testDebugUnitTest pass. release-gate needs the owner's release build.
+
+STATUS 2026-10-31 later (version 1.1.0, code 3, branch feature/1.1.0)
+ - Database v5 (auto migrations 2 to 5): obligation.parts, manualPlan, links; table class_note. Settings: medicalMode, medicalAsked, homeStyle.
+ - Engine: a deadline with manualPlan is left out of the planner; its minutes come off the capacity of those days and are added to the plan.
+ - Reminders: LEAD reminders for work deadlines, default 7, 6 and 5 days, or the deadline's leadDays. Daily budget still applies.
+ - Medical: core/medical/Medical.kt (profs, subjects, practicals, months), ui/Study.kt (picker, settings, class diary), medical palette in ui/Theme.kt (LocalMedical). Guessed from a spoken Bangla video: 2nd prof subjects, "COM MED" read as Community Medicine, "SX" as Surgery, "FM" as Forensic Medicine, "RFST" kept as written. Ask Dr. Muser to correct.
+ - Voice uses RecognizerIntent (no microphone permission). Privacy page has a sentence for it and for file links. Not seen on a real phone: all new screens, the speech window, the file picker.
+ - Open: chat by username search (see FEEDBACK_LOG), real screenshots in the Guide (it uses text examples).
+ - Cloud tips: set JAVA_HOME to /usr/lib/jvm/java-17-openjdk-amd64. Mirror and Robolectric repo notes are in the 1.0.1 block above. Do not call pkill -f with a word from your own command line: it kills your shell.

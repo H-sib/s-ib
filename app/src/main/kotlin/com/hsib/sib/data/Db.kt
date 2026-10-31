@@ -47,6 +47,8 @@ data class ObligationEntity(
     val relation: String,
     val since: String?,
     @ColumnInfo(defaultValue = "") val parts: String = "",
+    @ColumnInfo(defaultValue = "") val manualPlan: String = "",
+    @ColumnInfo(defaultValue = "") val links: String = "",
 )
 
 @Entity(tableName = "candidate")
@@ -180,6 +182,31 @@ interface CandidateDao {
     suspend fun deleteExpired(now: Long): Int
 
     @Query("DELETE FROM candidate")
+    suspend fun clear()
+}
+
+/** One class in a medical student's diary: the day, the subject, the topic and who taught it. Stays on this phone. */
+@Entity(tableName = "class_note")
+data class ClassNoteEntity(
+    @PrimaryKey val id: String,
+    val day: String,
+    val subject: String,
+    val topic: String,
+    val faculty: String,
+    val kind: String,
+)
+
+@Dao
+interface ClassNoteDao {
+    @Query("SELECT * FROM class_note ORDER BY day DESC, subject")
+    fun observeAll(): Flow<List<ClassNoteEntity>>
+
+    @Upsert suspend fun upsert(e: ClassNoteEntity)
+
+    @Query("DELETE FROM class_note WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("DELETE FROM class_note")
     suspend fun clear()
 }
 
@@ -338,16 +365,17 @@ interface SettingDao {
     entities = [
         ObligationEntity::class, CandidateEntity::class, StepEntity::class, ReceiptEntity::class, EvidenceEntity::class,
         SealEntity::class, ReminderEntity::class, DismissedEntity::class, SettingEntity::class,
-        RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class,
+        RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class, ClassNoteEntity::class,
     ],
-    version = 3,
+    version = 5,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5)],
 )
 abstract class SibDatabase : RoomDatabase() {
     abstract fun obligations(): ObligationDao
     abstract fun candidates(): CandidateDao
     abstract fun steps(): StepDao
+    abstract fun diary(): ClassNoteDao
     abstract fun receipts(): ReceiptDao
     abstract fun evidence(): EvidenceDao
     abstract fun seals(): SealDao

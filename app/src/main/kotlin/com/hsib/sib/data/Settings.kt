@@ -18,6 +18,14 @@ enum class LockScreenDetail { HIDDEN, TITLES }
 /** How long the opening plays. AUTO is long the first time and short after. */
 enum class IntroSpeed(val label: String) { AUTO("Long once, then short"), LONG("Always long"), SHORT("Always short"), OFF("Skip it") }
 
+/** How the next deadlines are shown on Today. FOCUS is the original look and the default. */
+enum class HomeStyle(val label: String, val hint: String) {
+    FOCUS("Focus", "One big card, the others listed under it"),
+    SWIPE("Swipe", "Every deadline gets the same big card. Swipe to see the next"),
+    STACK("Stack", "The nearest in front, the others behind it, faded"),
+    COLLAGE("Collage", "All deadlines as colourful tiles"),
+}
+
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val dateOrder: DateOrder = DateOrder.AUTO,
@@ -48,6 +56,10 @@ data class AppSettings(
     val keepExcerptsByDefault: Boolean = false,
     val notificationPermissionAsked: Boolean = false,
     val closeOnesEnabled: Boolean = true,
+    /** Medical student mode: MBBS exam types, subjects and a class diary. Off until the person asks for it. */
+    val medicalMode: Boolean = false,
+    val medicalAsked: Boolean = false,
+    val homeStyle: HomeStyle = HomeStyle.FOCUS,
     /** Packages whose notifications H-sib Reminder may read for deadlines. Empty means it reads none. Never restored from a backup. */
     val notificationReaderApps: Set<String> = emptySet(),
     val readerPromptDismissed: Boolean = false,
@@ -90,6 +102,7 @@ object SettingsCodec {
         put("keepExcerptsByDefault", s.keepExcerptsByDefault.toString())
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
+        put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -138,6 +151,9 @@ object SettingsCodec {
             keepExcerptsByDefault = m.bool("keepExcerptsByDefault", d.keepExcerptsByDefault),
             notificationPermissionAsked = m.bool("notificationPermissionAsked", d.notificationPermissionAsked),
             closeOnesEnabled = m.bool("closeOnesEnabled", d.closeOnesEnabled),
+            medicalMode = m.bool("medicalMode", d.medicalMode),
+            medicalAsked = m.bool("medicalAsked", d.medicalAsked),
+            homeStyle = m.enum("homeStyle", d.homeStyle),
             notificationReaderApps = m["notificationReaderApps"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..160 }?.take(60)?.toSet() ?: d.notificationReaderApps,
             readerPromptDismissed = m.bool("readerPromptDismissed", d.readerPromptDismissed),
             dashboardPromptDismissed = m.bool("dashboardPromptDismissed", d.dashboardPromptDismissed),

@@ -18,6 +18,8 @@ import com.hsib.sib.core.model.Limits
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Recurrence
+import com.hsib.sib.core.model.Kind
+import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Relation
 import com.hsib.sib.core.model.Repeat
 import com.hsib.sib.core.model.clamped
@@ -103,6 +105,9 @@ data class CandidateEdit(
     val keepExcerpt: Boolean = false,
 )
 
+/** A class in the diary. [kind] is Lecture, Tutorial or Ward. */
+data class ClassNote(val id: String, val day: LocalDate, val subject: String, val topic: String, val faculty: String, val kind: String)
+
 class Store(
     private val db: SibDatabase,
     private val keys: HistoryKeys,
@@ -113,6 +118,11 @@ class Store(
     val obligations: Flow<List<Obligation>> = db.obligations().observeAll().map { l -> l.map { it.toModel() } }
     val candidates: Flow<List<StoredCandidate>> = db.candidates().observeAll().map { l -> l.map { it.toStored() } }
     val steps: Flow<List<UserStep>> = db.steps().observeAll().map { l -> l.map { it.toModel() } }
+    val classNotes: Flow<List<ClassNote>> = db.diary().observeAll().map { l -> l.map { ClassNote(it.id, LocalDate.parse(it.day), it.subject, it.topic, it.faculty, it.kind) } }
+    suspend fun addClassNote(n: ClassNote) =
+        db.diary().upsert(ClassNoteEntity(n.id.ifEmpty { newId() }, n.day.toString(), n.subject.take(60), n.topic.take(160), n.faculty.take(80), n.kind.take(30)))
+    suspend fun removeClassNote(id: String) = db.diary().delete(id)
+
     fun receipts(obligationId: String): Flow<List<Receipt>> = db.receipts().observeFor(obligationId).map { l -> l.map { it.toModel() } }
     fun excerpts(obligationId: String): Flow<List<Evidence>> = db.evidence().observeFor(obligationId).map { l -> l.map { it.toModel() } }
     fun history(obligationId: String): Flow<List<SealEntry>> = db.seals().observeFor(obligationId).map { l -> l.map { it.toEntry() } }
@@ -242,6 +252,24 @@ class Store(
             all.sortedWith(compareByDescending<CandidateEntity> { it.confidence }.thenByDescending { it.createdAt })
                 .drop(Limits.MAX_PENDING).forEach { db.candidates().delete(it.id) }
         }
+    }
+
+    /** Keeps several waiting suggestions as one deadline on the last date, with one part for each. */
+    suspend fun acceptAsOne(ids: List<String>, title: String): Obligation? = db.withTransaction {
+        val cs = ids.mapNotNull { db.candidates().get(it)?.toStored()?.candidate }.filter { it.relation == Relation.NEW && it.due != null }.sortedBy { it.due!!.local }
+        if (cs.size < 2) return@withTransaction null
+        val category = cs.groupingBy { it.category }.eachCount().maxByOrNull { it.value }!!.key
+        val short = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale.ENGLISH)
+        val o = create(
+            Obligation(
+                id = newId(), title = title.take(120), category = category, kind = Kind.DEADLINE, due = cs.last().due,
+                importance = Defaults.importance(category), effort = Effort.fromLikely(Defaults.effort(category).likelyMin * cs.size),
+                parts = cs.map { Part(it.title.take(60) + " (" + it.due!!.local.toLocalDate().format(short) + ")") },
+            ),
+            "SUGGESTION", "accepted together from an exam routine",
+        )
+        ids.forEach { db.candidates().delete(it) }
+        o
     }
 
     suspend fun accept(candidateId: String, edit: CandidateEdit = CandidateEdit()): Obligation? = db.withTransaction {
@@ -392,6 +420,7 @@ class Store(
     /** Deletes everything the app holds except the vault itself. */
     suspend fun wipeAll() = db.withTransaction {
         wipeRows()
+        db.diary().clear()
         db.rooms().clear(); db.roomKeys().clear(); db.roomMembers().clear(); db.roomMessages().clear(); db.blocked().clear()
         db.settings().all().filter { it.key != "historyKeys" }.forEach { db.settings().delete(it.key) }
         blobs.deleteAll()

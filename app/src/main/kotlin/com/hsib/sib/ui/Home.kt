@@ -58,6 +58,7 @@ import com.hsib.sib.core.plan.PlanTask
 import com.hsib.sib.core.plan.Remedy
 import com.hsib.sib.core.urgency.UrgencyState
 import com.hsib.sib.data.CandidateEdit
+import com.hsib.sib.data.HomeStyle
 import com.hsib.sib.domain.AppState
 import com.hsib.sib.domain.Fmt
 import com.hsib.sib.domain.ObligationView
@@ -75,20 +76,20 @@ fun rememberFmt(): Fmt {
 
 // ---- bottom bar ------------------------------------------------------------------------------
 
-enum class Tab(val label: String) { TODAY("Today"), PLAN("Plan"), REVIEW("Review"), SETTINGS("More") }
+enum class Tab(val label: String) { TODAY("Today"), PLAN("Plan"), REVIEW("Review"), MESSAGES("Messages"), SETTINGS("More") }
 
 /** A floating pill: the chosen tab opens up to show its name, the others stay as icons. */
 @Composable
-fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int) {
+fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int, unreadMessages: Int = 0, tabs: List<Tab> = Tab.values().toList()) {
     val c = SibTheme.colors
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp).clip(RoundedCornerShape(34.dp)).background(c.raised).padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        for (tab in Tab.values()) {
+        for (tab in tabs) {
             val on = tab == selected
             val weight by animateFloatAsState(if (on) 1.7f else 1f, tween(260), label = "tabWeight")
-            val desc = tab.label + (if (tab == Tab.REVIEW && reviewCount > 0) ", $reviewCount waiting" else "")
+            val desc = tab.label + (if (tab == Tab.REVIEW && reviewCount > 0) ", $reviewCount waiting" else "") + (if (tab == Tab.MESSAGES && unreadMessages > 0) ", $unreadMessages new" else "")
             Row(
                 Modifier.weight(weight).height(54.dp).clip(RoundedCornerShape(28.dp))
                     .then(if (on) Modifier.background(c.violetWash) else Modifier)
@@ -97,9 +98,10 @@ fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int) {
             ) {
                 Box {
                     TabGlyph(tab, if (on) c.violet else c.inkSoft)
-                    if (tab == Tab.REVIEW && reviewCount > 0) {
+                    val badge = if (tab == Tab.REVIEW) reviewCount else if (tab == Tab.MESSAGES) unreadMessages else 0
+                    if (badge > 0) {
                         Text(
-                            reviewCount.coerceAtMost(99).toString(), style = SibType.label.copy(fontSize = 10.sp), color = c.paper,
+                            badge.coerceAtMost(99).toString(), style = SibType.label.copy(fontSize = 10.sp), color = c.paper,
                             modifier = Modifier.align(Alignment.TopEnd).padding(start = 18.dp).clip(RoundedCornerShape(8.dp)).background(c.vermilion).padding(horizontal = 5.dp, vertical = 1.dp),
                         )
                     }
@@ -131,6 +133,11 @@ private fun TabGlyph(tab: Tab, color: androidx.compose.ui.graphics.Color) {
                 drawLine(color, Offset(3f * u, 12f * u), Offset(size.width * 0.65f, 12f * u), sw, StrokeCap.Round)
                 drawLine(color, Offset(3f * u, 17f * u), Offset(size.width * 0.4f, 17f * u), sw, StrokeCap.Round)
                 drawLine(color, Offset(size.width - 3f * u, 3f * u), Offset(size.width - 3f * u, 21f * u), sw, StrokeCap.Round)
+            }
+            Tab.MESSAGES -> {
+                drawRoundRect(color, Offset(3f * u, 4f * u), androidx.compose.ui.geometry.Size(18f * u, 12f * u), androidx.compose.ui.geometry.CornerRadius(4f * u), style = Stroke(sw))
+                drawLine(color, Offset(8f * u, 16f * u), Offset(7f * u, 21f * u), sw, StrokeCap.Round)
+                drawLine(color, Offset(7f * u, 21f * u), Offset(12f * u, 16f * u), sw, StrokeCap.Round)
             }
             Tab.REVIEW -> drawCircle(color, size.minDimension / 2 - 3f * u, style = Stroke(sw, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f * u, 4f * u))))
             Tab.SETTINGS -> {
@@ -202,11 +209,11 @@ fun TodayScreen(
         Text(weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
 
         Gap(24.dp)
-        NextCard(next, st, fmt, onOpen, onAdd, nextStep(st), onLog, shared = next != null && social?.roomFor(next.o.id) != null)
+        DeadlineDeck(st.settings.homeStyle, items, next, st, fmt, onOpen, onAdd, nextStep(st), onLog, social)
 
         // The hero shows the next one; the others wait right below it so nothing is hidden behind "All deadlines".
         val others = items.filter { it !== next && it.urgency != UrgencyState.MOVED }.take(3)
-        if (others.isNotEmpty()) {
+        if (others.isNotEmpty() && st.settings.homeStyle == HomeStyle.FOCUS) {
             Gap(20.dp)
             SectionHeader("Also coming up", count = others.size)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -297,7 +304,7 @@ fun TodayScreen(
 
 /** The hero: the next deadline as a graded ring with the days left in large figures. */
 @Composable
-private fun NextCard(
+internal fun NextCard(
     v: ObligationView?,
     st: AppState,
     fmt: Fmt,
@@ -371,9 +378,9 @@ fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, shared
     }
 }
 
-private data class NextStep(val id: String, val title: String, val day: LocalDate, val minutes: Int)
+internal data class NextStep(val id: String, val title: String, val day: LocalDate, val minutes: Int)
 
-private fun nextStep(st: AppState): NextStep? {
+internal fun nextStep(st: AppState): NextStep? {
     val b = st.plan.blocks.filter { !it.day.isBefore(st.today) }.minWithOrNull(compareBy({ it.day }, { -it.minutes })) ?: return null
     val v = st.items.firstOrNull { it.o.id == b.taskId } ?: return null
     val total = st.plan.blocks.filter { it.taskId == b.taskId && it.day == b.day }.sumOf { it.minutes }
@@ -399,6 +406,8 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
             ShortfallCard(s, st, fmt)
         }
         Gap(24.dp)
+        InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
+        Gap(8.dp)
         Choice(PlanView.values().map { it to it.label }, view, { view = it })
         Gap(24.dp)
         when (view) {
@@ -510,6 +519,8 @@ fun ReviewScreen(
     onDismiss: (String) -> Unit,
     onSnooze: (String) -> Unit,
     onAdd: () -> Unit,
+    onRoutineSeparate: (List<Candidate>) -> Unit = {},
+    onRoutineOne: (List<Candidate>, String) -> Unit = { _, _ -> },
 ) {
     val c = SibTheme.colors
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
@@ -528,6 +539,11 @@ fun ReviewScreen(
         } else {
             Text("Confirm what is right.", style = SibType.body, color = c.inkSoft)
             Gap(20.dp)
+            val routine = remember(st.pending) { com.hsib.sib.core.extract.ExamRoutine.find(st.pending) }
+            if (routine.isNotEmpty()) {
+                RoutineCard(routine, { onRoutineSeparate(routine) }, { onRoutineOne(routine, "Exam routine") })
+                Gap(20.dp)
+            }
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 (st.pending.filter { it.tier == Tier.SUGGEST } + st.pending.filter { it.tier == Tier.MAYBE }).forEach {
                     CandidateCard(it, st, onConfirm, onDismiss, onSnooze)
@@ -535,6 +551,18 @@ fun ReviewScreen(
             }
         }
         Gap(40.dp)
+    }
+}
+
+/** Offered when a timetable was read: one deadline for each exam, or a single deadline with a part for each. */
+@Composable
+private fun RoutineCard(routine: List<Candidate>, onSeparate: () -> Unit, onOne: () -> Unit) {
+    val c = SibTheme.colors
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(c.violetWash).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a part for each exam, and tick the parts off as you go.", style = SibType.title)
+        Text("${routine.size} exams were found. How do you want to keep them?", style = SibType.body, color = c.ink)
+        SibButton("${routine.size} separate deadlines", onSeparate, Modifier.fillMaxWidth())
+        SibButton("One deadline with ${routine.size} parts", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
     }
 }
 

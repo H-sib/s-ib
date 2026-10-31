@@ -127,7 +127,6 @@ class Engine(
         val nowInstant = clock.instant()
         val zone = clock.zone
         val today = nowInstant.atZone(zone).toLocalDate()
-        val capacity = capacityFor(s)
 
         fun remaining(o: Obligation): Pair<Int, Int> {
             val e = o.effort ?: return 0 to 0
@@ -136,14 +135,26 @@ class Engine(
             return (exp - o.progressMin).coerceAtLeast(0) to (safe - o.progressMin).coerceAtLeast(0)
         }
 
-        val planTasks = all.filter { it.lifecycle == Lifecycle.ACTIVE && it.space == Space.WORK && it.planDay(zone) != null && it.effort != null }.map { o ->
+        // A deadline with its own plan keeps exactly the hours the person chose. Those hours come off the day's time for the rest.
+        val manual = all.filter { it.lifecycle == Lifecycle.ACTIVE && it.space == Space.WORK && it.manualPlan.isNotEmpty() }
+        val manualByDay = manual.flatMap { o -> o.manualPlan.filter { !it.key.isBefore(today) }.map { (d, m) -> d to m } }.groupBy({ it.first }, { it.second }).mapValues { it.value.sum() }
+        val capacity = Capacity.standard(s.weekdayMinutes, s.weekendMinutes, s.weekend, manualByDay.mapValues { (d, m) -> (capacityFor(s).minutes(d) - m).coerceAtLeast(0) })
+        val manualIds = manual.map { it.id }.toSet()
+
+        val planTasks = all.filter { it.id !in manualIds && it.lifecycle == Lifecycle.ACTIVE && it.space == Space.WORK && it.planDay(zone) != null && it.effort != null }.map { o ->
             val (exp, safe) = remaining(o)
             PlanTask(
                 id = o.id, title = o.title, remainingMin = exp, safeRemainingMin = safe,
                 dueDay = o.planDay(zone)!!, earliestDay = maxOf(today, o.postponedUntil ?: today), importance = o.importance,
             )
         }
-        val plan = Planner.plan(planTasks, capacity, today)
+        val autoPlan = Planner.plan(planTasks, capacity, today)
+        val manualBlocks = manual.flatMap { o -> o.manualPlan.filter { !it.key.isBefore(today) && it.value > 0 }.map { (d, m) -> PlanBlock(d, o.id, m) } }
+        val plan = autoPlan.copy(
+            blocks = (autoPlan.blocks + manualBlocks).sortedBy { it.day },
+            loadByDay = (autoPlan.loadByDay.keys + manualByDay.keys).associateWith { (autoPlan.loadByDay[it] ?: 0) + (manualByDay[it] ?: 0) },
+            capacityByDay = (autoPlan.capacityByDay.keys + manualByDay.keys).associateWith { (autoPlan.capacityByDay[it] ?: 0) + (manualByDay[it] ?: 0) },
+        )
         val blocksBy = plan.blocks.groupBy { it.taskId }
         val atRisk = plan.atRisk.associate { it.taskId to it.unscheduledMin }
 

@@ -101,6 +101,7 @@ class Notifier(internal val context: Context) {
         val work = if (remaining > 0) " About ${fmt.minutes(remaining)} of work left." else ""
         val (title, body, channel) = when (kindName) {
             ReminderKind.START_NUDGE.name -> Triple("Time to start: ${o.title}", "This is the latest safe day to begin.$work", CH_REMINDERS)
+            ReminderKind.LEAD.name -> Triple("${o.title} is due $dueText", "A calm early reminder.$work", CH_REMINDERS)
             ReminderKind.APPROACHING.name -> Triple("${o.title} is due $dueText", "No rush yet.$work", CH_REMINDERS)
             ReminderKind.DUE_SOON.name -> Triple("Due soon: ${o.title}", "Due $dueText.$work", CH_URGENT)
             ReminderKind.DUE_MORNING.name -> Triple("Due today: ${o.title}", (due?.let { "Due at " + fmt.time(it.atZone(st.zone).toLocalTime()) + "." } ?: "") + work, CH_URGENT)

@@ -54,6 +54,8 @@ TAGS / CATEGORY
 Category: Productivity. Suggested tags: To-do list, Reminder, Planner, Productivity, Calendar.
 
 WHAT'S NEW (first release, max 500)
+1.1.0: a version for medical students, your own hours and plan, four Today styles, Messages tab, files, voice and exam timetables. Thank you to our testers.
+
 1.0.1: a month calendar in Plan, deadlines split into parts with a battery that fills, more deadlines on Today, clearer wording, and Friend in Close ones. Thank you to our testers.
 
 First release. Find deadlines in what you already receive, see the latest safe day to start, get a few calm reminders, pin your next deadline in the notification bar, and keep personal dates private in Close ones. Sharing and chat with friends are optional; until you sign in, everything stays on your phone.

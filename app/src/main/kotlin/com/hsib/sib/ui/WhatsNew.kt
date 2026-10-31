@@ -22,6 +22,16 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            3, "1.1.0",
+            listOf(
+                "A version for medical students: exam types by prof, subjects, study steps, a class diary and its own colours. Turn it on in Settings.",
+                "You choose the hours, even 48, and you can plan each day yourself.",
+                "Four ways to see your deadlines on Today: Focus, Swipe, Stack and Collage.",
+                "A Messages tab, a clearer month calendar and a small eye next to each feature that explains it.",
+                "Attach files, speak a deadline, and turn an exam timetable into one deadline or many.",
+            ),
+        ),
+        Entry(
             2, "1.0.1",
             listOf(
                 "A month view in Plan marks your deadlines on a calendar.",
