@@ -160,7 +160,7 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier, count: Int? = nul
     Row(modifier.fillMaxWidth().padding(top = 36.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(5.dp).height(20.dp).clip(RoundedCornerShape(50)).background(c.violet))
         Spacer(Modifier.width(10.dp))
-        Text(text, style = SibType.title, color = c.ink)
+        Text(tr(text), style = SibType.title, color = c.ink)
         if (count != null) {
             Spacer(Modifier.width(10.dp))
             Text(count.toString(), style = SibType.label, color = c.violet, modifier = Modifier.clip(RoundedCornerShape(50)).background(c.violetWash).padding(horizontal = 10.dp, vertical = 3.dp))
@@ -180,8 +180,8 @@ fun ScreenHeader(title: String, subtitle: String, icon: SibIcon, modifier: Modif
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = SibType.display, color = c.ink)
-            Text(subtitle, style = SibType.body, color = c.inkSoft)
+            Text(tr(title), style = SibType.display, color = c.ink)
+            Text(tr(subtitle), style = SibType.body, color = c.inkSoft)
         }
         Spacer(Modifier.width(12.dp))
         if (action != null) action() else IconBadge(icon, size = 56.dp)
@@ -211,7 +211,7 @@ fun Chip(text: String, tone: Tone = Tone.NEUTRAL, modifier: Modifier = Modifier)
         Tone.ALERT -> c.vermilionWash to c.vermilion
         Tone.GOOD -> c.verdigrisWash to c.verdigris
     }
-    Text(text, style = SibType.label, color = fg, modifier = modifier.clip(RoundedCornerShape(50)).background(bg).padding(horizontal = 12.dp, vertical = 5.dp))
+    Text(tr(text), style = SibType.label, color = fg, modifier = modifier.clip(RoundedCornerShape(50)).background(bg).padding(horizontal = 12.dp, vertical = 5.dp))
 }
 
 enum class ButtonKind { PRIMARY, QUIET, DANGER, TEXT }
@@ -231,7 +231,7 @@ fun SibButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, 
         modifier.heightIn(min = if (compact) 46.dp else 52.dp).clip(shape).background(fill).bounceClick(enabled = enabled, onClick = onClick).padding(horizontal = if (compact) 12.dp else if (kind == ButtonKind.TEXT) 8.dp else 24.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = SibType.bodyStrong, color = fg, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(tr(text), style = SibType.bodyStrong, color = fg, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
@@ -252,7 +252,7 @@ fun Field(
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(18.dp)
     Column(modifier.fillMaxWidth()) {
-        Text(label, style = SibType.bodyStrong, color = c.ink)
+        Text(tr(label), style = SibType.bodyStrong, color = c.ink)
         Spacer(Modifier.height(8.dp))
         BasicTextField(
             value = value, onValueChange = onChange,
@@ -266,7 +266,7 @@ fun Field(
                 Box(
                     Modifier.clip(shape).background(c.lifted).border(if (focused) 2.dp else 1.dp, if (focused) c.violet else c.rule, shape).padding(horizontal = 18.dp, vertical = 16.dp),
                 ) {
-                    if (value.isEmpty() && placeholder.isNotEmpty()) Text(placeholder, style = SibType.body, color = c.inkSoft)
+                    if (value.isEmpty() && placeholder.isNotEmpty()) Text(tr(placeholder), style = SibType.body, color = c.inkSoft)
                     inner()
                 }
             },
@@ -301,7 +301,7 @@ fun <T> Choice(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Uni
                     .padding(horizontal = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (on) c.onAction else c.ink, maxLines = 1, softWrap = false)
+                Text(tr(label), style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (on) c.onAction else c.ink, maxLines = 1, softWrap = false)
             }
         }
     }
@@ -321,8 +321,8 @@ fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boo
     ) {
         if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
-            Text(title, style = SibType.bodyStrong, color = if (enabled) c.ink else c.inkSoft)
-            if (subtitle != null) Text(subtitle, style = SibType.small, color = c.inkSoft)
+            Text(tr(title), style = SibType.bodyStrong, color = if (enabled) c.ink else c.inkSoft)
+            if (subtitle != null) Text(tr(subtitle), style = SibType.small, color = c.inkSoft)
         }
         Spacer(Modifier.width(16.dp))
         Switch(
@@ -345,8 +345,8 @@ fun NavRow(title: String, subtitle: String?, onClick: () -> Unit, modifier: Modi
     ) {
         if (icon != null) { IconBadge(icon, size = 44.dp); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
-            Text(title, style = SibType.title, color = c.ink)
-            if (subtitle != null) Text(subtitle, style = SibType.small, color = c.inkSoft)
+            Text(tr(title), style = SibType.title, color = c.ink)
+            if (subtitle != null) Text(tr(subtitle), style = SibType.small, color = c.inkSoft)
         }
         if (trailing != null) { Text(trailing, style = SibType.bodyStrong, color = c.violet); Spacer(Modifier.width(8.dp)) }
         Canvas(Modifier.size(10.dp, 14.dp)) {
@@ -389,7 +389,7 @@ fun Page(
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
             if (onBack != null) BackArrow(onBack) else Spacer(Modifier.width(8.dp))
-            Text(title, style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp))
+            Text(tr(title), style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp))
             action?.invoke()
         }
         Column(

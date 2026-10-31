@@ -22,6 +22,16 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            6, "1.3.0",
+            listOf(
+                "Four new colour themes: Cosmos, Dune, Forest and Ocean. Choose a language and an easy mode that keeps only the basics.",
+                "Your steps are yours to edit, and the Plan card now lets you change what it suggests.",
+                "The app can greet you by name, and a small hint offers help when you seem stuck. Both can be turned off.",
+                "A focus timer, a small celebration when you finish, search in All deadlines, and backups that now include your class routine.",
+                "Hide any part of Today you do not need.",
+            ),
+        ),
+        Entry(
             5, "1.2.0",
             listOf(
                 "Make it yours: set the app up for your study, your work or your daily life. Edit it, save it and share it with friends.",

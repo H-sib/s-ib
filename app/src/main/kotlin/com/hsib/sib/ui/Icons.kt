@@ -109,6 +109,9 @@ fun iconFor(title: String): SibIcon? = when (title) {
     "Notification dashboard" -> SibIcon.GRID
     "Close ones" -> SibIcon.HEART
     "Motivation" -> SibIcon.CHECK
+    "Your name and hints" -> SibIcon.USER
+    "Language" -> SibIcon.GLOBE
+    "Easy mode" -> SibIcon.CHECK
     "Calendar" -> SibIcon.CALENDAR
     "Medical student", "Study course", "Study tools", "My course" -> SibIcon.BOOK
     "Appearance" -> SibIcon.PALETTE
@@ -145,6 +148,7 @@ fun iconFor(title: String): SibIcon? = when (title) {
     "Bills and renewals" -> SibIcon.BELL
     "Personal and other" -> SibIcon.USER
     "Also coming up", "Today's classes", "Needs more time", "Day counts", "Friends row", "To review row", "Make it yours card" -> SibIcon.GRID
+    "Focus session" -> SibIcon.CLOCK
     "Blocked people" -> SibIcon.BLOCK
     "Sign out" -> SibIcon.LOGOUT
     else -> null

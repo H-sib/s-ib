@@ -115,6 +115,14 @@ data class SealDto(
     }
 }
 
+/** One class in the diary, for backups. */
+@Serializable
+data class ClassNoteDto(val id: String, val day: String, val subject: String, val topic: String, val faculty: String, val kind: String)
+
+/** One class in the weekly routine, for backups. */
+@Serializable
+data class RoutineDto(val id: String, val day: Int, val kind: String, val shift: String, val subject: String, val room: String, val startMin: Int, val endMin: Int)
+
 /** Everything a restore needs, and nothing it does not. Raw messages and documents are never part of it. */
 @Serializable
 data class BackupSnapshot(
@@ -127,6 +135,8 @@ data class BackupSnapshot(
     val seal: List<SealDto> = emptyList(),
     val dismissed: List<String> = emptyList(),
     val settings: Map<String, String> = emptyMap(),
+    val classNotes: List<ClassNoteDto> = emptyList(),
+    val routine: List<RoutineDto> = emptyList(),
 ) {
     fun toBytes(): ByteArray = json.encodeToString(serializer(), this).toByteArray(Charsets.UTF_8)
 

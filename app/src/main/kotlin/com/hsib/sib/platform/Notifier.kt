@@ -161,10 +161,10 @@ class Notifier(internal val context: Context) {
     }
 
     /** The daily encouraging line. Silent, gone by evening, and never shown on the lock screen. */
-    fun motivation(line: String): Notification =
+    fun motivation(line: String, name: String? = null): Notification =
         NotificationCompat.Builder(context, CH_MOTIVATION)
             .setSmallIcon(R.drawable.ic_stat_sib)
-            .setContentTitle("A little push")
+            .setContentTitle(if (name != null) "A little push, $name" else "A little push")
             .setContentText(line)
             .setStyle(NotificationCompat.BigTextStyle().bigText(line))
             .setAutoCancel(true)
@@ -195,7 +195,7 @@ class Notifier(internal val context: Context) {
         val showTitles = st.settings.lockScreenDetail == LockScreenDetail.TITLES
         return NotificationCompat.Builder(context, CH_DIGEST)
             .setSmallIcon(R.drawable.ic_stat_sib)
-            .setContentTitle("Today")
+            .setContentTitle(st.settings.callName?.let { "Today, $it" } ?: "Today")
             .setContentText(text.replaceFirstChar { it.uppercase() })
             .setStyle(NotificationCompat.BigTextStyle().bigText(text.replaceFirstChar { it.uppercase() } + (next?.let { "\nNext: ${it.o.title}" } ?: "")))
             .setAutoCancel(true)

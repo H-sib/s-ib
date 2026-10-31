@@ -60,7 +60,7 @@ fun IconAction(icon: SibIcon, label: String, modifier: Modifier = Modifier, desc
             if (badge != null) Box(Modifier.align(Alignment.TopEnd).padding(9.dp).size(10.dp).clip(CircleShape).background(c.vermilion))
         }
         Spacer(Modifier.height(6.dp))
-        Text(label, style = SibType.label.copy(fontWeight = FontWeight.Normal), color = c.inkSoft, textAlign = TextAlign.Center)
+        Text(tr(label), style = SibType.label.copy(fontWeight = FontWeight.Normal), color = c.inkSoft, textAlign = TextAlign.Center)
     }
 }
 
@@ -81,7 +81,7 @@ fun FoldItem(icon: SibIcon, title: String, hint: String? = null, info: String? =
         ) {
             IconBadge(icon)
             Spacer(Modifier.width(14.dp))
-            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f, fill = false))
+            Text(tr(title), style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f, fill = false))
             if (info != null) { Spacer(Modifier.width(6.dp)); InfoEye(showInfo, { showInfo = !showInfo }, title) }
             Spacer(Modifier.weight(1f))
             if (hint != null && !open) {

@@ -40,7 +40,7 @@ internal fun Notifier.dashboardViews(st: AppState): DashboardViews? {
     // Nothing is pinned for a deadline weeks away that is not yet worth thinking about.
     if (days > 14 && hero.urgency.rank < UrgencyState.START_SOON.rank) return null
 
-    val mode = when (st.settings.theme) { ThemeMode.BLACK -> ThemeMode.BLACK; ThemeMode.NEON -> ThemeMode.NEON; else -> ThemeMode.DARK }
+    val mode = when (st.settings.theme) { ThemeMode.BLACK -> ThemeMode.BLACK; ThemeMode.NEON -> ThemeMode.NEON; ThemeMode.COSMOS -> ThemeMode.COSMOS; ThemeMode.FOREST -> ThemeMode.FOREST; ThemeMode.OCEAN -> ThemeMode.OCEAN; else -> ThemeMode.DARK }
     val tone = toneOf(hero.urgency).let { if (hero.o.importance == Importance.CRITICAL) hotter(it) else it }
     val progress = if (days < 0) 1f else (1f - days.coerceIn(0, 30) / 30f).coerceIn(0.04f, 1f)
     val countText = when { days < 0 -> "!"; days == 0L -> "Today"; else -> days.toString() }

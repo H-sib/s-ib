@@ -108,7 +108,7 @@ fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int, unrea
                 }
                 if (on) {
                     Spacer(Modifier.width(8.dp))
-                    Text(tab.label, style = SibType.bodyStrong, color = c.ink, maxLines = 1)
+                    Text(tr(tab.label), style = SibType.bodyStrong, color = c.ink, maxLines = 1)
                 }
             }
         }
@@ -178,6 +178,13 @@ private fun weekPhrase(st: AppState, fmt: Fmt): String {
     }
 }
 
+/** "Good morning, Rafi. " when a name is set, and nothing at all when it is not or the person switched it off. */
+private fun greeting(st: AppState): String {
+    val name = st.settings.callName ?: return ""
+    val hour = st.now.atZone(st.zone).hour
+    return (if (hour < 12) "Good morning" else if (hour < 17) "Good afternoon" else "Good evening") + ", $name. "
+}
+
 @Composable
 fun TodayScreen(
     st: AppState,
@@ -207,7 +214,7 @@ fun TodayScreen(
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
         Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink)
-        Text(weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
+        Text(greeting(st) + weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
 
         Gap(24.dp)
         DeadlineDeck(st.settings.homeStyle, items, next, st, fmt, onOpen, onAdd, nextStep(st), onLog, social)
@@ -360,7 +367,9 @@ internal fun NextCard(
 @Composable
 fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, sharedIds: Set<String> = emptySet()) {
     val fmt = rememberFmt()
-    val items = st.items.filter { it.urgency != UrgencyState.DONE && it.o.space == Space.WORK }
+    var query by rememberSaveable { mutableStateOf("") }
+    val all = st.items.filter { it.urgency != UrgencyState.DONE && it.o.space == Space.WORK }
+    val items = if (query.isBlank()) all else all.filter { it.o.title.contains(query.trim(), ignoreCase = true) || it.o.notes.contains(query.trim(), ignoreCase = true) }
     val groups = listOf(
         "Past due" to items.filter { it.urgency == UrgencyState.OVERDUE },
         "Today" to items.filter { it.urgency == UrgencyState.DUE_TODAY },
@@ -369,6 +378,10 @@ fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, shared
         "Later" to items.filter { it.urgency == UrgencyState.PLANNED || it.urgency == UrgencyState.MOVED },
     )
     Page("All deadlines", onBack) {
+        if (all.size >= 4 || query.isNotBlank()) {
+            Field("Search", query, { query = it.take(60) }, placeholder = "A word from the title or notes")
+            Spacer(Modifier.height(4.dp))
+        }
         for ((title, list) in groups) {
             if (list.isEmpty()) continue
             SectionHeader(title, count = list.size)
@@ -411,11 +424,11 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit, onSetE
             }
         }
         Gap(24.dp)
-        InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
+        if (!st.settings.easyMode) InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
         Gap(8.dp)
-        Choice(PlanView.values().map { it to it.label }, view, { view = it })
+        if (!st.settings.easyMode) Choice(PlanView.values().map { it to it.label }, view, { view = it })
         Gap(24.dp)
-        when (view) {
+        when (if (st.settings.easyMode) PlanView.WEEK else view) {
             PlanView.WEEK -> WeekView(st, fmt, selected, { selected = it }, onOpen)
             PlanView.MONTH -> MonthView(st, fmt, selected, { selected = it }, onOpen)
             PlanView.RUNWAY -> Runway(remember(st.items, st.pending, st.today) { runwayItems(st) }, st.today, fmt, onOpen)

@@ -47,7 +47,7 @@ fun InfoTitle(title: String, info: String, modifier: Modifier = Modifier, style:
     var open by rememberSaveable(title) { mutableStateOf(false) }
     Column(modifier.fillMaxWidth().animateContentSize()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = style, color = c.ink, modifier = Modifier.weight(1f, fill = false))
+            Text(tr(title), style = style, color = c.ink, modifier = Modifier.weight(1f, fill = false))
             Spacer(Modifier.width(6.dp))
             InfoEye(open, { open = !open }, title)
         }

@@ -67,12 +67,14 @@ fun Onboarding(
     today: LocalDate,
     demo: suspend (String) -> Extraction?,
     onRestore: () -> Unit,
-    onFinish: (choice: String) -> Unit,
+    onFinish: (choice: String, name: String, easy: Boolean) -> Unit,
 ) {
     val c = SibTheme.colors
     var page by rememberSaveable { mutableIntStateOf(0) }
-    val last = 4
+    val last = 5
+    var easy by rememberSaveable { mutableStateOf(false) }
     var choice by rememberSaveable { mutableStateOf("none") }
+    var callName by rememberSaveable { mutableStateOf("") }
     val ms = if (rememberMotionEnabled()) 280 else 0
     Column(Modifier.fillMaxSize().background(c.paper).windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -90,7 +92,8 @@ fun Onboarding(
                         0 -> PageOne()
                         1 -> PageTry(today, demo)
                         2 -> PagePlan(today)
-                        3 -> PageStudy(choice) { choice = it }
+                        3 -> PageStudy(choice, callName, { callName = it }) { choice = it }
+                        4 -> PageEase(easy) { easy = it }
                         else -> PagePrivacy()
                     }
                     Gap(24.dp)
@@ -103,14 +106,16 @@ fun Onboarding(
             }
             if (page == 0) SibButton("I have a backup", onRestore, kind = ButtonKind.TEXT) else SibButton("Back", { page-- }, kind = ButtonKind.TEXT)
             Spacer(Modifier.size(6.dp))
-            ActionButton(if (page == last) "Start" else "Next", { if (page == last) onFinish(choice) else page++ })
+            ActionButton(if (page == last) "Start" else "Next", { if (page == last) onFinish(choice, callName.trim(), easy) else page++ })
         }
     }
 }
 
 @Composable
-private fun PageStudy(choice: String, onChange: (String) -> Unit) {
+private fun PageStudy(choice: String, name: String, onName: (String) -> Unit, onChange: (String) -> Unit) {
     val c = SibTheme.colors
+    Gap(24.dp)
+    Field("What should we call you? (optional)", name, { onName(it.filter { ch -> !ch.isISOControl() }.take(30)) }, placeholder = "Your first name")
     Gap(24.dp)
     Text("What fits your days?", style = SibType.display, color = c.ink)
     Gap(12.dp)
@@ -122,6 +127,20 @@ private fun PageStudy(choice: String, onChange: (String) -> Unit) {
         SelectChip("I have a job or profession", choice == "work", { onChange("work") }, Modifier.fillMaxWidth())
         SelectChip("I want it for daily life", choice == "life", { onChange("life") }, Modifier.fillMaxWidth())
         SelectChip("None of these, keep it plain", choice == "none", { onChange("none") }, Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun PageEase(easy: Boolean, onChange: (Boolean) -> Unit) {
+    val c = SibTheme.colors
+    Gap(24.dp)
+    Text(tr("How do you want the app?"), style = SibType.display, color = c.ink)
+    Gap(12.dp)
+    Text("Easy mode keeps only the basics: add a deadline, see what is due, and get reminded. You can switch to the full app any time in Settings.", style = SibType.body.copy(fontSize = 17.sp, lineHeight = 26.sp), color = c.inkSoft)
+    Gap(24.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SelectChip("Easy: only the basics", easy, { onChange(true) }, Modifier.fillMaxWidth())
+        SelectChip("Full: everything", !easy, { onChange(false) }, Modifier.fillMaxWidth())
     }
 }
 

@@ -429,6 +429,33 @@ object Motivation {
         "Treat the viva as a conversation, and practise the conversation.",
     )
 
+    private val doneLines = listOf(
+        "That is one thing off your mind, and onto the finished pile.",
+        "Finished. Somewhere a calendar is quietly impressed.",
+        "Done is a lovely word, and you earned it.",
+        "You started it, you finished it. That is the whole trick.",
+        "One less thing waiting for you. Go and enjoy the quiet.",
+        "Well done. Your future self already sent a thank you note.",
+        "Another one down, and it did not even see you coming.",
+        "That took effort, and it shows. Take a proper break.",
+        "The deadline never stood a chance.",
+        "Finished early or finished late, finished is finished.",
+        "Tick. That sound is you getting better at this.",
+        "A small victory, and the good kind: the real kind.",
+        "You made it look easy. It was not, and you did it anyway.",
+        "Drink some water, stretch a little, and be proud for a minute.",
+        "That is how it is done: a bit at a time, then all at once.",
+        "Not everyone finishes things. You do.",
+    )
+
+    /** A line to say when something is finished. With a [name] some of them speak to the person. */
+    fun doneLine(seedKey: String, epochDay: Long, name: String? = null): String {
+        val h = Math.floorMod((seedKey.hashCode().toLong() * 31 + epochDay) * 2654435761L, doneLines.size.toLong()).toInt()
+        val line = doneLines[h]
+        val n = name?.trim()?.takeIf { it.isNotEmpty() } ?: return line
+        return if (h % 2 == 0) "$n, " + line.replaceFirstChar { it.lowercase() } else line
+    }
+
     /** How many different lines can come out, counting the extra pools. */
     fun possibleLines(): Int = Bucket.values().sumOf { b -> remarks.getValue(b).size * (nudges.getValue(b).size + started.size + medical.size + byGroup.values.maxOf { it.size }) } + closeRemarks.size * closeNudges.size
 
@@ -436,7 +463,14 @@ object Motivation {
      * One line for a deadline [seedKey] on day [epochDay]. [daysLeft] picks the pool, [started] swaps in praise when work has begun,
      * and [medical] mixes in study nudges. The same inputs always give the same line, and tomorrow gives a different one.
      */
-    fun line(daysLeft: Long, seedKey: String, epochDay: Long, started: Boolean = false, medical: Boolean = false, group: Group = Group.PERSONAL): String {
+    fun line(daysLeft: Long, seedKey: String, epochDay: Long, started: Boolean = false, medical: Boolean = false, group: Group = Group.PERSONAL, name: String? = null): String {
+        val plain = plainLine(daysLeft, seedKey, epochDay, started, medical, group)
+        // About one line in three speaks to the person by name, so it feels personal without becoming a habit.
+        val n = name?.trim()?.takeIf { it.isNotEmpty() } ?: return plain
+        return if (Math.floorMod((seedKey.hashCode().toLong() + epochDay) * 31, 3L) == 0L) n + ", " + plain.replaceFirstChar { it.lowercase() } else plain
+    }
+
+    private fun plainLine(daysLeft: Long, seedKey: String, epochDay: Long, started: Boolean, medical: Boolean, group: Group): String {
         val b = bucket(daysLeft)
         var h = (seedKey.hashCode().toLong() * 31 + epochDay) * 2654435761L
         h = h xor (h ushr 17)

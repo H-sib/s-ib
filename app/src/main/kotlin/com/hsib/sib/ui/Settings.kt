@@ -103,12 +103,13 @@ private fun LocalTime.hhmm() = "%02d:%02d".format(hour, minute)
 // ---- root ---------------------------------------------------------------------------------------
 
 @Composable
-fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> Unit) {
+fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> Unit, onEasy: (Boolean) -> Unit = {}) {
     val c = SibTheme.colors
+    val easy = st.settings.easyMode
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
         // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting. It can be hidden.
-        if ("makeit" !in st.settings.uiHidden) Row(
+        if ("makeit" !in st.settings.uiHidden && !easy) Row(
             Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(c.violet.copy(alpha = 0.14f))
                 .border(1.5.dp, c.violet.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).bounceClick { onNav("settings/course") }.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -121,9 +122,11 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
             }
         }
         Group(null, Modifier.padding(top = 0.dp)) {
+            ToggleRow("Easy mode", "Only the basics are shown. Switch it off to see everything the app can do.", easy, onEasy, icon = SibIcon.CHECK)
+            GroupDivider()
             NavItem("Guide", "Everything the app can do, in a few lines", { onNav("settings/guide") })
         }
-        if (social != null) {
+        if (social != null && !easy) {
             Group("Account") {
                 NavItem("Friends", social.user?.let { "Signed in as ${it.displayName}" } ?: "Share a deadline and chat about it", { onNav("friends") })
             }
@@ -131,11 +134,16 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
         Group("Daily use") {
             NavItem("Reminders", "Your time each day, quiet hours, how many reminders", { onNav("settings/reminders") })
             GroupDivider()
+            NavItem("Language", st.settings.language.native, { onNav("settings/language") }, icon = SibIcon.GLOBE)
+            GroupDivider()
+            if (!easy) {
             NavItem("Chats and notifications", if (st.settings.notificationReaderApps.isEmpty()) "Find deadlines in your chats" else "Reading ${st.settings.notificationReaderApps.size} apps", { onNav("settings/reader") })
             GroupDivider()
             NavItem("Notification dashboard", null, { onNav("settings/notifications") }, trailing = if (st.settings.todayNotification) "On" else "Off")
             GroupDivider()
             NavItem("Close ones", null, { onNav("settings/close") }, trailing = if (st.settings.closeOnesEnabled) "On" else "Hidden")
+            GroupDivider()
+            NavItem("Your name and hints", st.settings.callName ?: "Greeting and help hints", { onNav("settings/you") })
             GroupDivider()
             NavItem("Motivation", "A light line to get you going, for each kind of deadline", { onNav("settings/motivation") }, trailing = if (st.settings.motivationOn) "On" else "Off")
             GroupDivider()
@@ -145,17 +153,22 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
                 NavItem("Study tools", "Class routine, class diary and the study switch", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
                 GroupDivider()
             }
+            }
             NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
         }
         Group("Data and safety") {
             NavItem("Backup and restore", null, { onNav("settings/backup") }, trailing = if (st.settings.backupFolder != null) "On" else "Not set up")
             GroupDivider()
-            NavItem("Security", null, { onNav("settings/security") }, trailing = if (st.settings.appLock) "App lock on" else "App lock off")
-            GroupDivider()
+            if (!easy) {
+                NavItem("Security", null, { onNav("settings/security") }, trailing = if (st.settings.appLock) "App lock on" else "App lock off")
+                GroupDivider()
+            }
             NavItem("Privacy and data", "What is stored and which permissions it has", { onNav("settings/privacy") })
             GroupDivider()
-            NavItem("Sources", "What it can read, and what it keeps", { onNav("settings/sources") })
-            GroupDivider()
+            if (!easy) {
+                NavItem("Sources", "What it can read, and what it keeps", { onNav("settings/sources") })
+                GroupDivider()
+            }
             NavItem("Terms and security", "What you agreed to, and how data is protected", { onNav("settings/terms") })
         }
         Group("Help") {
@@ -235,7 +248,7 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         )
         Gap(12.dp)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            listOf(listOf(ThemeMode.LIGHT, ThemeMode.DARK), listOf(ThemeMode.BLACK, ThemeMode.NEON)).forEach { pair ->
+            listOf(listOf(ThemeMode.LIGHT, ThemeMode.DARK), listOf(ThemeMode.BLACK, ThemeMode.NEON), listOf(ThemeMode.COSMOS, ThemeMode.DUNE), listOf(ThemeMode.FOREST, ThemeMode.OCEAN)).forEach { pair ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     pair.forEach { mode -> ThemeSwatch(mode, mode == shown, { choose(mode) }, Modifier.weight(1f)) }
                 }
@@ -245,7 +258,7 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         Text("Turn off anything you do not need. Nothing here deletes anything.", style = SibType.small, color = SibTheme.colors.inkSoft)
         listOf(
             "also" to "Also coming up", "classes" to "Today's classes", "shortfall" to "Needs more time", "counts" to "Day counts",
-            "friends" to "Friends row", "review" to "To review row", "makeit" to "Make it yours card",
+            "friends" to "Friends row", "review" to "To review row", "makeit" to "Make it yours card", "focus" to "Focus session",
         ).forEach { (key, label) ->
             ToggleRow(label, null, key !in st.settings.uiHidden, { on -> scope.launch { ready.settings.update { it.copy(uiHidden = if (on) it.uiHidden - key else it.uiHidden + key) } } })
         }

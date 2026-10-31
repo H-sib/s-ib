@@ -214,6 +214,9 @@ interface RoutineSlotDao {
     @Query("SELECT * FROM routine_slot ORDER BY day, startMin")
     fun observeAll(): Flow<List<RoutineSlotEntity>>
 
+    @Query("SELECT * FROM routine_slot")
+    suspend fun all(): List<RoutineSlotEntity>
+
     @Upsert suspend fun upsert(e: RoutineSlotEntity)
 
     @Query("DELETE FROM routine_slot WHERE id = :id")
@@ -230,6 +233,9 @@ interface RoutineSlotDao {
 interface ClassNoteDao {
     @Query("SELECT * FROM class_note ORDER BY day DESC, subject")
     fun observeAll(): Flow<List<ClassNoteEntity>>
+
+    @Query("SELECT * FROM class_note")
+    suspend fun all(): List<ClassNoteEntity>
 
     @Upsert suspend fun upsert(e: ClassNoteEntity)
 

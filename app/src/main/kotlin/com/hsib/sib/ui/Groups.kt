@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.sp
 fun Group(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val c = SibTheme.colors
     Column(modifier.fillMaxWidth().padding(top = 28.dp)) {
-        if (title != null) Text(title, style = SibType.label.copy(letterSpacing = 0.8.sp), color = c.inkSoft, modifier = Modifier.padding(start = 8.dp, bottom = 10.dp))
+        if (title != null) Text(tr(title), style = SibType.label.copy(letterSpacing = 0.8.sp), color = c.inkSoft, modifier = Modifier.padding(start = 8.dp, bottom = 10.dp))
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised), content = content)
     }
 }
@@ -69,7 +69,7 @@ fun CollapsibleGroup(title: String, icon: SibIcon? = iconFor(title), content: @C
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) { IconBadge(icon, size = 40.dp); Spacer(Modifier.width(14.dp)) }
-            Text(title, style = SibType.title, color = c.ink, modifier = Modifier.weight(1f))
+            Text(tr(title), style = SibType.title, color = c.ink, modifier = Modifier.weight(1f))
             Canvas(Modifier.size(14.dp, 10.dp)) {
                 val p = Path().apply {
                     if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }
@@ -164,7 +164,7 @@ fun ExpandItem(title: String, body: String, icon: SibIcon? = iconFor(title)) {
     Column(Modifier.fillMaxWidth().animateContentSize().clickable(role = Role.Button) { open = !open }.padding(horizontal = 20.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
-            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
+            Text(tr(title), style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
             Canvas(Modifier.size(14.dp, 10.dp)) {
                 val p = Path().apply {
                     if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }

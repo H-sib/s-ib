@@ -41,6 +41,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -82,8 +83,8 @@ private fun cachedTheme(context: Context): ThemeMode =
     runCatching { ThemeMode.valueOf(context.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE).getString("theme", null) ?: "SYSTEM") }.getOrDefault(ThemeMode.SYSTEM)
 
 @Composable
-private fun Themed(mode: ThemeMode, space: Space, reduceMotion: Boolean, medical: Boolean = false, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalMedical provides medical) {
+private fun Themed(mode: ThemeMode, space: Space, reduceMotion: Boolean, medical: Boolean = false, lang: com.hsib.sib.data.Lang = com.hsib.sib.data.Lang.EN, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalMedical provides medical, LocalLang provides lang) {
     SibTheme(mode, space) {
         CompositionLocalProvider(LocalReduceMotion provides reduceMotion) {
             SystemBars()
@@ -152,7 +153,7 @@ fun SibRoot(
     val introMs = remember { introDuration(prefs) }
     var introDone by rememberSaveable { mutableStateOf(route != null || introMs == 0) }
 
-    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion, settingsKnown && st.settings.medicalMode && com.hsib.sib.core.medical.Courses.isMedical(st.settings.course)) {
+    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion, settingsKnown && st.settings.medicalMode && com.hsib.sib.core.medical.Courses.isMedical(st.settings.course), if (settingsKnown) st.settings.language else com.hsib.sib.data.Lang.EN) {
         val motion = rememberMotionEnabled()
         Crossfade(introDone, animationSpec = tween(if (motion) 520 else 0), label = "intro") { done ->
             when {
@@ -239,6 +240,12 @@ private fun Running(
     val context = LocalContext.current
     var showRestore by remember { mutableStateOf(false) }
 
+    // The language comes first, right after the opening, so everything after it can be read in the person's own language.
+    if (!st.settings.languageChosen && !st.settings.onboardingDone) {
+        LanguageScreen(st.settings.language) { lang -> scope.launch { ready.settings.update { it.copy(language = lang, languageChosen = true) } } }
+        return
+    }
+
     // Nothing is stored and nothing is asked until the terms have been read and accepted (again, if they change).
     if (st.settings.termsVersion < Terms.VERSION) {
         TermsScreen(
@@ -254,14 +261,14 @@ private fun Running(
         } else {
             Onboarding(
                 st.today, vm::demo, onRestore = { showRestore = true },
-                onFinish = { choice ->
+                onFinish = { choice, who, easyChoice ->
                     scope.launch {
                         // The first pick sets the app up with a sensible default for it. It can be changed under More, Make it yours.
                         val pick = when (choice) { "university" -> "University (general)"; "work" -> "Corporate office"; "life" -> "Home and family"; else -> null }
                         val course = com.hsib.sib.core.medical.CourseTemplates.all.firstOrNull { it.course.name == pick }?.course
                         ready.settings.update {
                             it.copy(
-                                onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE, medicalAsked = true,
+                                onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE, medicalAsked = true, userName = who, easyMode = easyChoice,
                                 medicalMode = choice != "none", courses = if (course != null) listOf(course) else it.courses,
                                 courseActive = course?.name ?: if (choice == "medical") com.hsib.sib.core.medical.Courses.mbbs.name else it.courseActive,
                             )
@@ -340,6 +347,8 @@ private fun Running(
     val back: () -> Unit = { nav.popBackStack() }
     val ms = if (reduce) 0 else MOTION_MS
 
+    var lastTouchAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    Box(Modifier.fillMaxSize().notingTouches { lastTouchAt = System.currentTimeMillis() }) {
     NavHost(
         nav, startDestination = "home",
         enterTransition = { fadeIn(tween(ms)) + slideInHorizontally(tween(ms)) { it / 12 } },
@@ -384,6 +393,8 @@ private fun Running(
         composable("settings/health") { HealthScreen(st, ready, back) }
         composable("settings/about") { AboutScreen(back, onTerms = { nav.navigate("settings/terms") }) }
         composable("settings/close") { CloseOnesSettings(st, ready, back) }
+        composable("settings/language") { LanguageSettings(st, ready, back) }
+        composable("settings/you") { YouSettings(st, ready, back) }
         composable("settings/motivation") { MotivationSettings(st, ready, back) }
         composable("settings/calendar") { CalendarSettings(st, ready, back) }
         composable("settings/course") { CourseScreen(st, ready, back, onEdit = { nav.navigate("course/edit/" + android.net.Uri.encode(it)) }, onWizard = { nav.navigate("course/wizard") }, onImport = { nav.navigate("course/import") }, onTemplates = { nav.navigate("course/templates/" + android.net.Uri.encode(it)) }) }
@@ -396,7 +407,9 @@ private fun Running(
         composable("study/routine") { ClassRoutineScreen(st, ready, back) }
         composable("settings/reader") { ReaderScreen(st, ready, back) }
         composable("settings/feedback") { FeedbackScreen(back) }
-        composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back, medical = st.settings.medicalMode) }
+        composable("settings/guide?topic={topic}", arguments = listOf(androidx.navigation.navArgument("topic") { type = androidx.navigation.NavType.StringType; nullable = true; defaultValue = null })) { e ->
+            GuideScreen(online = ready.social?.practice == false, onBack = back, medical = st.settings.medicalMode, startTopic = e.arguments?.getString("topic"))
+        }
         composable("settings/terms") {
             val on by produceState<String?>(null) { value = ready.settings.raw("termsAcceptedOn") }
             TermsScreen(online = BuildConfig.FIREBASE_READY, acceptedOn = on, onAccept = null, onBack = back)
@@ -438,6 +451,14 @@ private fun Running(
             }
         }
     }
+    val helpKey = entry?.destination?.route?.let { r -> if (r == "home") (if (tab == Tab.TODAY || tab == Tab.SETTINGS) null else "tab:${tab.name}") else r }
+    HelpNudge(
+        helpKey, st.settings.callName, ready, st.settings.helpHints, lastTouchAt,
+        onOpenGuide = { t -> nav.navigate("settings/guide?topic=" + android.net.Uri.encode(t)) },
+        modifier = Modifier.align(Alignment.BottomCenter),
+    )
+    }
+
 
     val importUi by vm.importUi.collectAsState()
     ImportDialog(importUi, onDismiss = vm::dismissImport) {
@@ -522,12 +543,12 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onJoin = { nav.navigate("friends/join") },
                         onAccount = { nav.navigate("friends/account") },
                     )
-                    Tab.SETTINGS -> SettingsHome(st, social = social, onNav = { nav.navigate(it) })
+                    Tab.SETTINGS -> SettingsHome(st, social = social, onNav = { nav.navigate(it) }, onEasy = { on -> scope.launch { ready.settings.update { it.copy(easyMode = on) } } })
                 }
             }
         }
         Box(Modifier.background(c.paper).windowInsetsPadding(WindowInsets.navigationBars)) {
-            SibBottomBar(tab, onTab, st.pending.size, social?.rooms?.values?.sumOf { it.unread } ?: 0, if (social != null) Tab.values().toList() else Tab.values().filter { it != Tab.MESSAGES })
+            SibBottomBar(tab, onTab, st.pending.size, social?.rooms?.values?.sumOf { it.unread } ?: 0, Tab.values().filter { (social != null && !st.settings.easyMode) || it != Tab.MESSAGES })
         }
     }
 }

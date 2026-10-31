@@ -11,7 +11,13 @@ import java.time.LocalTime
  * SYSTEM follows the phone between Light and Twilight. DARK is Twilight (the violet night theme). BLACK is true black with
  * white. NEON is near black with vivid colour. The names are kept so stored settings never break.
  */
-enum class ThemeMode(val label: String) { SYSTEM("Follow my phone"), LIGHT("Light"), DARK("Twilight"), BLACK("Black"), NEON("Neon") }
+enum class ThemeMode(val label: String) {
+    SYSTEM("Follow my phone"), LIGHT("Light"), DARK("Twilight"), BLACK("Black"), NEON("Neon"),
+    COSMOS("Cosmos"), DUNE("Dune"), FOREST("Forest"), OCEAN("Ocean"),
+}
+
+/** The language of the screens. English is complete; the others cover the main screens, buttons and settings and grow with each version. */
+enum class Lang(val label: String, val native: String) { EN("English", "English"), BN("Bengali", "বাংলা"), HI("Hindi", "हिन्दी") }
 
 enum class LockScreenDetail { HIDDEN, TITLES }
 
@@ -72,6 +78,15 @@ data class AppSettings(
     val routineWards: Int = 1,
     /** Parts of Today, Plan and More that this person chose to hide. Nothing is hidden by default. */
     val uiHidden: Set<String> = emptySet(),
+    val language: Lang = Lang.EN,
+    val languageChosen: Boolean = false,
+    /** Easy mode: only the basics are shown. Everything else is one switch away in Settings. */
+    val easyMode: Boolean = false,
+    /** What to call this person in greetings and reminders. Stays on the phone. Empty means no name is used. */
+    val userName: String = "",
+    val useName: Boolean = true,
+    /** A small "need a hand?" hint when someone seems stuck on a screen. */
+    val helpHints: Boolean = true,
     val motivationOn: Boolean = true,
     val motivationShow: Boolean = true,
     val motivationNotify: Boolean = true,
@@ -95,6 +110,9 @@ data class AppSettings(
     val backupHead: String? = null,
 ) {
     /** The course in use: the saved one with the chosen name, or the built in MBBS course. */
+    /** The name to use for this person, or null when none was given or it was switched off. */
+    val callName: String? get() = userName.trim().takeIf { useName && it.isNotEmpty() }
+
     val course: com.hsib.sib.core.medical.Course get() = courses.firstOrNull { it.name == courseActive } ?: com.hsib.sib.core.medical.Courses.mbbs
 
     fun reminder() = ReminderSettings(
@@ -125,7 +143,7 @@ object SettingsCodec {
         put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive); put("courseCount", s.courseCount.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
         put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
-        put("uiHidden", s.uiHidden.sorted().joinToString(",")); put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
+        put("uiHidden", s.uiHidden.sorted().joinToString(",")); put("language", s.language.name); put("languageChosen", s.languageChosen.toString()); put("easyMode", s.easyMode.toString()); put("userName", s.userName); put("useName", s.useName.toString()); put("helpHints", s.helpHints.toString()); put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -184,6 +202,12 @@ object SettingsCodec {
             routineLectures = m.int("routineLectures", d.routineLectures, 0..8),
             routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..2),
             routineWards = m.int("routineWards", d.routineWards, 0..2),
+            userName = m["userName"]?.filter { !it.isISOControl() }?.trim()?.take(30) ?: d.userName,
+            useName = m.bool("useName", d.useName),
+            helpHints = m.bool("helpHints", d.helpHints),
+            language = m.enum("language", d.language),
+            languageChosen = m.bool("languageChosen", d.languageChosen),
+            easyMode = m.bool("easyMode", d.easyMode),
             uiHidden = m["uiHidden"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..20 }?.take(20)?.toSet() ?: d.uiHidden,
             motivationOn = m.bool("motivationOn", d.motivationOn),
             motivationShow = m.bool("motivationShow", d.motivationShow),

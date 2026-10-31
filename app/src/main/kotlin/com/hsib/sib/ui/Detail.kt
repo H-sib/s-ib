@@ -132,6 +132,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
     var title by remember(id, o.title) { mutableStateOf(o.title) }
     var pickDate by remember { mutableStateOf<String?>(null) }
     var completing by remember { mutableStateOf(false) }
+    var celebrate by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
     var tab by rememberSaveable(id) { mutableStateOf(DetailTab.OVERVIEW) }
     var stepEditing by remember(id) { mutableStateOf<UserStep?>(null) }
@@ -227,7 +228,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                 val group = com.hsib.sib.core.motivation.Motivation.groupFor(o.category)
                 if (group.name !in st.settings.motivationOff && o.space == Space.WORK) {
                     val daysLeft = java.time.temporal.ChronoUnit.DAYS.between(st.today, due.dayIn(st.zone))
-                    val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, o.id, st.today.toEpochDay(), o.progressMin > 0 || o.parts.any { it.done }, st.settings.medicalMode && o.category.medical, group)
+                    val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, o.id, st.today.toEpochDay(), o.progressMin > 0 || o.parts.any { it.done }, st.settings.medicalMode && o.category.medical, group, st.settings.callName)
                     Spacer(Modifier.height(10.dp))
                     Text(line, style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(horizontal = 6.dp))
                 }
@@ -267,9 +268,15 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             }
 
             // ---- parts: several pieces due together ----
-            if (active && o.space == Space.WORK) {
+            if (active && o.space == Space.WORK && !st.settings.easyMode) {
                 Gap(12.dp)
                 PartsTile(o.parts) { scope.launch { save(o.copy(parts = it), "parts changed") } }
+            }
+
+            // ---- a focus session that adds the real time ----
+            if (active && effort != null && "focus" !in st.settings.uiHidden && !st.settings.easyMode) {
+                Gap(12.dp)
+                FocusTile(id, ready, st.settings.callName)
             }
 
             // ---- progress ----
@@ -301,7 +308,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             }
 
             // ---- files: only remembered, never copied ----
-            if (active && o.space == Space.WORK) {
+            if (active && o.space == Space.WORK && !st.settings.easyMode) {
                 Gap(12.dp)
                 FilesTile(o.links) { scope.launch { save(o.copy(links = it), "files changed") } }
             }
@@ -512,7 +519,18 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             ready.store.complete(id, note, bytes)
             ready.engine.refreshCalibration()
             ready.social?.markDone(id, true)
+            val weekAgo = Instant.now().minus(java.time.Duration.ofDays(7))
+            val count = 1 + st.items.count { it.o.id != id && it.o.lifecycle == Lifecycle.COMPLETED && (it.o.completedAt?.isAfter(weekAgo) == true) }
+            celebrate = com.hsib.sib.core.motivation.Motivation.doneLine(id, st.today.toEpochDay(), st.settings.callName) + "\n\n" + (if (count == 1) "That is your first one finished this week." else "That is $count finished this week.")
         }
+    }
+    celebrate?.let { line ->
+        AlertDialog(
+            onDismissRequest = { celebrate = null }, containerColor = c.raised,
+            title = { Text(st.settings.callName?.let { "Well done, $it" } ?: "Well done", style = SibType.headline, color = c.ink) },
+            text = { Text(line, style = SibType.body, color = c.inkSoft) },
+            confirmButton = { TextButton({ celebrate = null }) { Text("Thank you", style = SibType.bodyStrong, color = c.ink) } },
+        )
     }
 
     if (confirmDelete) {
