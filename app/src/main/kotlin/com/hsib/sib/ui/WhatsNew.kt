@@ -22,6 +22,16 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            2, "1.0.1",
+            listOf(
+                "A month view in Plan marks your deadlines on a calendar.",
+                "Split one deadline into parts, such as 7 assignments, and watch a battery fill as you tick them off.",
+                "Today now shows your next few deadlines, not only one.",
+                "Clearer words when there is not enough time, and for hours done.",
+                "Friend is now a choice in Close ones.",
+            ),
+        ),
+        Entry(
             1, "1.0",
             listOf(
                 "Share a message, photo or file and the deadline is found for you.",

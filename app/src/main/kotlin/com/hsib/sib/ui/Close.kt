@@ -128,7 +128,7 @@ object CloseTemplates {
         all.firstOrNull { it.category == o.category && it.repeat == o.repeat } ?: all.firstOrNull { it.category == o.category } ?: all.last()
 }
 
-private val RELATIONS = listOf("Partner", "Girlfriend", "Boyfriend", "Wife", "Husband", "Someone special")
+private val RELATIONS = listOf("Partner", "Girlfriend", "Boyfriend", "Wife", "Husband", "Friend", "Best friend", "Someone special")
 private val LEAD_CHOICES = listOf(60, 30, 21, 14, 7, 3, 2, 1)
 
 /** "4 years together", "Turns 28": derived from the original date, never stored. Null when there is nothing to count. */

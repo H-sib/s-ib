@@ -8,6 +8,7 @@ import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Obligation
+import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
 import com.hsib.sib.core.model.Repeat
 import com.hsib.sib.core.model.Space
@@ -49,6 +50,7 @@ data class ObligationDto(
     val person: String = "",
     val relation: String = "",
     val since: String? = null,
+    val parts: String = "",
 ) {
     fun toModel(): Obligation = Obligation(
         id = id, title = title, notes = notes,
@@ -68,7 +70,7 @@ data class ObligationDto(
         repeat = runCatching { Repeat.valueOf(repeat) }.getOrDefault(Repeat.NONE),
         repeatAnchor = repeatAnchor?.let(LocalDate::parse),
         leadDays = leadDays.split(",").mapNotNull { it.toIntOrNull() },
-        person = person, relation = relation, since = since?.let(LocalDate::parse),
+        person = person, relation = relation, since = since?.let(LocalDate::parse), parts = Part.decode(parts),
     )
 
     companion object {
@@ -81,7 +83,7 @@ data class ObligationDto(
             lifecycle = o.lifecycle.name, postponedUntil = o.postponedUntil?.toString(), progressMin = o.progressMin,
             createdAt = o.createdAt.toEpochMilli(), updatedAt = o.updatedAt.toEpochMilli(), completedAt = o.completedAt?.toEpochMilli(),
             space = o.space.name, repeat = o.repeat.name, repeatAnchor = o.repeatAnchor?.toString(), leadDays = o.leadDays.joinToString(","),
-            person = o.person, relation = o.relation, since = o.since?.toString(),
+            person = o.person, relation = o.relation, since = o.since?.toString(), parts = Part.encode(o.parts),
         )
     }
 }

@@ -156,7 +156,7 @@ fun PlusButton(description: String = "Add a deadline", onClick: () -> Unit) {
 // ---- today -----------------------------------------------------------------------------------
 
 private fun weekPhrase(st: AppState, fmt: Fmt): String {
-    st.plan.shortfall?.let { return "Short by ${fmt.minutes(it.missingMin)} before ${fmt.dayNoWeek(it.toDay)}" }
+    st.plan.shortfall?.let { return "Needs ${fmt.minutes(it.missingMin)} more time before ${fmt.dayNoWeek(it.toDay)}" }
     val days = (0 until 7).map { st.today.plusDays(it.toLong()) }
     val cap = days.sumOf { st.plan.capacityByDay[it] ?: 0 }
     val load = days.sumOf { st.plan.loadByDay[it] ?: 0 }
@@ -204,6 +204,16 @@ fun TodayScreen(
         Gap(24.dp)
         NextCard(next, st, fmt, onOpen, onAdd, nextStep(st), onLog, shared = next != null && social?.roomFor(next.o.id) != null)
 
+        // The hero shows the next one; the others wait right below it so nothing is hidden behind "All deadlines".
+        val others = items.filter { it !== next && it.urgency != UrgencyState.MOVED }.take(3)
+        if (others.isNotEmpty()) {
+            Gap(20.dp)
+            SectionHeader("Also coming up", count = others.size)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                others.forEach { v -> ObligationRow(v, fmt, st.today, st.zone, st.now, { onOpen(v.o.id) }, shared = social?.roomFor(v.o.id) != null) }
+            }
+        }
+
         if (overdue + dueToday + thisWeek > 0) {
             Gap(16.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -245,7 +255,7 @@ fun TodayScreen(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.vermilionWash).bounceClick(onClick = onPlan).padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Short by ${fmt.minutes(s.missingMin)}", style = SibType.title, color = c.vermilion, modifier = Modifier.weight(1f))
+                Text("Needs ${fmt.minutes(s.missingMin)} more time", style = SibType.title, color = c.vermilion, modifier = Modifier.weight(1f))
                 Text("Options", style = SibType.bodyStrong, color = c.vermilion)
             }
         }
@@ -393,6 +403,7 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
         Gap(24.dp)
         when (view) {
             PlanView.WEEK -> WeekView(st, fmt, selected, { selected = it }, onOpen)
+            PlanView.MONTH -> MonthView(st, fmt, selected, { selected = it }, onOpen)
             PlanView.RUNWAY -> Runway(remember(st.items, st.pending, st.today) { runwayItems(st) }, st.today, fmt, onOpen)
             PlanView.LOAD -> {
                 LoadHorizon(st.plan, st.today, fmt, weekStart = st.settings.weekStart)
@@ -404,7 +415,7 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
     }
 }
 
-private enum class PlanView(val label: String) { WEEK("Week"), RUNWAY("Runway"), LOAD("Load") }
+private enum class PlanView(val label: String) { WEEK("Week"), MONTH("Month"), RUNWAY("Runway"), LOAD("Load") }
 
 @Composable
 private fun WeekView(st: AppState, fmt: Fmt, selected: LocalDate, onSelect: (LocalDate) -> Unit, onOpen: (String) -> Unit) {
@@ -415,6 +426,13 @@ private fun WeekView(st: AppState, fmt: Fmt, selected: LocalDate, onSelect: (Loc
     }
     WeekStrip(cells, selected, st.today, fmt, onSelect)
     Gap(20.dp)
+    DayDetails(st, fmt, selected, onOpen)
+}
+
+/** What is due and planned on one day. Shared by the week and month views. */
+@Composable
+fun DayDetails(st: AppState, fmt: Fmt, selected: LocalDate, onOpen: (String) -> Unit) {
+    val c = SibTheme.colors
     val dayBlocks = st.plan.blocks.filter { it.day == selected }
     val dueThatDay = st.active.filter { it.dueInstant?.atZone(st.zone)?.toLocalDate() == selected }
     if (dayBlocks.isEmpty() && dueThatDay.isEmpty()) {
@@ -452,7 +470,7 @@ private fun ShortfallCard(s: com.hsib.sib.core.plan.Shortfall, st: AppState, fmt
     val c = SibTheme.colors
     var open by rememberSaveable { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(30.dp)).background(c.vermilionWash).padding(22.dp)) {
-        Text("Short by ${fmt.minutes(s.missingMin)}", style = SibType.display, color = c.vermilion)
+        Text("Needs ${fmt.minutes(s.missingMin)} more time", style = SibType.display, color = c.vermilion)
         Text("Before ${fmt.dayNoWeek(s.toDay)}", style = SibType.body, color = c.ink)
         Gap(14.dp)
         SibButton(if (open) "Hide options" else "See options", { open = !open }, kind = ButtonKind.QUIET)

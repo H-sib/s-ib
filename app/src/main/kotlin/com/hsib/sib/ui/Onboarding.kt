@@ -170,7 +170,7 @@ private fun PagePlan(today: LocalDate) {
         Text("It fits. Start by ${plan.latestStart["report"]?.let { fmt.dayShort(it) } ?: "today"}.", style = SibType.title, color = c.verdigris)
     } else {
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.vermilionWash).padding(horizontal = 20.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Short by ${fmt.minutes(s.missingMin)}", style = SibType.title, color = c.vermilion)
+            Text("Needs ${fmt.minutes(s.missingMin)} more time", style = SibType.title, color = c.vermilion)
         }
     }
 }

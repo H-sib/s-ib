@@ -10,6 +10,7 @@ import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Obligation
+import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
 import com.hsib.sib.core.model.Reason
 import com.hsib.sib.core.model.Relation
@@ -47,6 +48,7 @@ fun ObligationEntity.toModel(): Obligation = Obligation(
     leadDays = leadDays.split(",").mapNotNull { it.toIntOrNull() },
     person = person, relation = relation,
     since = since?.let(LocalDate::parse),
+    parts = Part.decode(parts),
 )
 
 fun Obligation.toEntity(): ObligationEntity = ObligationEntity(
@@ -58,6 +60,7 @@ fun Obligation.toEntity(): ObligationEntity = ObligationEntity(
     createdAt = createdAt.toEpochMilli(), updatedAt = updatedAt.toEpochMilli(), completedAt = completedAt?.toEpochMilli(),
     space = space.name, repeat = repeat.name, repeatAnchor = repeatAnchor?.toString(), leadDays = leadDays.joinToString(","),
     person = person, relation = relation, since = since?.toString(),
+    parts = Part.encode(parts),
 )
 
 @Serializable

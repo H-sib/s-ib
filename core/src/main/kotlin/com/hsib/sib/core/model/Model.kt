@@ -123,7 +123,11 @@ data class Obligation(
     val relation: String = "",
     /** For an anniversary: the day it all began. */
     val since: LocalDate? = null,
+    /** Smaller pieces of one deadline, for example seven assignments due together. Empty when the deadline is a single piece. */
+    val parts: List<Part> = emptyList(),
 ) {
+    val partsDone: Int get() = parts.count { it.done }
+
     /** Remaining expected work in minutes (never negative). */
     fun remainingExpectedMin(): Int = ((effort?.expectedMin ?: 0) - progressMin).coerceAtLeast(0)
 
@@ -135,6 +139,17 @@ data class Obligation(
         fog != null -> fog.earliest
         due != null -> due.dayIn(deviceZone)
         else -> null
+    }
+}
+
+/** One piece of a deadline, with a name the person can change and a done mark. */
+data class Part(val name: String, val done: Boolean = false) {
+    companion object {
+        /** Stored as one line per part: 0 or 1 for done, a bar, then the name. */
+        fun encode(parts: List<Part>): String = parts.joinToString("\n") { (if (it.done) "1|" else "0|") + it.name.replace('\n', ' ') }
+
+        fun decode(text: String): List<Part> =
+            if (text.isEmpty()) emptyList() else text.split("\n").map { Part(it.substringAfter('|'), it.startsWith("1")) }
     }
 }
 
