@@ -1,0 +1,42 @@
+HOW TO CONTINUE H-SIB REMINDER IN A CLAUDE CLOUD SESSION (for the owner, plain steps)
+Written 2026-10-31. Everything the new session needs to know is already in the project (docs\HANDOFF.txt and CLAUDE.md), so you do not have to explain anything.
+
+ONE TIME SETUP (about 10 minutes)
+ 1. Open https://claude.ai/code and sign in.
+ 2. Connect GitHub when it asks (install the Claude app for GitHub and allow it on the repository H-sib/s-ib only).
+ 3. Start a New session, choose the repository H-sib/s-ib, branch main.
+ 4. If it asks for an environment: name it "hsib", set the setup script to:   bash tools/cloud-setup.sh
+    (it installs Java and the Android tools by itself; the first start takes a few minutes)
+ 5. Leave network access on the default setting. It needs to download from Google and Maven.
+
+EVERY TIME YOU HAVE TESTER FEEDBACK
+ 1. On your PC open docs\FEEDBACK_LOG.txt, paste the feedback under OPEN (any language), save, then run in a terminal in the project folder:
+        git add -A
+        git commit -m "Add tester feedback"
+        git push
+    (or open the file on github.com/H-sib/s-ib, click the pencil, paste, and Commit changes)
+ 2. In the cloud session type this one message:
+        Read CLAUDE.md and docs/HANDOFF.txt. Fix the OPEN items in docs/FEEDBACK_LOG.txt, test, bump the version to the next one, and open a pull request. Keep your answers short.
+ 3. When it says it is done, open the pull request link, read the short summary, and press "Merge pull request".
+
+RELEASING (on your PC, you do this yourself)
+ 1. In the project folder:   git pull
+ 2. Run:   powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1
+    Wait until it finishes. Open offline-report.txt: it must say 0 failures. The file to upload appears at  release\h-sib-reminder-release.aab
+ 3. Play Console, your H-sib Reminder app: Test and release, Testing, Closed testing, Alpha, "Create new release".
+ 4. Drag the .aab file into the upload box and wait until it says the bundle is uploaded.
+ 5. Release notes: paste the text from store\listing.txt (the WHAT'S NEW block) between <en-GB> and </en-GB>.
+ 6. Next, Save, then go to Publishing overview and press "Submit changes for review". Testers get the update within hours.
+ 7. If Play says the version code is already used, the new version was not bumped: ask the cloud session to bump it again.
+
+IF SOMETHING GOES WRONG
+ - The cloud session cannot build: copy the red error text into a new message and say "fix the cloud setup".
+ - Tests fail: ask the session to show only the failing test name and the one-line reason, then fix it.
+ - You are unsure: the safest answer is to do nothing. The testers keep using version 1.0.0 safely until you upload a new one.
+ - Never share these files with anyone: release\upload-keystore.p12, release\keystore.properties, app\google-services.json. A copy of the two release files is on your phone in
+   Documents\H-sib-signing-backup. Move them into your password manager when you can.
+
+TOKEN SAVING TIPS
+ - Paste feedback in one go and ask for one release at a time.
+ - Do not ask the session to look at all screenshots; ask for one screen.
+ - Let it work without long explanations: say "keep your answers short".

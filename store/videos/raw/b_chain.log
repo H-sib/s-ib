@@ -1,0 +1,107 @@
+tapx Plan -> ('Plan', 506, 2275)
+tapx Add a deadline -> ('Add a deadline', 954, 195)
+set Describe it -> ('Describe it', 540, 456)
+tapx Save -> ('Save', 540, 2220)
+   179   105 Back
+   178   508 Assignment
+   179   927 Done
+   317   102 Due soon
+   317   261 Due soon
+   485   540 Essay due about 8 hours
+   725   226 Overview
+   725   540 Steps
+   725   854 History
+   936   393 Sat, Oct 31, 6:00 PM
+  1022   214 in 19 h
+  1156   426 Not enough time at your usual pace
+  1390   174 Change the date
+  1390   417 Add to calendar
+  1390   661 Send as a calendar file. Notes and progress stay private.
+  1390   905 Share with people
+  1629   422 0 min of 8 h 24 min
+  1830   246 Add 15 minutes
+  1830   539 Add 30 minutes
+  1830   833 Add 1 hour
+  2098   592 Plan
+  2269   592 Tune
+   195   477 Plan
+   195   954 Add a deadline
+   421   521 Short by 5 h 30 min
+   498   259 Before Oct 31
+   628   302 See options
+   892   226 Week
+   892   540 Runway
+   892   855 Load
+  1198   126 Fri, Oct 30, 2 h planned
+  1081   126 Fri
+  1140   126 30
+  1198   263 Sat, Oct 31, 1 due, 1 h planned
+  1081   264 Sat
+  1140   264 31
+  1198   401 Sun, Nov 1, 45 min planned
+  1081   402 Sun
+  1140   402 1
+  1198   539 Mon, Nov 2, 30 min planned
+  1081   540 Mon
+  1140   539 2
+  1198   677 Tue, Nov 3, 30 min planned
+  1081   677 Tue
+  1140   677 3
+  1198   815 Wed, Nov 4, 45 min planned
+  1081   816 Wed
+  1140   816 4
+  1198   953 Thu, Nov 5, 1 due, 45 min planned
+  1081   953 Thu
+  1140   953 5
+  1491   246 2 h
+  1491   676 Essay due about 8 hours
+  2275   166 Today
+  2275   438 Plan
+  2275   483 Plan
+  2275   710 Review
+  2275   914 More
+tapx Plan -> ('Plan', 477, 195)
+tapx Runway -> ('Runway', 540, 892)
+tapx Load -> ('Load', 855, 892)
+tapx Week -> ('Week', 226, 892)
+tapx See options -> ('See options', 302, 628)
+   195   477 Plan
+   195   954 Add a deadline
+   421   521 Short by 5 h 30 min
+   498   259 Before Oct 31
+   628   313 Hide options
+   810   540 Find 2 h 45 min more a day, Oct 30 to Oct 31
+   962   540 Ask for 4 more days on Essay due about 8 hours
+  1114   540 Cut 5 h 30 min from Essay due about 8 hours
+  1385   226 Week
+  1385   540 Runway
+  1385   855 Load
+  1691   126 Fri, Oct 30, 2 h planned
+  1574   126 Fri
+  1633   126 30
+  1691   263 Sat, Oct 31, 1 due, 1 h planned
+  1574   264 Sat
+  1633   264 31
+  1691   401 Sun, Nov 1, 45 min planned
+  1574   402 Sun
+  1633   402 1
+  1691   539 Mon, Nov 2, 30 min planned
+  1574   540 Mon
+  1633   539 2
+  1691   677 Tue, Nov 3, 30 min planned
+  1574   677 Tue
+  1633   677 3
+  1691   815 Wed, Nov 4, 45 min planned
+  1574   816 Wed
+  1633   816 4
+  1691   953 Thu, Nov 5, 1 due, 45 min planned
+  1574   953 Thu
+  1633   953 5
+  1984   246 2 h
+  1984   676 Essay due about 8 hours
+  2275   166 Today
+  2275   438 Plan
+  2275   483 Plan
+  2275   710 Review
+  2275   914 More
+recorded b_plan 887 KB, 5 taps

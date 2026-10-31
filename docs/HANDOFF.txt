@@ -1,0 +1,132 @@
+H-SIB REMINDER: FULL HANDOFF FOR A NEW CLAUDE SESSION (written 2026-10-31)
+Read this once at the start. It replaces the long chat history. For depth, docs\RESUME.txt (newest status at the bottom), docs\DECISIONS.txt,
+docs\FRIENDS_AND_CHAT_DESIGN.txt, docs\SECURITY_REVIEW.txt and store\PLAY_CONSOLE_RELEASE_GUIDE.txt hold the details. Do not read them all.
+
+======================================================================================================================
+1. WHO AND WHAT
+======================================================================================================================
+Owner: Chowdhury Hasibur Rahaman, goes by H-sib (GitHub, Play, YouTube). Lives in Bangladesh. Security researcher building portfolio apps, works alone.
+He has very little AI budget: keep answers short, plain and few. He is not an Android expert. He reads English; testers may write feedback in Bangla, Hindi or English
+(you translate; the app UI stays English). Address him simply, no jargon, give exact clicks when he must do something.
+App: H-sib Reminder, package com.hsib.sib, store title "H-sib Reminder: Deadlines". "sib" means Start It Before, the main idea. Offline-first and privacy-first
+Android deadline planner: finds dates in what you receive, works out the latest safe day to start, reminds calmly. Optional sharing and chat with friends
+(Google sign in, Firebase, end to end sealed). Version 1.0.0 (code 1). It is live in Google Play CLOSED TESTING (track "Alpha", email list "Closed testers",
+28 people, 178 countries). Next: testers give feedback, fix, release 1.0.1, keep 12 or more testers opted in for 14 days, then apply for production.
+Repository: https://github.com/H-sib/s-ib (public, branch main). Web pages (GitHub Pages from site\): https://h-sib.github.io/s-ib/ privacy.html, terms.html,
+delete-account.html. Support email shown on Play: chr.siam7@gmail.com.
+
+======================================================================================================================
+2. OWNER'S RULES AND TASTE (follow these every time)
+======================================================================================================================
+Writing: no em dashes and no en dashes anywhere (code comments, docs, UI, store text). No exclamation marks or the word "just" in app and store text (tools\words-check.py
+enforces). No .md files except CLAUDE.md: use .txt or .html. Be honest: say what was never run on a real device. Short replies.
+Commits: author "Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>", NO Co-Authored-By line, no AI attribution. Never push secrets. Do not send emails or messages
+to anyone unless he names who. Do not change Firebase, Google Cloud, Play Console or phone security settings yourself: tell him the exact clicks.
+Design (he is picky; he rejected an editorial look):
+ - Bold tiles, little text, whitespace, layered screens, graded colour, a cool intro, Gen Z feel but usable by older and minimalist people.
+ - He LOVES the Home screen (Today tab) and the current separated-weeks load chart (ui\Charts.kt LoadHorizon). Do not change them unless asked.
+ - Icon-led screens: own icon set (ui\Icons.kt, SibIcon). Rows show an icon and a short title; extra options are folded behind one-word rows (ui\Tiles.kt FoldItem).
+ - The chat (ui\ChatUi.kt) is deliberately quiet: one tone for page and bubbles, thin outlines only, nonchalant, Instagram-like concept.
+ - The name is styled "H-" and "Reminder" faded, "sib" in the gradient and heavy, ALL THE SAME SIZE (ui\Groups.kt AppName). Never shrink the other parts.
+ - Subtle animated scroll hint at the bottom of scrolling pages (ui\ScrollCue.kt). Notification bar card is drawn art in Sora font (platform\DashboardArt.kt).
+Legal: world wide audience. Terms govern by Bangladesh law with consumer rights kept. Offline app 13 plus, sharing and chat 16 plus.
+
+======================================================================================================================
+3. HOW THE CODE IS ORGANISED
+======================================================================================================================
+core\ pure Kotlin (no Android): extraction of dates, planning engine, urgency, model, social crypto (XChaCha20-Poly1305, X25519 key wrap, invite codes).
+app\ Android: Kotlin 2.4, Compose with own components, Room 2.8 (SQLCipher, schema v2, exported schemas in app\schemas), WorkManager, Glance widget, Tink.
+  ui\       screens. Root.kt (navigation, intro, terms gate), Home.kt (Today, Plan, Review, More), Detail.kt (deadline page), Add.kt, Settings.kt, Social.kt,
+            Room.kt (people and chat screen), ChatUi.kt, Groups.kt (settings rows, AppName, HsibMark), Tiles.kt (IconAction, FoldItem, QuickAdd), Icons.kt,
+            ScrollCue.kt, Intro.kt, Terms.kt (first run terms gate, Terms.VERSION), WhatsNew.kt (needs an entry per versionCode), Guide.kt, Theme.kt (4 themes, 8 palettes).
+  platform\ notifications (Notifier, Dashboard.kt and DashboardArt.kt for the bar card, Reminders), widget, tile, backups, notification reader, Ingest.
+  social\   SocialRepository (the brain), SocialBackend interface, FakeBackend (in memory, also practice mode in debug), firebase\ (FirestoreBackend, auth,
+            mapping, setup). Rooms are sealed on the phone; the server only holds ciphertext, membership and times.
+  data\     Room database, Settings (AppSettings, codec), Store.
+firebase\firestore.rules is the server side of the permissions; tests in firebase\tests have never been run (needs npm and the emulator).
+tools\ checks: hygiene.py (dashes and unused imports; getValue and setValue unused-import reports are false positives), words-check.py, contrast-check.py,
+release-gate.py (manifest against privacy page, what's new entry, secrets scan), offline-pipeline.ps1 (everything, builds the signed bundle, Windows only),
+store-graphics.py (Play graphics from the shot tests), gw.ps1 (Gradle on the owner's Windows PC), cloud-setup.sh (Linux cloud session).
+Important rules enforced by tests: ArchitectureTest (only ui and AppContainer import the social package; network libraries only inside social\; the notification reader,
+Ingest, Backup and similar never mention sharing); LayoutAuditTest (text must not be cut off or ellipsised at font scales 1.0, 1.3 and 2.0 on a 360 dp screen);
+MigrationTest (Room); screenshot tests with Roborazzi (-Precord=true writes app\build\shots). SocialRepositoryTest (22 tests) covers sharing, chat, account switching and the consent record.
+Firebase is DORMANT unless app\google-services.json exists (git-ignored; the owner has it on his PC). Without it the build has no INTERNET permission and social uses practice mode.
+So a cloud build works and tests pass without any secret.
+
+======================================================================================================================
+4. WHAT EXISTS AND HOW IT BEHAVES (state on 2026-10-31)
+======================================================================================================================
+ - First run: intro (dots roll into the H-sib mark, ui\Intro.kt), terms gate (must accept), onboarding. Offline features need no account.
+ - Today, Plan (week load chart), Review (suggestions), More (Settings, Friends, Guide). Close ones (private personal dates, own look).
+ - Deadline page (Detail.kt): tinted date tile with countdown, four icon actions (Move, Calendar, Send, Share or Chat), progress tile with QuickAdd pills, folded rows Plan, Tune, Pause, More.
+ - Sharing and chat: Google sign in (Credential Manager), invite codes, quiet chat, report and block, delete account. Community rules accepted before first share, join or message.
+   The acceptance is recorded on the server once per version at users/{uid}/consent/rules-N with the server's time (SocialRepository.recordConsentIfNeeded); local copies in settings.
+ - Account switching on one phone: SocialRepository.forgetRoomsOfOtherAccount runs first in every sync, signIn tail is NonCancellable (a bug fix; keep it).
+ - Notification bar card: default ON, colour by urgency and critical importance, ring and day dots, Open and Done. Swipe hides it for that deadline and tone until tomorrow
+   (settings.dashboardHidden). "Keep it after Clear all" is settings.todayPinned (ongoing) with a confirm dialog.
+ - Settings pages use grouped cards with auto icons (iconFor(title) in Icons.kt).
+ - When a room is re-found on a phone (new phone or restore) adoptRoom creates a NEW local deadline for it. Known, accepted.
+
+======================================================================================================================
+5. GOOGLE SIDE STATE (only the owner can change these; he is signed in as chr.siam7@gmail.com, authuser=1)
+======================================================================================================================
+Firebase and Cloud project: h-sib-reminder (number 304248086). Firestore (default) rules in firebase\firestore.rules are PUBLISHED. If you change the rules file the owner must paste and publish it
+in Firebase console, Firestore, Rules. Authentication: Google enabled. App Check: Play Integrity registered, enforcement OFF on purpose (turn on only after the App Check page shows verified
+requests from testers; Firestore first, then Authentication). The Android API key is restricted to package com.hsib.sib with three SHA-1 fingerprints.
+Fingerprints known to Firebase: upload SHA-1 4F:3B:69:F1:AC:CE:6C:C5:15:C3:FB:E6:E6:F7:85:A8:B5:AC:49:A7 (SHA-256 3D:94:8D:4F:...:21:12:D6); debug SHA-1 18:99:30:20:FF:35:F2:48:52:60:85:12:4D:72:F5:87:B4:ED:8B:CC;
+Play app signing SHA-1 CE:E9:0B:13:2B:B1:41:9D:F0:96:ED:C9:1D:43:D9:E9:0F:23:35:5D, SHA-256 60:1B:5B:93:3C:40:24:5A:A1:92:36:64:2B:05:63:92:86:03:D8:2B:7A:FF:40:45:2B:40:41:E7:4E:1E:0F:D8.
+OAuth consent screen: In production, External. Play Integrity API is linked in Play Console to this project.
+Play Console: app com.hsib.sib, closed track Alpha, release 1.0.0 (1) available to testers. The store listing is complete (a typo fix of the descriptions was sent for review on 2026-10-31).
+Data safety, content rating, target audience 18 plus, account deletion URL, privacy URL are done (answers in store\ files). Tester opt-in link: https://play.google.com/apps/testing/com.hsib.sib
+
+======================================================================================================================
+6. THE RELEASE PROCEDURE (the owner does this on his Windows PC; you prepare the code)
+======================================================================================================================
+You (cloud session) must: fix the issue, add or update a test, bump versionCode and versionName in app\build.gradle.kts (for example 2 and 1.0.1), add a WhatsNew entry for the new
+versionCode in app\src\main\kotlin\com\hsib\sib\ui\WhatsNew.kt (the release gate fails without it), keep the Play What's new text in store\listing.txt (max 500 characters) in step,
+run the narrow tests plus the full suite once, run the python checks, push a branch and open a pull request. If the change alters what a person agrees to, raise Terms.VERSION (ui\Terms.kt)
+and SocialLimits.TERMS_VERSION (core), and update site\terms.html and site\privacy.html first.
+The owner then: merges the pull request on GitHub, on his PC runs  git pull  then  powershell -ExecutionPolicy Bypass -File .\\tools\\offline-pipeline.ps1  (builds the signed bundle
+release\\h-sib-reminder-release.aab; the upload key and its properties live in release\\, git-ignored, backed up on his phone in Documents\\H-sib-signing-backup).
+Then in Play Console: Test and release, Testing, Closed testing, Alpha, Create new release, drag the .aab in, paste release notes (wrapped in <en-GB> tags), Next, Save, then Publishing
+overview, Submit changes for review. Closed test updates usually appear within hours. Tell him each click in plain words if he asks.
+Never tell him to upload release\\s-ib-release.aab (old).
+
+======================================================================================================================
+7. TESTER FEEDBACK INTAKE
+======================================================================================================================
+Testers use Settings, Send feedback (shares text with app version and phone model) or reply to the owner. The owner pastes raw feedback into docs\FEEDBACK_LOG.txt under OPEN.
+Triage each item: reproduce with a test or a Robolectric shot if it is visual, fix, add a test, mark it DONE with the commit. Group small fixes into one release. Do not
+redesign things the owner loves. Reply to the owner in a few lines: what was fixed, what needs his click.
+
+======================================================================================================================
+8. WHAT IS VERIFIED AND WHAT IS NOT
+======================================================================================================================
+Verified: all unit, layout, architecture and screenshot tests; release gate; two accounts shared a deadline, joined by code and chatted on the real Firebase project; the Play-installed
+copy signed in with Google on his Sony SOV43 phone; consent record rules published; API key restriction works.
+Not verified: Firestore rules in the emulator (firebase\tests, needs npm approval), screen reader and right to left checks, long battery and monkey runs, Play Integrity enforcement,
+production traffic, lawyer review of terms and privacy (owner cannot afford one; they are careful good faith drafts).
+Ideas not done: icons on Plan and Review tabs, Settings toggle rows, Guide and People screen buttons; upload native debug symbols; OAuth branding logo.
+
+======================================================================================================================
+9. PITFALLS WE ALREADY HIT (do not repeat)
+======================================================================================================================
+ - Weak phone GPU (Adreno 610): never repaint full screen gradients every frame; cache layers. Intro and cards keep paint work small.
+ - Robolectric and Compose tests hang with infinite animations: use finite animations only (ScrollCue plays three bounces then rests).
+ - LayoutAuditTest fails if any text is cut off or ellipsised: stack buttons vertically when LocalDensity.fontScale is above 1.15; avoid maxLines with ellipsis on titles.
+ - A shader fill takes the transparency of the paint colour set before it: set paint.color to an opaque colour before using a shader (DashboardArt).
+ - Coroutines started from a composable are cancelled when it leaves composition (sign in screen): finish important work in NonCancellable.
+ - Typing "ctrl+a" through browser automation can insert the letter a: avoid it when editing store text.
+ - Source files mix CRLF and LF line endings: edit with tools that preserve them (the Edit tool is fine; in Python use newline='').
+ - Release build must keep INTERNET only because of sharing; the privacy page, terms and release gate must stay in step with the manifest and the app texts.
+ - Kotlin edits: check imports (hygiene.py lists unused ones); Settings.kt needs the sp import for AppName calls.
+ - The word "just", exclamation marks, trailing dots and em dashes fail the checks.
+
+======================================================================================================================
+10. WORKING IN THE CLOUD SESSION (keep tokens low)
+======================================================================================================================
+Start: bash tools/cloud-setup.sh (once per fresh machine), then ./gradlew --version. Read docs\FEEDBACK_LOG.txt and the last 60 lines of docs\RESUME.txt. Use Grep before Read; read only the
+function you need. Run one test class at a time: ./gradlew :app:testDebugUnitTest --tests "com.hsib.sib.ui.LayoutAuditTest" -q ; run everything once before the pull request:
+./gradlew :core:test :app:testDebugUnitTest -q . Screenshots (only when a visual check is needed): add -Precord=true and look at the single image in app\build\shots, never all of them.
+You cannot reach his phone, Brave, Play Console or Firebase from the cloud: say what he must click. Commit often in small steps. When done, write 3 to 6 plain lines to the owner.
+Append a dated block to docs\RESUME.txt for the next session (what changed, what is open).

@@ -1,0 +1,23 @@
+# H-sib Reminder trailer. 124 bpm, 76 beats, about 37 s. Direction: stopwatch concept realised by the app's own ring, swung rhythm, wipe whip pop only.
+newlook|sib|base=bright|bg=#0D0B1F|ink=#F7F4FF|accent=#A28FFF|dim=#CFC8F0|frame=#221E47|font=verdanab.ttf|backdrop=grid|phone=thin|caption=stack|tap=chime|upper=0
+look|sib
+music|trailer.wav|0.9|124|0
+title|Wait. *When* is it due?|It was in a message.|6b|trans=pop
+clip|a_add4.mp4|5.0|6.6|*Type* it.|dur=3b|trans=wipe
+clip|a_add4.mp4|88.2|90.2|*Type* it.|dur=3b|capage=5|trans=pop
+clip|a_add4.mp4|90.6|93.8|*Read* the date.|dur=6b|trans=pop
+clip|a_add4.mp4|94.2|95.6|*Check* it.|dur=3b|trans=whip
+clip|a_add4.mp4|101.5|104.0|*Save* it.|dur=3b|trans=pop
+clip|a_add4.mp4|105.0|108.5|*See* how much room.|dur=4b|trans=pop
+clip|a_today.mp4|0.0|2.0|*Watch* it count.|dur=4b|trans=wipe
+clip|b_plan.mp4|30.6|33.0|*Plan* the week.|dur=3b|trans=whip
+clip|b_plan.mp4|14.0|16.5|*See* the runway.|dur=3b|trans=pop
+clip|b_plan.mp4|23.0|25.5|*Check* the load.|dur=3b|trans=pop
+clip|b_plan.mp4|36.0|44.0|*Fix* what does not fit.|dur=8b|trans=wipe
+clip|c_themes.mp4|12.5|17.5|*Pick* a mood.|dur=3b|trans=whip
+clip|c_themes.mp4|20.0|25.0|*Pick* a mood.|dur=3b|capage=5|trans=pop
+clip|c_themes.mp4|28.0|33.0|*Pick* a mood.|dur=3b|capage=5|trans=pop
+clip|c_themes.mp4|35.5|40.5|*Pick* a mood.|dur=3b|capage=5|trans=pop
+clip|c_themes.mp4|41.6|44.6|*Pick* a mood.|dur=3b|capage=5|trans=pop
+still|end_today.png|*Start* before it is late.|8b|boom=1|trans=wipe
+title|*H-sib* Reminder|Start it before.|6b|trans=pop

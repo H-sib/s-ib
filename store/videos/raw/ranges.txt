@@ -1,0 +1,17 @@
+a_add4.mp4 | 5.0 | 6.6 | Plan tab, Add form opens from the plus button | use | 5.1
+a_add4.mp4 | 7.0 | 86.0 | Add form empty, waiting for the typing step | skip |
+a_add4.mp4 | 88.2 | 90.2 | the line is typed, Understood as card appears | use | 87.0
+a_add4.mp4 | 90.6 | 93.8 | Understood as: Quiz due about 2 hours, Fri, Nov 6, 9:00 AM, keyboard up | use |
+a_add4.mp4 | 94.2 | 95.6 | keyboard hidden, Title and Date fields, 9:00 AM | use | 88.0
+a_add4.mp4 | 101.5 | 104.0 | Save button, then tap | use | 103.7
+a_add4.mp4 | 105.0 | 108.5 | deadline page: Quiz due about 2 hours, in 7 days, Plenty of room | use |
+a_today.mp4 | 0.0 | 2.0 | Today hero ring, 6 days left, Lab report due about 3 hours, Thursday November 5 | use |
+b_plan.mp4 | 30.6 | 33.0 | Plan, Load switches back to Week view | use | 31.0
+b_plan.mp4 | 14.0 | 16.5 | Plan, Runway view | use | 14.3
+b_plan.mp4 | 23.0 | 25.5 | Plan, Load view with weekly panels | use | 23.1
+b_plan.mp4 | 36.0 | 44.0 | See options tapped, three options shown | use | 38.4
+c_themes.mp4 | 12.5 | 17.5 | Appearance, four theme tiles, Twilight selected | use | 11.3
+c_themes.mp4 | 20.0 | 25.0 | Light theme | use | 18.7
+c_themes.mp4 | 28.0 | 33.0 | Black theme | use | 26.4
+c_themes.mp4 | 35.5 | 40.5 | Neon theme | use | 34.0
+c_themes.mp4 | 41.6 | 44.6 | Twilight theme again | use | 41.8

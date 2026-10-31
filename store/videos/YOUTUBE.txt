@@ -1,0 +1,41 @@
+YOUTUBE HELP FOR THE TWO H-SIB REMINDER VIDEOS (version 1.0.0). The dates, titles and descriptions to paste are in UPLOAD_SHEET.txt.
+Files (store\videos): trailer.mp4 (37.9 s, 1920 by 1080, 30 fps) and short.mp4 (17.5 s, 1080 by 1920, 30 fps). Music and sound effects are in.
+Neither video has a voice. The words are animated captions, so both can be watched with the sound off.
+The music and the sound effects are original, synthesised for this project (tools\make_music.py and tools\make_video.py), so there is nothing to credit and no copyright claim can match them.
+THE MUSIC WAS NEVER LISTENED TO by the one who made it (a script cannot hear it). Watch each video once with the sound on before you upload it, and say if a track should change.
+
+HOW TO UPLOAD
+1. Open studio.youtube.com on the H-sib channel. Create, Upload videos. Pick the file. Paste the title, description and tags from UPLOAD_SHEET.txt.
+2. Audience: "No, it's not made for kids". Then under Show more: the fixed fields in UPLOAD_SHEET.txt (paid promotion No, altered content No, category, comments held for review).
+3. Playlist: choose the playlist named in the sheet. Make it first if it does not exist: Content, Playlists, New playlist.
+4. Thumbnail (trailer only): upload your own 1280 by 720 picture, under 2 MB. If you have none, YouTube's pick is fine.
+5. Visibility: Schedule. Set the date and time from the sheet. Press Schedule. Do this for both files on Saturday 31 October.
+6. When each video goes public: write the pinned comment as your own comment, then the three dots, Pin. For the Short, paste the link of the trailer.
+7. Do not add a Google Play link anywhere until the app is public. If you are recruiting testers you may add the line "Closed testing now" to the trailer description; do not add a join link unless you want testers.
+
+IF YOU WANT THE TRAILER IN THE PLAY LISTING (Play Console, Store listing, Promo video)
+- Play needs a public or unlisted YouTube address, not age restricted, with ads off. Turn Monetisation OFF on the trailer.
+- Upload the trailer as Unlisted (or let the schedule make it public on 1 November) and copy its address.
+- Read this first: a listing change sent while a release is in review restarts that review (lesson L17 in APP_QUALITY_STANDARD.txt). Your notes say the closed testing release was
+  submitted on 2026-10-30. Paste the address only when that release is approved, or when you are sending the next change anyway. I never click or send anything in the console.
+
+AFTER UPLOAD
+- In the first 24 hours answer every comment in plain words. Pin the question comment. Do not argue.
+- After one week open Studio, Analytics, Engagement: at which second do viewers leave the trailer? Cut the next video shorter at that point.
+  For the Short, look at "viewed vs swiped away".
+- Add the Play link to both descriptions and the pinned comment on the day the app is public, not before.
+- If comments find problems in the app, copy them into the app's own list. Do not promise fixes in public that are not decided.
+
+NOTES FOR HONEST DESCRIPTIONS
+- Both videos show version 1.0.0 on a real Android phone (a Sony SOV43), as screen recordings with touch rings drawn where the finger was.
+- The speed is changed on purpose: waiting and typing are sped up, taps are shown close to real time. The app itself runs in real time.
+- The data is made up and plain (a lab report, an essay, a quiz). Keep the words "Test data shown".
+- It is the test build (debug) of version 1.0.0, not the release build from Google Play. Keep the words "Filmed on the test build" in the trailer description.
+- The Settings page shows a real account name and was never used. No notification, no home screen and no other app is in either video.
+- Do not describe the app as busy or popular, and do not add any claim that is not in the listing.
+
+WHAT STILL NEEDS YOU
+1. Watch both videos once with sound and say if any music or caption should change.
+2. Make the trailer thumbnail (or ask for one).
+3. Upload and schedule as above. I never sign in to YouTube or Play.
+4. If you want videos on the Play build, or more Shorts, say so: the takes would need to be filmed again on the phone.

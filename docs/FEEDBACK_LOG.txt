@@ -1,0 +1,16 @@
+TESTER FEEDBACK LOG (the owner pastes feedback here; the Claude session triages it)
+Write feedback exactly as received, in any language (Bangla, Hindi, English). One block per item. Add who sent it and the phone if they said.
+
+HOW CLAUDE USES THIS FILE
+ - Read OPEN. For each item: reproduce (a test or a screenshot test), fix, add a test, then move the block to DONE with the commit message.
+ - Group small fixes into one release. Do not redesign screens the owner loves (Home, the week chart).
+
+----------------------------------------------------------------------------------------------------------------------
+OPEN
+----------------------------------------------------------------------------------------------------------------------
+(paste new feedback below this line)
+
+
+----------------------------------------------------------------------------------------------------------------------
+DONE
+----------------------------------------------------------------------------------------------------------------------

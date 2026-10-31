@@ -1,0 +1,5 @@
+store/videos/raw/
+store/videos/music/*.wav
+store/videos/*.mp4
+store/videos/shorts/*.mp4
+store/videos/*.png

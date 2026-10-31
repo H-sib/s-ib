@@ -1,0 +1,62 @@
+UPLOAD SHEET FOR YOUTUBE (H-sib Reminder), 2 videos in the order they are posted: 1 trailer and 1 Short. Times are in YOUR time zone (YouTube Studio asks for it when you schedule).
+Written 2026-10-30 by the assistant. Nothing was uploaded by it. Nobody has listened to the music yet: watch both videos once with sound before you upload them.
+Help with the steps of YouTube Studio is in YOUTUBE.txt (same folder).
+
+WHY THESE DAYS AND TIMES
+The H-sib channel already has H-sib Workshop posts planned for almost every day until December (7 pm on Saturdays and Tuesdays, 8 pm on Sundays and Thursdays,
+12:30 pm on Mondays, Wednesdays and Fridays; see the Workshop's UPLOAD_SHEET.txt). You decided that H-sib Reminder may post on the same days as the Workshop, at another time of the day.
+So each Reminder video goes out on a day that has a Workshop post, but never at the same hour: the trailer at 12:30 pm (the Workshop posts at 8 pm that day), the Short at 7:00 pm (the Workshop posts at 12:30 pm that day).
+Only two Reminder videos exist, so only two days are used before 7 November. Any later Reminder video can follow the same rule: same day as a Workshop post, a different time.
+
+HOW TO SCHEDULE: YouTube Studio, Create, Upload videos, pick the file, fill the details below, then Visibility, choose Schedule, set the date and the time, and press Schedule.
+Upload and schedule both files on Saturday 31 October, so they are ready before the trailer goes out on Sunday 1 November. A vertical video of 60 seconds or less is treated as a Short by itself.
+The first three hashtags of a description show above the title.
+
+FIELDS THAT ARE THE SAME ON EVERY UPLOAD
+  Audience: No, it is not made for kids.   Age restriction: none.   Paid promotion: No.   Altered content (AI made, looks real): No.
+  Category: Science and Technology.   Language: English.   Licence: Standard YouTube licence.   Allow embedding: yes.   Publish to subscriptions feed: yes.
+  Comments: on, and hold potentially inappropriate comments for review.   Show how many people like the video: yes.   Subtitles: none (the words are on the screen).
+  Recording date and location: leave empty.   Game title: leave empty.   Monetisation: leave as it is (the channel is not monetised yet), except the trailer: OFF.
+  Playlists: make them once (Studio, Content, Playlists): H-sib Reminder: trailers, and H-sib Reminder Shorts: the date reader.
+  Pinned comment: after the video is public, write it as your own comment, then use the three dots, Pin.
+  Thumbnail: long video only. The Short needs none.   End screens and cards: skip (the videos end on their own closing card).
+  Put NO Google Play link in any description until the app is public.
+
+----------------------------------------------------------------------------------------------------
+LONG VIDEO store\videos\trailer.mp4   (37.9 seconds, 1920 by 1080)
+  Date and time: Sun 01 Nov 2026, 12:30 pm
+  Title: H-sib Reminder: start before the deadline | Official trailer
+  Description:
+    A deadline hides in a message. H-sib Reminder reads the line, finds the date and shows how much room you have.
+    Type it, read the date, check it, save it. Then see your week, the runway, the load, and what to do when a job does not fit.
+    What you see: typing a line into the Add screen; the date it understood; the saved deadline; the Today ring; the Plan views Week, Runway and Load; the options when a job is short; four themes (Light, Twilight, Black, Neon).
+    The waiting between taps is sped up. The app runs in real time. Test data shown. Filmed on the test build of version 1.0.0.
+
+    Made by H-sib. Apps, tools and ideas. Subscribe for the next one.
+  Tags: H-sib Reminder, deadline reminder, deadline planner, Android app, study planner, to do planner, H-sib, app trailer
+  Playlist: H-sib Reminder: trailers
+  Pinned comment: What deadline do you always forget?
+  Thumbnail: your own picture, 1280 by 720, under 2 MB, four words at most, for example the Today ring on the violet grid with the words "When is it due?" (YouTube's pick is the fallback)
+  Special: turn monetisation OFF. If you also want this as the promo video in the Play listing, upload it as Unlisted first and read the Play note in YOUTUBE.txt before you paste its address.
+
+SHORT store\videos\short.mp4   (17.5 seconds, 1080 by 1920)
+  Date and time: Mon 02 Nov 2026, 7:00 pm
+  Title: Type one line and it finds the date
+  Description:
+    Type one line. H-sib Reminder reads the date and shows how much room you have.
+    The waiting between taps is sped up. Test data shown.
+    Made by H-sib. Apps, tools and ideas.
+    #Shorts #hsib #deadline
+  Tags: H-sib Reminder, deadline reminder, deadline planner, Android app, study planner, shorts, H-sib
+  Playlist: H-sib Reminder Shorts: the date reader
+  Pinned comment: Full video: <paste the YouTube link of trailer.mp4 here once it is public>
+  Thumbnail: automatic (Shorts need none)
+  Special: none
+
+----------------------------------------------------------------------------------------------------
+WHAT THE VIDEOS CLAIM (each point is in store\listing.txt): the app finds the date in a typed line and shows how it understood it; shows the days left; plans the week;
+says by how much a job does not fit and offers options; has four themes.
+NOT CLAIMED: sharing, chat, Close ones, the notification bar card, finding deadlines in chats, backup, privacy, offline use. Do not add any of these to a description.
+The Today shot shows a first run card about catching deadlines from chats. It is a real card of the app and nothing is claimed about it.
+The footage was filmed on the test build of version 1.0.0 (debug build, minimum Android 26). The build now installed from Google Play is a release build (minimum Android 29);
+its screens were not compared with the footage. The descriptions say "test build" for that reason.

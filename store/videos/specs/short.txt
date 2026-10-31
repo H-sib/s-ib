@@ -1,0 +1,12 @@
+# H-sib Reminder Short. 120 bpm, 35 beats, 17.5 s. One idea: type a line, get the date.
+format|short
+newlook|sib|base=bright|bg=#0D0B1F|ink=#F7F4FF|accent=#A28FFF|dim=#CFC8F0|frame=#221E47|font=verdanab.ttf|backdrop=grid|phone=thin|caption=stack|tap=chime|upper=0
+look|sib
+music|short.wav|0.9|120|0
+title|*Due* when?||3b|trans=pop
+clip|a_add4.mp4|88.2|90.2|*Type* one line.|dur=4b|layout=tall|trans=wipe
+clip|a_add4.mp4|90.6|93.8|*Read* the date.|dur=8b|layout=tall|trans=pop
+clip|a_add4.mp4|105.0|108.5|*See* how much room.|dur=5b|layout=tall|trans=whip
+clip|b_plan.mp4|30.6|33.0|*Plan* the week.|dur=5b|layout=tall|trans=pop
+clip|a_today.mp4|0.0|2.0|*Watch* it count.|dur=4b|layout=tall|trans=wipe
+title|Made in *H-sib Reminder*|Start it before.|6b|trans=pop

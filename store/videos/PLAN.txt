@@ -1,0 +1,62 @@
+H-SIB REMINDER PROMO PLAN (lean set, written 2026-10-30, for approval before any filming)
+Scope: the smallest set that carries the app until 7 November: ONE trailer (60 s) and ONE vertical Short (20 s).
+Left out on purpose to save work: the 2 minute walkthrough (the playbook rejects long tours), tutorials, more Shorts, thumbnails.
+Rules kept: the playbook section 3 and the lean runbook. Made up data only. Nothing is uploaded or committed by me.
+
+PREMISE (one sentence)
+A deadline hides in a line of text; H-sib Reminder reads it, finds the date, and shows the latest day to start.
+
+DIRECTION CARD (rolled for com.hsib.sib, claimed in the shared ledger)
+Concept stopwatch, hook a real problem sentence, swung rhythm (3 beats long, 1 short), analogous palette, wide black sans,
+grid backdrop with a thin phone, transitions wipe whip pop only, minimal techno, imperative captions, ending zooms out to the whole phone.
+ONE CHANGE TO THE CARD, for you to overrule: the stopwatch is the app's own countdown ring ("1 day left"), not a drawn clock.
+Why: the footage waits are sped up, so a drawn stopwatch would claim a time the video cannot prove.
+
+LOOK (both videos): ground 0D0B1F, text F7F4FF, accent A28FFF, soft text CFC8F0 (the app's own Twilight colours), font Verdana Bold,
+backdrop grid, phone thin, tap sound chime. Open item: Verdana is a Windows font, not open licence; say if you want Bricolage Grotesque (open licence) instead.
+MUSIC (made by script, nothing to credit): trailer 124 bpm, Ab phrygian, four on the floor, square lead, seed 143.
+Short 120 bpm, same world, other seed. I cannot hear it; you must listen once.
+
+TRAILER STORYBOARD (124 bpm, 1 beat = 0.48 s, about 120 beats). Words are imperative, six at most, one lit word.
+ 1  title   "Wait. *When* is it due?"                       4b   hook, a real sentence, no logo
+ 2  Add     Describe it box opens                            3b   caption: *Type* it.
+ 3  Add     the line is typed (sped up)                      1b
+ 4  Add     "Understood as" with the date                    3b   caption: *Read* the date.
+ 5  Add     Check this, the title and date fields            1b   caption: *Check* it.
+ 6  Today   the hero ring with the deadline                  3b   caption: *Watch* it count.
+ 7  Plan    Week view, planned hours per day                 3b   caption: *Plan* the week.
+ 8  Plan    Runway view                                      1b
+ 9  Plan    "Short by" line, See options opens the sheet     3b   caption: *Fix* what does not fit.
+10  Plan    Load view                                        1b   caption: *Balance* the load.
+11  Themes  Light, Black, Neon, Twilight, one per beat       4b   caption: *Pick* a mood.
+12  Today   back on Twilight, the ring again                 3b   caption: *Start* before it is late.
+13  end     slow zoom out to the whole phone on a violet ground, then the card:
+            "H-sib Reminder" and "Start it before." and the small H-sib mark                     8b
+ The scenes repeat in a swung 3/1 pattern; the exact counts are fitted to whole beats in the spec and checked by lint.
+
+SHORT STORYBOARD (vertical, 20 s, one idea: type a line, get the date)
+ hook "Due when?" (2 s) > typing, sped up (4 s) > "Understood as" with the date, held (4 s) > Today ring (4 s) > zoom out, end card (3 s)
+ "Made in H-sib Reminder". Same look as the trailer.
+
+FILMING (three takes, one session on the SOV43, the app 1.0.0 already on it, Twilight theme at the start)
+ A add     Today, Add, type "Lab report due 12 Nov 5 PM about 3 hours", Understood as, save, Today.
+ B plan    Plan: Week, Runway, Load, See options (open, then close).
+ C themes  More, Appearance, Light, Black, Neon, back to Twilight. The More screen shows an account name for a moment:
+           those seconds go into raw\blocked.txt and are never used. Friends, Chat and Account are never filmed.
+ After filming I delete the "Lab report" deadline I made, and put the theme back to Twilight.
+ The phone already holds a developer test deadline, "Card test report"; it appears on Today and Plan (plain, made up).
+
+WHAT IS CLAIMED (each line is in store\listing.txt): finds the date in a typed line and shows how it understood it; nothing becomes a
+deadline until you confirm; shows the latest day to start; says by how much a job does not fit and offers options; four themes.
+Not shown and not claimed: sharing, chat, Close ones, the notification bar card, finding deadlines in chats, backup.
+Description lines to add: "The waiting between taps is sped up. The app runs in real time." and "Test data shown."
+The footage is the debug build of version 1.0.0 (the code of the closed testing release), because that is what is on the phone. It is not installed over anything.
+
+AFTER YOU SAY YES (steps, in order)
+ 1 make the two tracks  2 film A, B, C and read each contact sheet  3 write ranges.txt and blocked.txt  4 write two specs, lint them
+ 5 render both  6 one review sheet each  7 loudness numbers  8 banner scan  9 clean up the phone  10 five line report.
+
+SCHEDULE SO IT HELPS BEFORE 7 NOVEMBER (you upload; I do not)
+ Day 0: trailer, unlisted or public as you prefer, no Play link yet. Day 1: the Short. Everything else only after 7 November, if wanted.
+
+NEEDS FROM YOU: one yes to this plan; the phone unlocked and plugged in, and no other session using it; one listen with sound per video.
