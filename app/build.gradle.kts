@@ -84,8 +84,8 @@ android {
         applicationId = "com.hsib.sib"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.1"
+        versionCode = 5
+        versionName = "1.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "FIREBASE_READY", (firebase != null).toString())
         buildConfigField("String", "FIREBASE_API_KEY", "\"${firebase?.get("apiKey").orEmpty()}\"")

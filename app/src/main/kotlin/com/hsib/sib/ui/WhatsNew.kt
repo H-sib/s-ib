@@ -22,6 +22,16 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            5, "1.2.0",
+            listOf(
+                "Make it yours: set the app up for your study, your work or your daily life. Edit it, save it and share it with friends.",
+                "Find a friend by username and chat first. They accept before anything is shared.",
+                "Own plan, your own hours, four Today styles and a light daily line to get you going.",
+                "A weekly class table for medical students, checklists of up to 50 items, and calendar reading.",
+                "A livelier look on Plan, Review, Messages and the Guide.",
+            ),
+        ),
+        Entry(
             4, "1.1.1",
             listOf(
                 "A weekly class routine for medical students, Saturday to Thursday, with colours, rooms and times.",

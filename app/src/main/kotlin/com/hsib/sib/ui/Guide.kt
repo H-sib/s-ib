@@ -153,7 +153,7 @@ fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false) {
     val topic = topics.getOrNull(open)
     if (topic == null) {
         Page("Guide", onBack) {
-            Text("Everything the app can do, in a few lines each.", style = SibType.body, color = c.inkSoft)
+            ScreenHeader("Guide", "Everything the app can do, in a few steps each", SibIcon.BOOK)
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }) }

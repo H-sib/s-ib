@@ -349,7 +349,7 @@ fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJ
     LaunchedEffect(s.user?.uid) { if (s.user != null) { social.refreshRequestsNow(); username = social.username() } }
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
-        Text("Messages", style = SibType.display, color = c.ink)
+        ScreenHeader("Messages", if (requests.isNotEmpty()) "${requests.size} waiting for your answer" else "Chat with friends and shared deadlines", SibIcon.CHAT)
         Gap(16.dp)
         if (s.practice) PracticeBanner()
         if (s.user == null) {
@@ -413,7 +413,7 @@ fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJ
         Gap(24.dp)
         val rooms = s.rooms.values.sortedByDescending { it.unread }
         if (rooms.isEmpty()) {
-            Text("No chats yet. Find a friend above, open a deadline and tap Share, or join with a code.", style = SibType.body, color = c.inkSoft)
+            EmptyState(SibIcon.CHAT, "No chats yet. Find a friend above, open a deadline and tap Share, or join with a code.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 for (room in rooms) {

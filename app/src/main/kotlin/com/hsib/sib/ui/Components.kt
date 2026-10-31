@@ -158,11 +158,45 @@ fun Hairline(modifier: Modifier = Modifier) {
 fun SectionHeader(text: String, modifier: Modifier = Modifier, count: Int? = null) {
     val c = SibTheme.colors
     Row(modifier.fillMaxWidth().padding(top = 36.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.width(5.dp).height(20.dp).clip(RoundedCornerShape(50)).background(c.violet))
+        Spacer(Modifier.width(10.dp))
         Text(text, style = SibType.title, color = c.ink)
         if (count != null) {
             Spacer(Modifier.width(10.dp))
             Text(count.toString(), style = SibType.label, color = c.violet, modifier = Modifier.clip(RoundedCornerShape(50)).background(c.violetWash).padding(horizontal = 10.dp, vertical = 3.dp))
         }
+    }
+}
+
+/**
+ * The top of a main tab: the title large, one plain line under it, a soft glow behind and a round icon. It gives each tab its own
+ * face without changing how anything works. The glow is two simple gradients, light enough for a weak phone.
+ */
+@Composable
+fun ScreenHeader(title: String, subtitle: String, icon: SibIcon, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
+    val c = SibTheme.colors
+    Row(
+        modifier.fillMaxWidth().clip(RoundedCornerShape(32.dp)).glowBackdrop(c.glowA, c.glowB, 0.35f * c.glowStrength).padding(horizontal = 22.dp, vertical = 22.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = SibType.display, color = c.ink)
+            Text(subtitle, style = SibType.body, color = c.inkSoft)
+        }
+        Spacer(Modifier.width(12.dp))
+        if (action != null) action() else IconBadge(icon, size = 56.dp)
+    }
+}
+
+/** A friendly empty screen: a round icon, one line, and an optional button. */
+@Composable
+fun EmptyState(icon: SibIcon, line: String, modifier: Modifier = Modifier, button: String? = null, onButton: (() -> Unit)? = null) {
+    val c = SibTheme.colors
+    Column(modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.size(88.dp).clip(CircleShape).background(c.violet.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) { SibIconView(icon, size = 44.dp, tint = c.violet) }
+        Spacer(Modifier.height(16.dp))
+        Text(line, style = SibType.body, color = c.inkSoft, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        if (button != null && onButton != null) { Spacer(Modifier.height(16.dp)); SibButton(button, onButton, kind = ButtonKind.QUIET) }
     }
 }
 
