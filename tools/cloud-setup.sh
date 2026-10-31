@@ -18,6 +18,11 @@ JDKDIR="$HOME/jdk17"
 can_root() { [ "$(id -u)" = 0 ] || { command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; }; }
 as_root() { if [ "$(id -u)" = 0 ]; then "$@"; else sudo -n "$@"; fi; }
 
+# An installed JDK 17 may exist while another version is first on the PATH: use it.
+for d in /usr/lib/jvm/java-17-openjdk-* /usr/lib/jvm/temurin-17*; do
+  if [ -x "$d/bin/java" ]; then export JAVA_HOME="$d"; export PATH="$d/bin:$PATH"; break; fi
+done
+
 have_jdk17() { command -v java >/dev/null 2>&1 && java -version 2>&1 | grep -q 'version "17'; }
 
 if ! have_jdk17; then
