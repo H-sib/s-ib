@@ -60,6 +60,11 @@ data class AppSettings(
     val medicalMode: Boolean = false,
     val medicalAsked: Boolean = false,
     /** Encouraging lines. [motivationOn] is the master switch; the others turn off one place or one kind of deadline. */
+    /** The class routine: which weekdays it covers (1 Monday to 7 Sunday, Saturday to Thursday by default) and how many classes a day has. */
+    val routineDays: Set<Int> = setOf(6, 7, 1, 2, 3, 4),
+    val routineLectures: Int = 4,
+    val routineTutorials: Int = 1,
+    val routineWards: Int = 1,
     val motivationOn: Boolean = true,
     val motivationShow: Boolean = true,
     val motivationNotify: Boolean = true,
@@ -108,6 +113,7 @@ object SettingsCodec {
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
+        put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
         put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
@@ -160,6 +166,10 @@ object SettingsCodec {
             medicalMode = m.bool("medicalMode", d.medicalMode),
             medicalAsked = m.bool("medicalAsked", d.medicalAsked),
             homeStyle = m.enum("homeStyle", d.homeStyle),
+            routineDays = m["routineDays"]?.split(",")?.mapNotNull { it.trim().toIntOrNull() }?.filter { it in 1..7 }?.toSet()?.takeIf { it.isNotEmpty() } ?: d.routineDays,
+            routineLectures = m.int("routineLectures", d.routineLectures, 0..8),
+            routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..2),
+            routineWards = m.int("routineWards", d.routineWards, 0..2),
             motivationOn = m.bool("motivationOn", d.motivationOn),
             motivationShow = m.bool("motivationShow", d.motivationShow),
             motivationNotify = m.bool("motivationNotify", d.motivationNotify),

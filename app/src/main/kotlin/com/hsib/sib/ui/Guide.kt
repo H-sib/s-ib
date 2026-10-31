@@ -36,10 +36,12 @@ object Guide {
         if (medical) add(GuideTopic("Medical student mode", "Made for MBBS students.", listOf(
             "Tap [Add]. At the top, pick your prof, then the kind of exam, then the subject.",
             "The title, the time needed and the study steps are filled in. A prof or term exam gets a checklist with one item for each subject.",
-            "Open [More], [Settings], [Medical student], [Class diary] to write each class: subject, topic, faculty.",
+            "Open [More], [Settings], [Medical student], [Class routine] and fill your week table: the subject and classroom of each lecture, tutorial and ward class, with its time.",
+            "Use [Class diary] to write each class: subject, topic, faculty.",
         ), listOf(
             "Item is the weekly class test, then card, then term, then prof. Practical, ward final and supplementary are kept apart.",
             "1st, 2nd and 3rd prof are in November, the 4th prof in May. Supplementary runs the other way round. Set the exact day yourself.",
+            "Choose the days and how many lectures, tutorials and ward classes each day has. Phases differ, so every number is yours to set.",
             "Turn the mode off in Settings and your deadlines stay.",
         ), "Anatomy Card exam, 1st Prof\nNeeds 8 h  ·  Read, MCQ practice, Viva"))
         add(GuideTopic("Review suggestions", "Nothing becomes a deadline until you say yes.", listOf(

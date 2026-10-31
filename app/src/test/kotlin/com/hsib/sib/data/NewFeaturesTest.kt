@@ -87,6 +87,18 @@ class NewFeaturesTest {
         scope.cancel()
     }
 
+    @Test fun routineChoicesAndMotivationSwitchesSurviveTheSettingsCodec() {
+        val s = AppSettings(routineDays = setOf(6, 7, 1, 5), routineLectures = 7, routineTutorials = 0, routineWards = 2, motivationOn = false, motivationOff = setOf("EXAM", "BILL"), medicalMode = true)
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(s.routineDays, back.routineDays)
+        assertEquals(7, back.routineLectures)
+        assertEquals(0, back.routineTutorials)
+        assertEquals(2, back.routineWards)
+        assertEquals(setOf("EXAM", "BILL"), back.motivationOff)
+        assertEquals(false, back.motivationOn)
+        assertEquals(true, back.medicalMode)
+    }
+
     @Test fun medicalCategoriesSurviveTheDatabase() = runBlocking {
         val scope = CoroutineScope(Job())
         val ready = TestReady.create(context, scope)
