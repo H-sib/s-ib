@@ -571,4 +571,142 @@ class SocialRepositoryTest {
         assertTrue(ben.ready.db.roomKeys().forRoom(roomId).isEmpty())
         assertTrue(ben.ready.db.roomMessages().forRoom(roomId).isEmpty())
     }
+
+    // ---- finding people and chatting first --------------------------------------------------------------
+
+    private fun roomOf(p: Phone, obligationId: String): String = p.social.state.value.roomFor(obligationId)!!.roomId
+
+    @Test
+    fun usernamesAreUniqueAndFoundByExactNameOnly() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        val cat = Phone("cat", "Cat")
+        assertEquals("ana.k", ok(ana.social.setUsername("  @Ana.K ")))
+        assertEquals(SocialError.USERNAME_TAKEN, errorOf(ben.social.setUsername("ana.k")))
+        assertEquals(SocialError.BAD_USERNAME, errorOf(ben.social.setUsername("x")))
+        val hit = ok(cat.social.findPeople("ana.k")).single()
+        assertEquals("ana", hit.uid)
+        assertEquals("Ana", hit.displayName)
+        assertTrue(ok(cat.social.findPeople("ana")).isEmpty())
+        assertTrue(ok(cat.social.findPeople("nobody.here")).isEmpty())
+        assertTrue(ok(ana.social.findPeople("ana.k")).isEmpty())
+        ok(ana.social.removeUsername())
+        assertTrue(ok(cat.social.findPeople("ana.k")).isEmpty())
+        assertEquals("ana.k", ok(ben.social.setUsername("ana.k")))
+    }
+
+    @Test
+    fun anEmailIsFoundOnlyWhenTheOwnerAllowedItAndTheServerNeverHoldsIt() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        assertTrue(ok(ben.social.findPeople("ana@example.test")).isEmpty())
+        ok(ana.social.setFindableByEmail(true))
+        assertEquals("ana", ok(ben.social.findPeople("Ana@Example.test")).single().uid)
+        assertTrue(server.emails.keys.none { it.contains("ana") || it.contains("@") })
+        ok(ana.social.setFindableByEmail(false))
+        assertTrue(ok(ben.social.findPeople("ana@example.test")).isEmpty())
+    }
+
+    @Test
+    fun aPersonCanBeAskedToChatAndTheChatIsSealedAndHasNoDeadline() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        ok(ben.social.setUsername("ben.b"))
+        val hit = ok(ana.social.findPeople("ben.b")).single()
+        val mine = ok(ana.social.startChat(hit))
+        assertEquals(Space.CHAT, ana.ready.store.obligation(mine)!!.space)
+
+        ben.social.refreshRequestsNow()
+        val req = ben.social.requests.value.single()
+        assertEquals("ana", req.fromUid)
+        assertEquals("Ana", req.fromName)
+        assertNull(ben.social.state.value.rooms.values.firstOrNull())
+
+        later()
+        val theirs = ok(ben.social.acceptChat(req))
+        assertEquals(Space.CHAT, ben.ready.store.obligation(theirs)!!.space)
+        assertEquals("Chat with Ana", ben.ready.store.obligation(theirs)!!.title)
+        assertTrue(ben.social.requests.value.isEmpty())
+
+        later()
+        ok(ana.social.send(roomOf(ana, mine), "Hello Ben, shall we study together?"))
+        later()
+        ben.social.syncOne(roomOf(ben, theirs))
+        assertEquals(listOf("Hello Ben, shall we study together?"), chat(ben, roomOf(ben, theirs)).map { it.text })
+        later()
+        ok(ben.social.send(roomOf(ben, theirs), "Yes, tonight."))
+        ana.social.syncOne(roomOf(ana, mine))
+        assertEquals(2, chat(ana, roomOf(ana, mine)).size)
+        assertTrue(server.sealedValues().none { it.contains("study together") || it.contains("tonight") })
+    }
+
+    @Test
+    fun askingTwiceReusesTheSameChat() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        ok(ben.social.setUsername("ben.b"))
+        val hit = ok(ana.social.findPeople("ben.b")).single()
+        val first = ok(ana.social.startChat(hit))
+        later()
+        assertEquals(first, ok(ana.social.startChat(hit)))
+        assertEquals(1, server.roomCount())
+    }
+
+    @Test
+    fun decliningWithBlockHidesThePersonAndStopsNewAsks() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        ok(ben.social.setUsername("ben.b"))
+        ok(ana.social.startChat(ok(ana.social.findPeople("ben.b")).single()))
+        ben.social.refreshRequestsNow()
+        ok(ben.social.declineChat(ben.social.requests.value.single(), block = true))
+        assertTrue(ben.social.requests.value.isEmpty())
+        ben.social.refreshRequestsNow()
+        assertTrue(ben.social.requests.value.isEmpty())
+        ok(ana.social.setUsername("ana.k"))
+        assertEquals(SocialError.BLOCKED, errorOf(ben.social.startChat(ok(ben.social.findPeople("ana.k")).single())))
+    }
+
+    @Test
+    fun onlyTheOwnerOfARoomCanAskSomeoneToJoinItAndOneAskPerPairAtATime() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        val cat = Phone("cat", "Cat")
+        val roomId = room(ana)
+        val req = com.hsib.sib.core.social.ChatRequest("cat", "Cat", "ben", roomId, "ABCDEFGHJK", "x", 1, 0)
+        try { FakeBackend(server, "cat").sendChatRequest(req); throw AssertionError("a person who does not own the room was allowed") } catch (e: SocialException) { assertEquals(SocialError.DENIED, e.error) }
+        ok(ben.social.setUsername("ben.b"))
+        ok(ana.social.startChat(ok(ana.social.findPeople("ben.b")).single()))
+        val again = com.hsib.sib.core.social.ChatRequest("ana", "Ana", "ben", roomId, "ABCDEFGHJK", "x", 1, 0)
+        try { FakeBackend(server, "ana").sendChatRequest(again); throw AssertionError("a second waiting ask was allowed") } catch (e: SocialException) { assertEquals(SocialError.DENIED, e.error) }
+        assertEquals(cat.uid, "cat")
+    }
+
+    @Test
+    fun theAnonymousCountCountsEachPersonOnceAndHoldsNothingElse() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        val course = com.hsib.sib.core.medical.Courses.mbbs
+        ok(ana.social.countCourse(course))
+        ok(ana.social.countCourse(course))
+        ok(ben.social.countCourse(course.copy(name = "Same content, other name")))
+        val hash = server.courseUse.keys.single()
+        assertEquals(2, server.usersOfCourse(hash))
+        ok(ben.social.countCourse(course.copy(phases = course.phases.take(2))))
+        assertEquals(2, server.courseUse.size)
+    }
+
+    @Test
+    fun deletingTheAccountRemovesTheNameTheEmailLookupAndWaitingAsks() = scenario {
+        val ana = Phone("ana", "Ana")
+        val ben = Phone("ben", "Ben")
+        ok(ana.social.setUsername("ana.k"))
+        ok(ana.social.setFindableByEmail(true))
+        ok(ben.social.setUsername("ben.b"))
+        ok(ana.social.startChat(ok(ana.social.findPeople("ben.b")).single()))
+        ok(ana.social.deleteAccount(context))
+        assertTrue(server.usernames.values.none { it == "ana" })
+        assertTrue(server.emails.values.none { it == "ana" })
+        assertTrue(server.chatRequests.values.none { it.containsKey("ana") })
+    }
 }

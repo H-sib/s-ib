@@ -45,8 +45,8 @@ enum class Category(val label: String, val close: Boolean = false, val medical: 
     }
 }
 
-/** WORK is the main app. CLOSE is the private space for partners and the people who matter most. */
-enum class Space { WORK, CLOSE }
+/** WORK is the main app. CLOSE is the private space for partners and the people who matter most. CHAT holds a direct chat with one person: it has no date and never shows in any list of deadlines. */
+enum class Space { WORK, CLOSE, CHAT }
 
 /** How an occasion comes round again. Dates are computed from the original day so they never drift. */
 enum class Repeat(val label: String) { NONE("Once"), WEEKLY("Every week"), FORTNIGHTLY("Every two weeks"), MONTHLY("Every month"), YEARLY("Every year") }

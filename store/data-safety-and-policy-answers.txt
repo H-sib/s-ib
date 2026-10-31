@@ -10,14 +10,19 @@ Data types collected (only after sign in, for app functionality and account mana
   Personal info
     Name                     Collected. The display name the person chooses. Shown to the people in their shared deadlines.
     Email address            Collected by the sign in service (Firebase Authentication). Used to sign in. Not shown to friends.
-    User IDs                 Collected. The account id.
+    User IDs                 Collected. The account id, and the optional public username the person chooses (found by exact text only).
+    Email address (lookup)   Optional. Only a one way hash of the email is stored, and only if the person switches on being found by email.
   Messages
     Other in-app messages    Collected. Chat messages. Sealed on the phone; the server holds only sealed text.
   App activity
     Other user-generated content   Collected. Title, date and notes of a deadline the person chooses to share, sealed.
   Device or other IDs        Collected. A Firebase installation identifier, used by App Check to confirm the request comes from the
                              genuine app. Re-check what the Firebase and Google Play services libraries add on the day you submit.
-  Location, contacts, calendar, photos, files, audio, health, financial: not collected.
+  Location, contacts, photos, files, audio, health, financial: not collected.
+  Calendar: the app can read upcoming entries from the phone's calendar after the person switches on Calendar in Settings and allows
+    the permission. They are read and shown on the phone only, never sent anywhere and never written back, so answer: not collected.
+  Voice: the Speak button opens the phone's own speech window. The app receives only text, so audio is not collected by the app.
+  Anonymous setup count (optional, off by default): a number and a setup name, nothing about the person. Not personal data.
 Is data shared with third parties?   Data is processed by Google (Firebase) as the service provider that hosts it. Play treats a
   service provider acting on the developer's behalf as not "sharing". Nothing is sold. Nothing is used for advertising or analytics.
   There is no analytics library and no crash reporting.
@@ -56,6 +61,7 @@ Advertising ID:              The app does not use it. Declare "No".
 
 PERMISSIONS DECLARATIONS
 Declared in the release build:   INTERNET and ACCESS_NETWORK_STATE (sharing, chat and the app check only), POST_NOTIFICATIONS,
+  READ_CALENDAR (optional, read only, only after the person switches on Calendar in Settings),
   the NotificationReaderService (protected by BIND_NOTIFICATION_LISTENER_SERVICE, used only after the owner switches it on),
   RECEIVE_BOOT_COMPLETED, USE_BIOMETRIC, USE_FINGERPRINT (from the biometric library), WAKE_LOCK (from WorkManager).
 Not used and not declared:   SCHEDULE_EXACT_ALARM, USE_EXACT_ALARM, any foreground service permission,

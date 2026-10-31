@@ -440,7 +440,7 @@ fun ChatScreen(obligationId: String, st: AppState, ready: Ready, onBack: () -> U
     ChatFrame(v.o.title, if (room.members.size == 1) "1 person" else "${room.members.size} people", room.members.map { it.name }, onBack) {
         if (messages.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("No messages yet." + "\n" + "Say hello.", style = SibType.small, color = c.inkSoft, textAlign = TextAlign.Center)
+                Text(if (v.o.space == com.hsib.sib.core.model.Space.CHAT && room.members.size < 2) "Waiting for them to say yes." + "\n" + "You can write now. They see it once they accept." else "No messages yet." + "\n" + "Say hello.", style = SibType.small, color = c.inkSoft, textAlign = TextAlign.Center)
             }
         } else {
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(vertical = 12.dp)) {

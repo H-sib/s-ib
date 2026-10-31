@@ -35,6 +35,8 @@ data class SharedPayload(
     val cancelled: Boolean = false,
     /** Goes up by one each time the owner changes the deadline. Only the owner can write it. */
     val rev: Long = 1,
+    /** True for a direct chat with one person: there is no deadline, only the conversation. */
+    val chat: Boolean = false,
 ) {
     /** The same payload with every text cleaned and cut to its limit. */
     fun cleaned(): SharedPayload = copy(
@@ -65,7 +67,7 @@ data class SharedPayload(
             category = Category.values().first { it.name == p.category },
             due = p.dueSpec(), fog = p.fogWindow(),
             lifecycle = if (p.cancelled) Lifecycle.CANCELLED else Lifecycle.ACTIVE,
-            space = Space.WORK,
+            space = if (p.chat) Space.CHAT else Space.WORK,
         )
     }
 
@@ -84,6 +86,9 @@ data class SharedPayload(
 
     companion object {
         private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
+        /** The details of a direct chat. Nothing in it but a name, and the person's own name for the other is shown in the app. */
+        fun forChat(): SharedPayload = SharedPayload(title = "Chat", chat = true).cleaned()
 
         /** Null for a Close ones item, which can never be shared. */
         fun from(o: Obligation, rev: Long): SharedPayload? {

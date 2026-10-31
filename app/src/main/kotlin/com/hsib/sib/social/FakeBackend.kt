@@ -1,6 +1,7 @@
 package com.hsib.sib.social
 
 import android.content.Context
+import com.hsib.sib.core.social.ChatRequest
 import com.hsib.sib.core.social.Crockford
 import com.hsib.sib.core.social.DeviceKeyPair
 import com.hsib.sib.core.social.InviteInfo
@@ -29,6 +30,13 @@ class FakeServer(private val clock: () -> Long = { System.currentTimeMillis() })
     internal val members = HashMap<String, LinkedHashMap<String, MemberInfo>>()
     internal val messages = HashMap<String, MutableList<MessageInfo>>()
     internal val invites = HashMap<String, InviteInfo>()
+    internal val usernames = HashMap<String, String>()
+    internal val emails = HashMap<String, String>()
+    internal val chatRequests = HashMap<String, LinkedHashMap<String, ChatRequest>>()
+    internal val courseUse = HashMap<String, MutableSet<String>>()
+
+    /** How many people were counted for a setup, for tests. */
+    fun usersOfCourse(hash: String) = courseUse[hash]?.size ?: 0
     val reports = ArrayList<Pair<String, Report>>()
     private var last = 0L
 
@@ -198,7 +206,59 @@ class FakeBackend(private val server: FakeServer, private val uid: String) : Soc
 
     override suspend fun myRoomIds(): List<String> = online { server.members.filter { it.value.containsKey(uid) }.keys.toList() }
 
+    override suspend fun setUsername(name: String?, previous: String?) = online {
+        if (name != null) {
+            if (!Regex("[a-z0-9_.]{3,20}").matches(name)) deny()
+            if (server.usernames[name] != null && server.usernames[name] != uid) deny()
+            server.usernames[name] = uid
+        }
+        if (previous != null && previous != name && server.usernames[previous] == uid) server.usernames.remove(previous)
+        Unit
+    }
+
+    override suspend fun userByUsername(name: String): String? = online { server.usernames[name] }
+
+    override suspend fun userByEmailHash(hash: String): String? = online { server.emails[hash] }
+
+    override suspend fun setEmailLookup(hash: String, on: Boolean) = online {
+        if (on) {
+            if (hash.length != 64 || (server.emails[hash] != null && server.emails[hash] != uid)) deny()
+            server.emails[hash] = uid
+        } else if (server.emails[hash] == uid) {
+            server.emails.remove(hash)
+        }
+        Unit
+    }
+
+    override suspend fun sendChatRequest(request: ChatRequest) = online {
+        ownedRoom(request.roomId)
+        if (request.fromUid != uid || request.toUid == uid || request.wrappedKey.length > 512 || request.wrappedKey.isEmpty()) deny()
+        val mine = server.chatRequests.getOrPut(request.toUid) { LinkedHashMap() }
+        if (mine.containsKey(uid)) deny()
+        mine[uid] = request.copy(createdAtMs = server.now())
+        Unit
+    }
+
+    override suspend fun chatRequests(): List<ChatRequest> = online { server.chatRequests[uid]?.values?.toList().orEmpty() }
+
+    override suspend fun deleteChatRequest(toUid: String, fromUid: String) = online {
+        if (toUid != uid && fromUid != uid) deny()
+        server.chatRequests[toUid]?.remove(fromUid)
+        Unit
+    }
+
+    override suspend fun countCourseUse(courseHash: String, name: String) = online {
+        if (courseHash.length != 64) deny()
+        if (!server.courseUse.getOrPut(courseHash) { HashSet() }.add(uid)) deny()
+        Unit
+    }
+
     override suspend fun deleteMyData() = online {
+        server.usernames.entries.removeAll { it.value == uid }
+        server.emails.entries.removeAll { it.value == uid }
+        server.chatRequests.remove(uid)
+        server.chatRequests.values.forEach { it.remove(uid) }
+        server.courseUse.values.forEach { it.remove(uid) }
         for (roomId in server.members.filter { it.value.containsKey(uid) }.keys.toList()) {
             val r = server.rooms[roomId]
             if (r != null && r.ownerUid == uid) {

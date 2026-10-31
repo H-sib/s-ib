@@ -62,6 +62,8 @@ data class AppSettings(
     /** The courses this person has saved and the one in use. Empty means the built in MBBS course. */
     val courses: List<com.hsib.sib.core.medical.Course> = emptyList(),
     val courseActive: String = "MBBS",
+    /** Off by default. When on and signed in, the setup in use is added once to an anonymous count of people using the same setup. */
+    val courseCount: Boolean = false,
     /** Encouraging lines. [motivationOn] is the master switch; the others turn off one place or one kind of deadline. */
     /** The class routine: which weekdays it covers (1 Monday to 7 Sunday, Saturday to Thursday by default) and how many classes a day has. */
     val routineDays: Set<Int> = setOf(6, 7, 1, 2, 3, 4),
@@ -118,7 +120,7 @@ object SettingsCodec {
         put("keepExcerptsByDefault", s.keepExcerptsByDefault.toString())
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
-        put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive)
+        put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive); put("courseCount", s.courseCount.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
         put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
         put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
@@ -172,6 +174,7 @@ object SettingsCodec {
             closeOnesEnabled = m.bool("closeOnesEnabled", d.closeOnesEnabled),
             courses = m["courses"]?.let { com.hsib.sib.core.medical.Courses.listFromJson(it) } ?: d.courses,
             courseActive = m["courseActive"]?.take(60) ?: d.courseActive,
+            courseCount = m.bool("courseCount", d.courseCount),
             medicalMode = m.bool("medicalMode", d.medicalMode),
             medicalAsked = m.bool("medicalAsked", d.medicalAsked),
             homeStyle = m.enum("homeStyle", d.homeStyle),

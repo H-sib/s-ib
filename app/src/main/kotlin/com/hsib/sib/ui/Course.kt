@@ -64,6 +64,8 @@ private suspend fun useCourse(ready: Ready, st: AppState, c: Course, replacing: 
         val named = clean.copy(name = if (replacing == null || clean.name != replacing) freeName(clean.name, taken) else clean.name)
         cur.copy(courses = others + named, courseActive = named.name, medicalMode = true, medicalAsked = true)
     }
+    // Only when the person switched the count on and is signed in. A failure changes nothing for them.
+    if (st.settings.courseCount) runCatching { ready.social?.countCourse(ready.settings.current().course) }
 }
 
 /** A big tinted choice with an icon: where to go to set the app up for study, work or daily life. */
@@ -111,6 +113,10 @@ fun CourseScreen(st: AppState, ready: Ready, onBack: () -> Unit, onEdit: (String
                     GroupDivider()
                     NavItem("Delete from this phone", null, { scope.launch { ready.settings.update { cur -> cur.copy(courses = cur.courses.filter { it.name != active.name }, courseActive = Courses.mbbs.name) } } })
                 }
+                GroupDivider()
+                ToggleRow("Count my setup anonymously", "Off by default. When on, and signed in for friends and chat, your setup is added once to a count of people who use the same one, so popular setups can be offered to everyone. The server keeps a number and the setup's name, nothing about you.", st.settings.courseCount, { v ->
+                    scope.launch { ready.settings.update { it.copy(courseCount = v) }; if (v) runCatching { ready.social?.countCourse(active) } }
+                })
                 GroupDivider()
                 NavItem("Switch it off", "Go back to the plain app. Your deadlines stay.", { scope.launch { ready.settings.update { it.copy(medicalMode = false) } } })
             } else {

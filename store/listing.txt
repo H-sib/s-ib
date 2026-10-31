@@ -34,7 +34,7 @@ SHARE WITHOUT AN ACCOUNT
 Send a deadline, or a whole weekly or monthly series, to friends as a calendar file with a readable list. No sign-up for anyone.
 
 SHARE AND CHAT WITH FRIENDS (OPTIONAL)
-Sign in with Google, share a deadline with an invite code, and everyone in it is reminded and can chat about it. Each person keeps their own plan. What you share is sealed on your phone before it is sent, so the service that stores it cannot read it. You can report or block anyone, and delete your account in the app.
+Sign in with Google, then find a friend by username to chat, or share a deadline with an invite code, and everyone in it is reminded and can chat about it. Each person keeps their own plan. What you share is sealed on your phone before it is sent, so the service that stores it cannot read it. You can report or block anyone, and delete your account in the app.
 
 PRIVATE BY DESIGN
 No account is needed. No ads. No analytics. Your deadlines are stored in an encrypted database on your phone and stay there unless you choose to share one. Backups are end-to-end encrypted with a recovery key that only you hold, and are saved to any folder you choose, including a cloud drive. Every change to a deadline is chained to the one before it, so an unrecorded edit can be detected.

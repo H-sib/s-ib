@@ -3,6 +3,13 @@ package com.hsib.sib.social
 import android.content.Context
 import androidx.room.withTransaction
 import com.hsib.sib.BuildConfig
+import com.hsib.sib.core.model.Kind
+import com.hsib.sib.core.model.Obligation
+import com.hsib.sib.core.model.Space
+import com.hsib.sib.core.medical.Course
+import com.hsib.sib.core.medical.Courses
+import com.hsib.sib.core.social.ChatRequest
+import com.hsib.sib.core.social.UserHit
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.social.ChatMessage
 import com.hsib.sib.core.social.CommunityRules
@@ -186,9 +193,9 @@ class SocialRepository(
     suspend fun displayName(): String = auth.user.value?.let { myName(it) }.orEmpty()
 
     private suspend fun publishProfile(user: SocialUser) {
-        val profile = Profile(user.uid, myName(user), deviceKey().publicText())
+        val profile = Profile(user.uid, myName(user), deviceKey().publicText(), settings.raw(USERNAME_KEY))
         backend.saveProfile(profile)
-        settings.putRaw(PUBLISHED_KEY, profile.uid + "|" + profile.displayName + "|" + profile.publicKey)
+        settings.putRaw(PUBLISHED_KEY, profile.uid + "|" + profile.displayName + "|" + profile.publicKey + "|" + profile.username.orEmpty())
     }
 
     /**
@@ -196,7 +203,7 @@ class SocialRepository(
      * make a new key (a restore without the backed up key) must tell the server, or others would seal for the old key.
      */
     private suspend fun ensureProfile(user: SocialUser) {
-        val now = user.uid + "|" + myName(user) + "|" + deviceKey().publicText()
+        val now = user.uid + "|" + myName(user) + "|" + deviceKey().publicText() + "|" + settings.raw(USERNAME_KEY).orEmpty()
         if (settings.raw(PUBLISHED_KEY) != now) publishProfile(user)
     }
 
@@ -283,7 +290,8 @@ class SocialRepository(
             auth.deleteAccount(context)
             clearLocal()
             db.blocked().clear()
-            for (k in listOf(UID_KEY, NAME_KEY, SOCIAL_DEVICE_KEY, TERMS_KEY, PUBLISHED_KEY)) settings.removeRaw(k)
+            for (k in listOf(UID_KEY, NAME_KEY, SOCIAL_DEVICE_KEY, TERMS_KEY, PUBLISHED_KEY, USERNAME_KEY, EMAIL_KEY)) settings.removeRaw(k)
+            requestList.value = emptyList()
             termsAccepted.value = false
             SocialResult.Ok(Unit)
         }
@@ -397,6 +405,7 @@ class SocialRepository(
             val known = db.rooms().all().map { it.roomId }.toSet()
             for (roomId in backend.myRoomIds() - known) adoptRoom(roomId, user)
             for (row in db.rooms().all()) if (!row.removed) syncRoom(row.roomId, user)
+            runCatching { refreshRequests() }
             SocialResult.Ok(Unit)
         }
     }
@@ -697,6 +706,184 @@ class SocialRepository(
             SocialResult.Ok(Unit)
         }
 
+    // ---- finding people and chatting first ----------------------------------------------------------------
+
+    private val requestList = MutableStateFlow<List<ChatRequest>>(emptyList())
+
+    /** Requests from people who want to chat, waiting for a yes or a no. Blocked people never appear. */
+    val requests: StateFlow<List<ChatRequest>> = requestList
+
+    private suspend fun refreshRequests() {
+        val mine = auth.user.value ?: run { requestList.value = emptyList(); return }
+        val blocked = db.blocked().all().map { it.uid }.toSet()
+        val all = backend.chatRequests().filter { it.toUid == mine.uid }
+        for (r in all.filter { it.fromUid in blocked }) runCatching { backend.deleteChatRequest(mine.uid, r.fromUid) }
+        requestList.value = all.filter { it.fromUid !in blocked }.sortedByDescending { it.createdAtMs }
+    }
+
+    suspend fun refreshRequestsNow(): SocialResult<Unit> = lock.withLock { guarded { requireUser(); refreshRequests(); SocialResult.Ok(Unit) } }
+
+    /** This person's own username, or null. */
+    suspend fun username(): String? = settings.raw(USERNAME_KEY)
+
+    /** True when people can find this account by its email. */
+    suspend fun findableByEmail(): Boolean = settings.raw(EMAIL_KEY) == "1"
+
+    suspend fun setUsername(raw: String): SocialResult<String> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            val clean = SocialRules.cleanUsername(raw) ?: return SocialResult.Err(SocialError.BAD_USERNAME)
+            val previous = settings.raw(USERNAME_KEY)
+            try {
+                backend.setUsername(clean, previous)
+            } catch (e: SocialException) {
+                if (e.error == SocialError.DENIED) return SocialResult.Err(SocialError.USERNAME_TAKEN) else throw e
+            }
+            settings.putRaw(USERNAME_KEY, clean)
+            publishProfile(user)
+            SocialResult.Ok(clean)
+        }
+    }
+
+    suspend fun removeUsername(): SocialResult<Unit> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            val previous = settings.raw(USERNAME_KEY) ?: return SocialResult.Ok(Unit)
+            backend.setUsername(null, previous)
+            settings.removeRaw(USERNAME_KEY)
+            publishProfile(user)
+            SocialResult.Ok(Unit)
+        }
+    }
+
+    /** Lets people find this account by typing its email, or stops that. Only a one way hash of the email is stored. */
+    suspend fun setFindableByEmail(on: Boolean): SocialResult<Unit> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            val email = user.email ?: return SocialResult.Err(SocialError.FAILED)
+            ensureProfile(user)
+            backend.setEmailLookup(SocialRules.emailHash(email), on)
+            settings.putRaw(EMAIL_KEY, if (on) "1" else "0")
+            SocialResult.Ok(Unit)
+        }
+    }
+
+    /** Finds a person by their exact username or their exact email. There is no browsing: a guess that does not match returns nothing. */
+    suspend fun findPeople(query: String): SocialResult<List<UserHit>> = guarded {
+        val me = requireUser()
+        val q = query.trim()
+        val uid = when {
+            SocialRules.looksLikeEmail(q) -> backend.userByEmailHash(SocialRules.emailHash(q))
+            else -> SocialRules.cleanUsername(q)?.let { backend.userByUsername(it) }
+        }
+        if (uid == null || uid == me.uid) return SocialResult.Ok(emptyList())
+        val p = backend.profiles(setOf(uid))[uid] ?: return SocialResult.Ok(emptyList())
+        SocialResult.Ok(listOf(UserHit(uid, p.displayName, p.username)))
+    }
+
+    /**
+     * Starts a chat: makes a sealed room with no deadline in it, and asks the other person. Their copy of the room key is
+     * sealed for their own phone key, so only they can open it. Nothing happens on their side until they say yes.
+     */
+    suspend fun startChat(other: UserHit): SocialResult<String> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            requireTerms()
+            if (other.uid == user.uid) return SocialResult.Err(SocialError.FAILED)
+            if (db.blocked().all().any { it.uid == other.uid }) return SocialResult.Err(SocialError.BLOCKED)
+            // A chat with this person that is open already, or whose ask is still waiting for an answer, is reused.
+            val asked = settings.raw(chatWithKey(other.uid))?.let { db.rooms().forObligation(it) }?.takeIf { !it.removed }
+            val existing = asked ?: db.rooms().all().firstOrNull { r ->
+                !r.removed && store.obligation(r.obligationId)?.space == Space.CHAT && db.roomMembers().forRoom(r.roomId).any { it.uid == other.uid }
+            }
+            if (existing != null) return SocialResult.Ok(existing.obligationId)
+            val theirs = backend.profiles(setOf(other.uid))[other.uid] ?: return SocialResult.Err(SocialError.NOT_FOUND)
+            val theirKey = DeviceKeyPair.publicFromText(theirs.publicKey) ?: return SocialResult.Err(SocialError.FAILED)
+            val roomId = newId()
+            val obligationId = newId()
+            val key = RoomKey.generate()
+            val me = deviceKey()
+            val payload = SharedPayload.forChat()
+            val sealed = SocialCrypto.seal(key, SealContext(roomId, Purpose.PAYLOAD, 1), payload.toBytes())
+            val mine = KeyWrap.wrap(key, me.publicKey, roomId, 1, user.uid) ?: return SocialResult.Err(SocialError.FAILED)
+            val forThem = KeyWrap.wrap(key, theirKey, roomId, 1, other.uid) ?: return SocialResult.Err(SocialError.FAILED)
+            ensureProfile(user)
+            backend.createRoom(RoomInfo(roomId, user.uid, 1, 1, sealed, 1, 0), MemberInfo(user.uid, roomId, RoomRole.OWNER, myName(user), 0, null, mine, 1, 0))
+            val code = InviteCode.generate()
+            backend.createInvite(InviteInfo(code.id, roomId, user.uid, SocialRules.inviteExpiry(clock()), false, InviteSeal.seal(key, code, roomId, 1), 1))
+            backend.sendChatRequest(ChatRequest(user.uid, myName(user), other.uid, roomId, code.id, forThem, 1, 0))
+            store.create(Obligation(id = obligationId, title = "Chat with ${other.displayName}", kind = Kind.OPEN_ENDED, space = Space.CHAT), "CHAT", "started a chat")
+            db.withTransaction {
+                db.roomKeys().upsert(RoomKeyEntity(roomId, 1, key.encode()))
+                db.rooms().upsert(newRow(roomId, obligationId, user.uid, 1, 1, 1, fingerprint(payload)))
+            }
+            settings.putRaw(chatWithKey(other.uid), obligationId)
+            syncRoom(roomId, user)
+            SocialResult.Ok(obligationId)
+        }
+    }
+
+    /** Says yes to a request. The chat opens, and the person who asked sees the answer the next time it syncs. */
+    suspend fun acceptChat(req: ChatRequest): SocialResult<String> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            requireTerms()
+            if (db.blocked().all().any { it.uid == req.fromUid }) return SocialResult.Err(SocialError.BLOCKED)
+            val known = db.rooms().get(req.roomId)
+            if (known != null) { backend.deleteChatRequest(user.uid, req.fromUid); refreshRequests(); return SocialResult.Ok(known.obligationId) }
+            val me = deviceKey()
+            val key = (KeyWrap.unwrap(req.wrappedKey, me, req.roomId, req.keyVersion, user.uid) as? Opened.Ok)?.value
+                ?: return SocialResult.Err(SocialError.BAD_CODE)
+            val invite = backend.invite(req.inviteId) ?: return SocialResult.Err(SocialError.NOT_FOUND)
+            if (invite.roomId != req.roomId) return SocialResult.Err(SocialError.BAD_CODE)
+            if (invite.revoked) return SocialResult.Err(SocialError.REVOKED)
+            if (invite.expiresAtMs <= clock()) return SocialResult.Err(SocialError.EXPIRED)
+            ensureProfile(user)
+            val mine = KeyWrap.wrap(key, me.publicKey, req.roomId, req.keyVersion, user.uid) ?: return SocialResult.Err(SocialError.FAILED)
+            try {
+                backend.join(invite.id, MemberInfo(user.uid, req.roomId, RoomRole.MEMBER, myName(user), 0, null, mine, req.keyVersion, 0))
+            } catch (e: SocialException) {
+                if (e.error == SocialError.DENIED) return SocialResult.Err(SocialError.JOIN_REFUSED) else throw e
+            }
+            val info = backend.room(req.roomId) ?: return SocialResult.Err(SocialError.NOT_FOUND)
+            val payload = readPayload(info, key)
+            if (payload == null || !payload.chat) {
+                runCatching { backend.leave(req.roomId) }
+                return SocialResult.Err(SocialError.CANNOT_READ)
+            }
+            val obligationId = newId()
+            store.create(payload.toNewObligation(obligationId).copy(title = "Chat with ${req.fromName}"), "CHAT", "accepted a chat")
+            db.withTransaction {
+                db.roomKeys().upsert(RoomKeyEntity(info.id, req.keyVersion, key.encode()))
+                db.rooms().upsert(newRow(info.id, obligationId, info.ownerUid, req.keyVersion, info.rev, info.memberCount, fingerprint(payload)))
+            }
+            runCatching { backend.deleteChatRequest(user.uid, req.fromUid) }
+            syncRoom(info.id, user)
+            refreshRequests()
+            SocialResult.Ok(obligationId)
+        }
+    }
+
+    /** Says no to a request. With [block] the person is also blocked, so they cannot ask again. */
+    suspend fun declineChat(req: ChatRequest, block: Boolean): SocialResult<Unit> = lock.withLock {
+        guarded {
+            val user = requireUser()
+            backend.deleteChatRequest(user.uid, req.fromUid)
+            if (block) db.blocked().upsert(BlockedEntity(req.fromUid, req.fromName, clock()))
+            requestList.value = requestList.value.filter { it.fromUid != req.fromUid }
+            SocialResult.Ok(Unit)
+        }
+    }
+
+    /** Adds this person, once, to the anonymous count of people using the same setup. The server keeps a number and the setup's name, nothing about the person. */
+    suspend fun countCourse(course: Course): SocialResult<Unit> = guarded {
+        requireUser()
+        val clean = Courses.sanitize(course) ?: return SocialResult.Ok(Unit)
+        val hash = MessageDigest.getInstance("SHA-256").digest(Courses.listToJson(listOf(clean.copy(name = ""))).toByteArray(Charsets.UTF_8)).toHex()
+        try { backend.countCourseUse(hash, clean.name) } catch (e: SocialException) { if (e.error != SocialError.DENIED) throw e }
+        SocialResult.Ok(Unit)
+    }
+
     /** The community rules, so the screen and the web page show the same words. */
     val rules: List<String> get() = CommunityRules.rules
 
@@ -706,8 +893,11 @@ class SocialRepository(
         private const val CONSENT_SENT_KEY = "social.consentSent"
         const val UID_KEY = "social.uid"
         const val NAME_KEY = "social.displayName"
+        private const val USERNAME_KEY = "social.username"
+        private const val EMAIL_KEY = "social.emailLookup"
         private const val PUBLISHED_KEY = "social.published"
         private fun invitesKey(roomId: String) = "social.invites.$roomId"
+        private fun chatWithKey(uid: String) = "social.chatWith.$uid"
         private const val OVERLAP_MS = 5_000L
         private const val MAX_PAGES = 5
         private const val PROFILE_REFRESH_MS = 6L * 60 * 60 * 1000

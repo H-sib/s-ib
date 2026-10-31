@@ -26,5 +26,5 @@ object SocialLimits {
     const val FETCH_PAGE = 200
 
     /** Bumped when the community rules change, so people are asked to accept them again. */
-    const val TERMS_VERSION = 1
+    const val TERMS_VERSION = 2
 }

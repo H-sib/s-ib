@@ -1,6 +1,7 @@
 package com.hsib.sib.social
 
 import android.content.Context
+import com.hsib.sib.core.social.ChatRequest
 import com.hsib.sib.core.social.InviteInfo
 import com.hsib.sib.core.social.MemberInfo
 import com.hsib.sib.core.social.MessageInfo
@@ -31,6 +32,9 @@ enum class SocialError(val text: String) {
     TERMS("Accept the community rules first."),
     NO_GOOGLE_ACCOUNT("There is no Google account on this phone. Add one in Android settings, then try again."),
     SIGN_IN_FAILED("Google sign in did not work. Check the connection and try again."),
+    BAD_USERNAME("Use 3 to 20 letters, numbers, dots or underscores."),
+    USERNAME_TAKEN("That username is taken. Try another."),
+    BLOCKED("You blocked this person. Unblock them in Account first."),
     FAILED("Something went wrong. Try again."),
 }
 
@@ -128,6 +132,32 @@ interface SocialBackend {
 
     /** The rooms this person belongs to, so a new phone or a restore finds them again. */
     suspend fun myRoomIds(): List<String>
+
+    // ---- finding people and asking to chat --------------------------------------------------------------
+
+    /** Takes [name] as this person's username and gives up [previous]. Refused when someone else has it. Null [name] only gives up the old one. */
+    suspend fun setUsername(name: String?, previous: String?)
+
+    /** The account that has this username, or null. Found only by exact name; there is no way to list names. */
+    suspend fun userByUsername(name: String): String?
+
+    /** The account that allowed itself to be found by the hash of its email, or null. Found only by exact match. */
+    suspend fun userByEmailHash(hash: String): String?
+
+    /** Lets people find this account by the hash of its email, or stops that. */
+    suspend fun setEmailLookup(hash: String, on: Boolean)
+
+    /** Asks someone to chat. The request holds the new chat's key sealed for that person's own phone key. One waiting request per pair. */
+    suspend fun sendChatRequest(request: ChatRequest)
+
+    /** The requests waiting for this person. */
+    suspend fun chatRequests(): List<ChatRequest>
+
+    /** Removes a request. The person it was sent to can remove it, and so can the sender. */
+    suspend fun deleteChatRequest(toUid: String, fromUid: String)
+
+    /** Adds this person once to the anonymous count of people using the setup with this content hash. Refused quietly if already counted. */
+    suspend fun countCourseUse(courseHash: String, name: String)
 
     /** Removes everything the server holds about this person: memberships, their messages, their profile, rooms they own. */
     suspend fun deleteMyData()

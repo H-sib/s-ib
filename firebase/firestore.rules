@@ -5,7 +5,8 @@ rules_version = '2';
 // NOT YET RUN against the Firebase emulator. Run firebase/tests first (see firebase/README.txt).
 //
 // Everything stored in sealedPayload, sealedBody, sealedKey and wrappedKey is sealed on the phone, so the server and these
-// rules only ever see opaque text and its size. People are found only by an invite code, never by search.
+// rules only ever see opaque text and its size. People are found by an invite code, or by typing an exact username or an exact
+// email that its owner chose to make findable. Nothing can be listed or searched through.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -44,10 +45,12 @@ service cloud.firestore {
 
       // The public key is 32 bytes as base64url, 43 characters.
       allow create, update: if signedIn() && uid == me()
-        && keysOnly(['displayName', 'publicKey'])
+        && keysOnly(['displayName', 'publicKey', 'username'])
         && request.resource.data.keys().hasAll(['displayName', 'publicKey'])
         && text(request.resource.data.displayName, 40) && request.resource.data.displayName.size() > 0
-        && request.resource.data.publicKey is string && request.resource.data.publicKey.size() == 43;
+        && request.resource.data.publicKey is string && request.resource.data.publicKey.size() == 43
+        && (!('username' in request.resource.data)
+            || (request.resource.data.username is string && request.resource.data.username.matches('[a-z0-9_.]{3,20}')));
 
       allow delete: if signedIn() && uid == me();
 
@@ -73,6 +76,75 @@ service cloud.firestore {
           && existsAfter(memberPath(roomId, uid));
         // The person can remove their own entry, and the room's owner can remove it when removing that person.
         allow delete: if signedIn() && (uid == me() || isOwner(roomId));
+      }
+    }
+
+    // ---------- usernames ----------
+
+    // A name belongs to the first person who takes it. It can be read by its exact text (to find a person) and never listed.
+    match /usernames/{name} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && name.matches('[a-z0-9_.]{3,20}')
+        && keysOnly(['uid']) && request.resource.data.uid == me();
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    // ---------- email lookup ----------
+
+    // Only for people who switched it on. The document name is the SHA-256 of the lower case email, so the address itself is never
+    // stored, and the rule checks that the name really is the hash of the signed in person's own verified email.
+    match /emailLookup/{hash} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && keysOnly(['uid']) && request.resource.data.uid == me()
+        && hash == hashing.sha256(request.auth.token.email.lower().toUtf8()).toHexString();
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    // ---------- chat requests ----------
+
+    // One waiting request from one person to another. It holds the new chat's key sealed for the other person's own phone key.
+    // Only the person asked can read it, and either side can remove it. A person can only ask for a chat room they own.
+    match /chatRequests/{toUid}/from/{fromUid} {
+      allow get, list: if signedIn() && toUid == me();
+      allow create: if signedIn() && fromUid == me() && toUid != me()
+        && keysOnly(['fromName', 'roomId', 'inviteId', 'wrappedKey', 'keyVersion', 'createdAt'])
+        && request.resource.data.keys().hasAll(['fromName', 'roomId', 'inviteId', 'wrappedKey', 'keyVersion', 'createdAt'])
+        && text(request.resource.data.fromName, 40) && request.resource.data.fromName.size() > 0
+        && request.resource.data.roomId is string && request.resource.data.roomId.size() > 0 && request.resource.data.roomId.size() <= 128
+        && isOwner(request.resource.data.roomId)
+        && request.resource.data.inviteId is string && request.resource.data.inviteId.size() == 10
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteId)).data.roomId == request.resource.data.roomId
+        && text(request.resource.data.wrappedKey, 512) && request.resource.data.wrappedKey.size() > 0
+        && request.resource.data.keyVersion == 1
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if signedIn() && (toUid == me() || fromUid == me());
+    }
+
+    // ---------- anonymous count of people using the same setup ----------
+
+    // A number and a name, nothing about the person. The person is marked as counted in the same step, so each person counts once.
+    match /courseUse/{hash} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && hash.size() == 64
+        && keysOnly(['count', 'name']) && request.resource.data.count == 1 && text(request.resource.data.name, 60)
+        && existsAfter(/databases/$(database)/documents/courseUse/$(hash)/users/$(me()));
+      allow update: if signedIn() && changes(['count'])
+        && request.resource.data.count == resource.data.count + 1
+        && !exists(/databases/$(database)/documents/courseUse/$(hash)/users/$(me()))
+        && existsAfter(/databases/$(database)/documents/courseUse/$(hash)/users/$(me()));
+      allow delete: if false;
+
+      match /users/{uid} {
+        allow get: if signedIn() && uid == me();
+        allow list: if false;
+        allow create: if signedIn() && uid == me() && keysOnly(['createdAt']) && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
       }
     }
 

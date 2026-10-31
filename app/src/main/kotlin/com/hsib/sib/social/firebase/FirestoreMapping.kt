@@ -1,6 +1,7 @@
 package com.hsib.sib.social.firebase
 
 import com.google.firebase.Timestamp
+import com.hsib.sib.core.social.ChatRequest
 import com.hsib.sib.core.social.InviteInfo
 import com.hsib.sib.core.social.MemberInfo
 import com.hsib.sib.core.social.MessageInfo
@@ -20,6 +21,16 @@ internal object Fields {
     const val INVITES = "invites"
     const val REPORTS = "reports"
     const val CONSENT = "consent"
+    const val USERNAMES = "usernames"
+    const val EMAIL_LOOKUP = "emailLookup"
+    const val CHAT_REQUESTS = "chatRequests"
+    const val FROM = "from"
+    const val COURSE_USE = "courseUse"
+    const val USERNAME = "username"
+    const val UID = "uid"
+    const val FROM_NAME = "fromName"
+    const val COUNT = "count"
+    const val NAME = "name"
     const val ACCEPTED_AT = "acceptedAt"
     const val VERSION = "version"
     const val APP = "app"
@@ -72,10 +83,24 @@ internal object FirestoreMapping {
     fun profile(uid: String, d: Map<String, Any?>): Profile? {
         val name = text(d[Fields.DISPLAY_NAME], SocialLimits.DISPLAY_NAME_CHARS)?.takeIf { it.isNotBlank() } ?: return null
         val key = (d[Fields.PUBLIC_KEY] as? String)?.takeIf { it.length == 43 } ?: return null
-        return Profile(uid, name, key)
+        val handle = (d[Fields.USERNAME] as? String)?.takeIf { Regex("[a-z0-9_.]{3,20}").matches(it) }
+        return Profile(uid, name, key, handle)
     }
 
-    fun profileData(p: Profile): Map<String, Any?> = mapOf(Fields.DISPLAY_NAME to p.displayName, Fields.PUBLIC_KEY to p.publicKey)
+    fun profileData(p: Profile): Map<String, Any?> =
+        buildMap { put(Fields.DISPLAY_NAME, p.displayName); put(Fields.PUBLIC_KEY, p.publicKey); p.username?.let { put(Fields.USERNAME, it) } }
+
+    // ---- chat requests -----------------------------------------------------------------------------------
+
+    fun chatRequest(toUid: String, fromUid: String, d: Map<String, Any?>): ChatRequest? = ChatRequest(
+        fromUid = fromUid, toUid = toUid,
+        fromName = text(d[Fields.FROM_NAME], SocialLimits.DISPLAY_NAME_CHARS)?.takeIf { it.isNotBlank() } ?: return null,
+        roomId = text(d[Fields.ROOM_ID], 128)?.takeIf { it.isNotEmpty() } ?: return null,
+        inviteId = text(d[Fields.INVITE_ID], 10)?.takeIf { it.length == 10 } ?: return null,
+        wrappedKey = text(d[Fields.WRAPPED_KEY], 512)?.takeIf { it.isNotEmpty() } ?: return null,
+        keyVersion = int(d[Fields.KEY_VERSION]) ?: return null,
+        createdAtMs = millis(d[Fields.CREATED_AT]) ?: 0,
+    )
 
     // ---- rooms -----------------------------------------------------------------------------------------
 
