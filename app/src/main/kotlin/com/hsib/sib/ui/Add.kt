@@ -1,5 +1,9 @@
 package com.hsib.sib.ui
 
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.hsib.sib.Ready
 import com.hsib.sib.core.extract.EffortParser
 import com.hsib.sib.core.extract.Extraction
+import com.hsib.sib.core.extract.VoiceHints
 import com.hsib.sib.core.model.Candidate
 import com.hsib.sib.core.model.Category
 import com.hsib.sib.core.model.DueSpec
@@ -104,6 +109,11 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
     var seriesCount by remember { mutableStateOf(4) }
     var shareAsk by remember { mutableStateOf<List<Obligation>?>(null) }
     var medParts by remember { mutableStateOf<List<String>>(emptyList()) }
+    val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        val said = r.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (r.resultCode == android.app.Activity.RESULT_OK && !said.isNullOrBlank()) text = (if (text.isBlank()) "" else text.trim() + ". ") + said
+    }
+    val hints = remember(text) { VoiceHints.parse(text) }
     val context = LocalContext.current
 
     LaunchedEffect(text) {
@@ -117,7 +127,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
     val readings = listOfNotNull(cand?.due) + (cand?.alternatives ?: emptyList())
 
     // Fill the form from what was understood, but never overwrite something the user typed or picked.
-    LaunchedEffect(cand?.id, reading, parsedEffort) {
+    LaunchedEffect(cand?.id, reading, parsedEffort, hints) {
         if (cand != null) {
             if (!touchedTitle) title = cand.title
             if (!touchedCategory) { category = cand.category; importance = Defaults.importance(cand.category) }
@@ -127,7 +137,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
                 time = if (d.precision == Precision.DATE_TIME) d.local.toLocalTime() else null
             }
         }
-        if (!touchedEffort) effortMin = parsedEffort ?: Defaults.effort(category).likelyMin
+        if (!touchedEffort) effortMin = hints.effortMin ?: parsedEffort ?: Defaults.effort(category).likelyMin
     }
 
     Page("Add", onBack) {
@@ -152,6 +162,14 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
             IconAction(SibIcon.PHOTO, "Photo", Modifier.weight(1f), onClick = importActions.photo)
             IconAction(SibIcon.SCAN, "Scan", Modifier.weight(1f), onClick = importActions.scan)
             IconAction(SibIcon.FILE, "File", Modifier.weight(1f), onClick = importActions.file)
+            IconAction(SibIcon.CHAT, "Speak", Modifier.weight(1f), description = "Say it out loud. The phone's own speech window opens.") {
+                runCatching {
+                    voice.launch(
+                        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            .putExtra(RecognizerIntent.EXTRA_PROMPT, "Say the deadline, the date and the hours"),
+                    )
+                }
+            }
         }
         if (onJoin != null) SibButton("Join a shared deadline with a code", onJoin, kind = ButtonKind.TEXT)
 
@@ -261,7 +279,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
                     Obligation(
                         id = UUID.randomUUID().toString(), title = if (count > 1) "${title.trim()} (${i + 1} of $count)" else title.trim(), category = category,
                         kind = if (due == null) Kind.OPEN_ENDED else Kind.DEADLINE, due = due, importance = importance, effort = effort,
-                        parts = medParts.map { Part(it) },
+                        parts = medParts.map { Part(it) }, leadDays = hints.leadDays,
                     )
                 }
                 scope.launch {

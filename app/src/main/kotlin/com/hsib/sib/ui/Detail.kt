@@ -333,6 +333,18 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     }
                     GroupDivider()
                 }
+                if (active && due != null) {
+                    FoldItem(SibIcon.BELL, "Reminder days", hint = if (o.leadDays.isEmpty()) "7, 6, 5" else o.leadDays.sortedDescending().joinToString(", "), info = "These are the early reminders, counted in days before the date. Until you choose, you get a calm one 7, 6 and 5 days ahead. Pick your own days if you want fewer or different ones. Reminders on the last days stay on.") {
+                        val picked = o.leadDays.ifEmpty { com.hsib.sib.core.urgency.ReminderPlanner.DEFAULT_LEADS }.toSet()
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(14, 10, 7, 6, 5, 4, 3, 2, 1).forEach { d ->
+                                SelectChip("$d", d in picked, { val next = if (d in picked) picked - d else picked + d; scope.launch { save(o.copy(leadDays = next.sortedDescending()), "reminder days changed") } })
+                            }
+                        }
+                        Text("Days before the date.", style = SibType.small, color = c.inkSoft)
+                    }
+                    GroupDivider()
+                }
                 if (active) {
                     FoldItem(SibIcon.PAUSE, "Pause", hint = o.postponedUntil?.let { "Until " + fmt.dayShort(it) }) {
                         val pausedUntil = o.postponedUntil

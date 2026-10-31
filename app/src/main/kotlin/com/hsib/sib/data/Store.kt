@@ -18,6 +18,8 @@ import com.hsib.sib.core.model.Limits
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Recurrence
+import com.hsib.sib.core.model.Kind
+import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Relation
 import com.hsib.sib.core.model.Repeat
 import com.hsib.sib.core.model.clamped
@@ -250,6 +252,24 @@ class Store(
             all.sortedWith(compareByDescending<CandidateEntity> { it.confidence }.thenByDescending { it.createdAt })
                 .drop(Limits.MAX_PENDING).forEach { db.candidates().delete(it.id) }
         }
+    }
+
+    /** Keeps several waiting suggestions as one deadline on the last date, with one part for each. */
+    suspend fun acceptAsOne(ids: List<String>, title: String): Obligation? = db.withTransaction {
+        val cs = ids.mapNotNull { db.candidates().get(it)?.toStored()?.candidate }.filter { it.relation == Relation.NEW && it.due != null }.sortedBy { it.due!!.local }
+        if (cs.size < 2) return@withTransaction null
+        val category = cs.groupingBy { it.category }.eachCount().maxByOrNull { it.value }!!.key
+        val short = java.time.format.DateTimeFormatter.ofPattern("d MMM", java.util.Locale.ENGLISH)
+        val o = create(
+            Obligation(
+                id = newId(), title = title.take(120), category = category, kind = Kind.DEADLINE, due = cs.last().due,
+                importance = Defaults.importance(category), effort = Effort.fromLikely(Defaults.effort(category).likelyMin * cs.size),
+                parts = cs.map { Part(it.title.take(60) + " (" + it.due!!.local.toLocalDate().format(short) + ")") },
+            ),
+            "SUGGESTION", "accepted together from an exam routine",
+        )
+        ids.forEach { db.candidates().delete(it) }
+        o
     }
 
     suspend fun accept(candidateId: String, edit: CandidateEdit = CandidateEdit()): Obligation? = db.withTransaction {

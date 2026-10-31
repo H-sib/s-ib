@@ -486,6 +486,8 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onDismiss = { id -> scope.launch { ready.store.dismiss(id) } },
                         onSnooze = { id -> scope.launch { ready.store.snooze(id, Instant.now().plus(Duration.ofDays(3))) } },
                         onAdd = { nav.navigate("add") },
+                        onRoutineSeparate = { list -> scope.launch { list.forEach { ready.store.accept(it.id) }; afterSave() } },
+                        onRoutineOne = { list, title -> scope.launch { ready.store.acceptAsOne(list.map { it.id }, title); afterSave() } },
                     )
                     Tab.MESSAGES -> if (ready.social != null) MessagesScreen(
                         st, ready,

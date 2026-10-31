@@ -517,6 +517,8 @@ fun ReviewScreen(
     onDismiss: (String) -> Unit,
     onSnooze: (String) -> Unit,
     onAdd: () -> Unit,
+    onRoutineSeparate: (List<Candidate>) -> Unit = {},
+    onRoutineOne: (List<Candidate>, String) -> Unit = { _, _ -> },
 ) {
     val c = SibTheme.colors
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
@@ -535,6 +537,11 @@ fun ReviewScreen(
         } else {
             Text("Confirm what is right.", style = SibType.body, color = c.inkSoft)
             Gap(20.dp)
+            val routine = remember(st.pending) { com.hsib.sib.core.extract.ExamRoutine.find(st.pending) }
+            if (routine.isNotEmpty()) {
+                RoutineCard(routine, { onRoutineSeparate(routine) }, { onRoutineOne(routine, "Exam routine") })
+                Gap(20.dp)
+            }
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 (st.pending.filter { it.tier == Tier.SUGGEST } + st.pending.filter { it.tier == Tier.MAYBE }).forEach {
                     CandidateCard(it, st, onConfirm, onDismiss, onSnooze)
@@ -542,6 +549,18 @@ fun ReviewScreen(
             }
         }
         Gap(40.dp)
+    }
+}
+
+/** Offered when a timetable was read: one deadline for each exam, or a single deadline with a part for each. */
+@Composable
+private fun RoutineCard(routine: List<Candidate>, onSeparate: () -> Unit, onOne: () -> Unit) {
+    val c = SibTheme.colors
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(c.violetWash).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a part for each exam, and tick the parts off as you go.", style = SibType.title)
+        Text("${routine.size} exams were found. How do you want to keep them?", style = SibType.body, color = c.ink)
+        SibButton("${routine.size} separate deadlines", onSeparate, Modifier.fillMaxWidth())
+        SibButton("One deadline with ${routine.size} parts", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
     }
 }
 

@@ -49,6 +49,7 @@ data class BudgetResult(val scheduled: List<ReminderSpec>, val digestOnly: List<
  * deadline can never leave an old reminder behind.
  */
 object ReminderPlanner {
+    val DEFAULT_LEADS = listOf(7, 6, 5)
 
     fun inQuiet(t: LocalTime, s: ReminderSettings): Boolean =
         if (s.quietStart.isAfter(s.quietEnd)) !t.isBefore(s.quietStart) || t.isBefore(s.quietEnd)
@@ -109,6 +110,10 @@ object ReminderPlanner {
         }
         if (fogTentative) return out
 
+        // Early reminders. The person's own days win; with none chosen a deadline gets a calm nudge 7, 6 and 5 days ahead.
+        for (days in o.leadDays.filter { it > 0 }.distinct().ifEmpty { DEFAULT_LEADS }) {
+            add(ReminderKind.LEAD, dueZ.toLocalDate().minusDays(days.toLong()).atTime(s.morning).atZone(zone))
+        }
         add(ReminderKind.APPROACHING, dueZ.minusDays(3).toLocalDate().atTime(s.morning).atZone(zone))
         add(ReminderKind.DUE_SOON, dueZ.minusHours(24))
         // A morning nudge only makes sense when the deadline is still a while away that morning.
