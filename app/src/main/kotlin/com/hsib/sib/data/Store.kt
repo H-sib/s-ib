@@ -348,6 +348,9 @@ class Store(
 
     suspend fun removeStep(id: String) = db.steps().delete(id)
 
+    /** Saves a change to one step. An edited step belongs to the person from then on, not to the suggestions. */
+    suspend fun updateStep(step: UserStep) = db.steps().upsert(step.copy(title = step.title.take(120), suggested = false, updatedAt = now()).toEntity())
+
     suspend fun addStep(obligationId: String, title: String, minutes: Int, day: LocalDate?, position: Int) =
         db.steps().upsert(UserStep(newId(), obligationId, title.take(120), minutes, day, false, false, position, now()).toEntity())
 

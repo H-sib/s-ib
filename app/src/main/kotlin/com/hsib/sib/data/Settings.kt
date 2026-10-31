@@ -70,6 +70,8 @@ data class AppSettings(
     val routineLectures: Int = 4,
     val routineTutorials: Int = 1,
     val routineWards: Int = 1,
+    /** Parts of Today, Plan and More that this person chose to hide. Nothing is hidden by default. */
+    val uiHidden: Set<String> = emptySet(),
     val motivationOn: Boolean = true,
     val motivationShow: Boolean = true,
     val motivationNotify: Boolean = true,
@@ -123,7 +125,7 @@ object SettingsCodec {
         put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive); put("courseCount", s.courseCount.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
         put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
-        put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
+        put("uiHidden", s.uiHidden.sorted().joinToString(",")); put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -182,6 +184,7 @@ object SettingsCodec {
             routineLectures = m.int("routineLectures", d.routineLectures, 0..8),
             routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..2),
             routineWards = m.int("routineWards", d.routineWards, 0..2),
+            uiHidden = m["uiHidden"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..20 }?.take(20)?.toSet() ?: d.uiHidden,
             motivationOn = m.bool("motivationOn", d.motivationOn),
             motivationShow = m.bool("motivationShow", d.motivationShow),
             motivationNotify = m.bool("motivationNotify", d.motivationNotify),

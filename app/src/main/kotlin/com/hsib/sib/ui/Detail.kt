@@ -134,6 +134,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
     var completing by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var tab by rememberSaveable(id) { mutableStateOf(DetailTab.OVERVIEW) }
+    var stepEditing by remember(id) { mutableStateOf<UserStep?>(null) }
 
     suspend fun save(new: com.hsib.sib.core.model.Obligation, reason: String) {
         ready.store.save(new, "USER", reason)
@@ -378,36 +379,47 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
         }
         if (tab == DetailTab.STEPS) {
         // ---- steps ----
-        if (o.lifecycle == Lifecycle.ACTIVE && (steps.isNotEmpty() || suggested.isNotEmpty())) {
-            SectionHeader("Steps")
+        if (o.lifecycle == Lifecycle.ACTIVE) {
+            Gap(20.dp)
+            InfoTitle("Steps", "Steps cut the job into smaller pieces, each with a time and a day. The app suggests some from your plan. Use them as they are, change them, or write your own. Tap a step to change it. Tap the box to tick it.", style = SibType.title)
+            Gap(8.dp)
             if (steps.isEmpty()) {
-                Text("Suggested steps", style = SibType.body, color = c.inkSoft)
-                suggested.forEach { SuggestedStepRow(it, fmt) }
+                if (suggested.isNotEmpty()) {
+                    Text("Suggested for you", style = SibType.body, color = c.inkSoft)
+                    suggested.forEach { SuggestedStepRow(it, fmt) }
+                    Spacer(Modifier.height(8.dp))
+                    SibButton("Use these steps", {
+                        scope.launch {
+                            ready.store.saveSteps(id, suggested.mapIndexed { i, s ->
+                                UserStep(UUID.randomUUID().toString(), id, s.title, s.minutes, s.targetDay, false, true, i, Instant.now())
+                            })
+                        }
+                    }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                } else {
+                    Text("No steps yet. Write your own.", style = SibType.body, color = c.inkSoft)
+                }
                 Spacer(Modifier.height(8.dp))
-                SibButton("Use this plan", {
-                    scope.launch {
-                        ready.store.saveSteps(id, suggested.mapIndexed { i, s ->
-                            UserStep(UUID.randomUUID().toString(), id, s.title, s.minutes, s.targetDay, false, true, i, Instant.now())
-                        })
-                    }
-                }, kind = ButtonKind.QUIET)
+                SibButton("Write my own step", { stepEditing = UserStep("", id, "", 60, null, false, false, 0, Instant.now()) }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
             } else {
                 steps.forEach { s ->
-                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Checkbox) { scope.launch { ready.store.toggleStep(s) } }, verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(Modifier.size(22.dp)) {
-                            val dash = if (s.suggested) PathEffect.dashPathEffect(floatArrayOf(5f, 4f)) else null
-                            drawRect(c.ink, topLeft = Offset(2f, 2f), size = Size(size.width - 4f, size.height - 4f), style = Stroke(2f, pathEffect = dash))
-                            if (s.done) { drawLine(c.verdigris, Offset(6f, 12f), Offset(10f, 17f), 3f); drawLine(c.verdigris, Offset(10f, 17f), Offset(18f, 6f), 3f) }
+                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(48.dp).clickable(role = Role.Checkbox) { scope.launch { ready.store.toggleStep(s) } }.semantics { contentDescription = (if (s.done) "Done: " else "Not done: ") + s.title }, contentAlignment = Alignment.Center) {
+                            Canvas(Modifier.size(22.dp)) {
+                                val dash = if (s.suggested) PathEffect.dashPathEffect(floatArrayOf(5f, 4f)) else null
+                                drawRect(c.ink, topLeft = Offset(2f, 2f), size = Size(size.width - 4f, size.height - 4f), style = Stroke(2f, pathEffect = dash))
+                                if (s.done) { drawLine(c.verdigris, Offset(6f, 12f), Offset(10f, 17f), 3f); drawLine(c.verdigris, Offset(10f, 17f), Offset(18f, 6f), 3f) }
+                            }
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
+                        Column(Modifier.weight(1f).clickable(role = Role.Button, onClickLabel = "Change this step") { stepEditing = s }.padding(vertical = 8.dp)) {
                             Text(s.title, style = SibType.body, color = if (s.done) c.inkSoft else c.ink)
                             Text(listOfNotNull(s.targetDay?.let { fmt.dayShort(it) }, fmt.minutes(s.minutes)).joinToString("  ·  "), style = SibType.small, color = c.inkSoft)
                         }
+                        Box(Modifier.size(44.dp).clickable(role = Role.Button) { stepEditing = s }.semantics { contentDescription = "Change step" }, contentAlignment = Alignment.Center) { SibIconView(SibIcon.PENCIL, size = 18.dp, tint = c.violet) }
                         Box(Modifier.size(44.dp).clickable(role = Role.Button) { scope.launch { ready.store.removeStep(s.id) } }.semantics { contentDescription = "Remove step" }, contentAlignment = Alignment.Center) { SibIconView(SibIcon.CLOSE, size = 18.dp, tint = c.inkSoft) }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+                SibButton("Add a step", { stepEditing = UserStep("", id, "", 60, null, false, false, steps.size, Instant.now()) }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
                 SibButton("Go back to suggested steps", { scope.launch { ready.store.saveSteps(id, emptyList()) } }, kind = ButtonKind.TEXT)
             }
         }
@@ -454,6 +466,21 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
 
         }
         Spacer(Modifier.height(40.dp))
+    }
+
+    stepEditing?.let { s ->
+        StepDialog(
+            initial = s.takeIf { it.id.isNotEmpty() }, today = st.today, fmt = fmt,
+            onSave = { title, minutes, day ->
+                scope.launch {
+                    if (s.id.isEmpty()) ready.store.addStep(id, title, minutes, day, s.position)
+                    else ready.store.updateStep(s.copy(title = title, minutes = minutes, targetDay = day))
+                }
+                stepEditing = null
+            },
+            onDelete = if (s.id.isNotEmpty()) ({ scope.launch { ready.store.removeStep(s.id) }; stepEditing = null }) else null,
+            onDismiss = { stepEditing = null },
+        )
     }
 
     pickDate?.let { mode ->

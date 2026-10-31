@@ -311,7 +311,7 @@ fun <T> Choice(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Uni
 val EffortChoices = listOf(30 to "30 min", 120 to "2 hours", 240 to "4 hours", 480 to "1 day", 960 to "2 days")
 
 @Composable
-fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: SibIcon? = iconFor(title)) {
     val c = SibTheme.colors
     Row(
         modifier.fillMaxWidth().heightIn(min = 60.dp)
@@ -319,6 +319,7 @@ fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boo
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
             Text(title, style = SibType.bodyStrong, color = if (enabled) c.ink else c.inkSoft)
             if (subtitle != null) Text(subtitle, style = SibType.small, color = c.inkSoft)
@@ -336,12 +337,13 @@ fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boo
 
 /** A row that opens another layer: a soft card with a chevron. */
 @Composable
-fun NavRow(title: String, subtitle: String?, onClick: () -> Unit, modifier: Modifier = Modifier, trailing: String? = null) {
+fun NavRow(title: String, subtitle: String?, onClick: () -> Unit, modifier: Modifier = Modifier, trailing: String? = null, icon: SibIcon? = null) {
     val c = SibTheme.colors
     Row(
         modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.raised).bounceClick(onClick = onClick).padding(horizontal = 20.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (icon != null) { IconBadge(icon, size = 44.dp); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
             Text(title, style = SibType.title, color = c.ink)
             if (subtitle != null) Text(subtitle, style = SibType.small, color = c.inkSoft)

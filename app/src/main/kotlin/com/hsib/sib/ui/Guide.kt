@@ -144,6 +144,30 @@ object Guide {
     }
 }
 
+/** One icon for each topic, so nothing in the Guide is a bare line of words. */
+fun guideIcon(title: String): SibIcon = when (title) {
+    "Add a deadline" -> SibIcon.PLUS
+    "Make it yours" -> SibIcon.PALETTE
+    "Medical student mode" -> SibIcon.BOOK
+    "Review suggestions" -> SibIcon.DOC_CHECK
+    "The plan", "Own plan and hours" -> SibIcon.GAUGE
+    "Steps you can edit" -> SibIcon.ROUTE
+    "Focus sessions" -> SibIcon.CLOCK
+    "Checklist and progress bar" -> SibIcon.CHECK
+    "Month calendar" -> SibIcon.CALENDAR
+    "Say it out loud" -> SibIcon.CHAT
+    "Attach files" -> SibIcon.FILE
+    "Reminders", "Class reminders" -> SibIcon.BELL
+    "Close ones" -> SibIcon.HEART
+    "Chats and notifications", "Find a friend and chat" -> SibIcon.CHAT
+    "Card, widget and tile", "Today style" -> SibIcon.GRID
+    "Back up and restore" -> SibIcon.CLOUD
+    "Share with friends" -> SibIcon.PEOPLE
+    "Send to a friend" -> SibIcon.SEND
+    "Hide what you do not need" -> SibIcon.EYE
+    else -> SibIcon.PALETTE
+}
+
 /** The Guide: a list of topics, then one topic at a time. Reached from Settings. */
 @Composable
 fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false) {
@@ -156,13 +180,17 @@ fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false) {
             ScreenHeader("Guide", "Everything the app can do, in a few steps each", SibIcon.BOOK)
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }) }
+                topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }, icon = guideIcon(t.title)) }
             }
             Gap(40.dp)
         }
     } else {
         Page(topic.title, { open = -1 }) {
-            Text(topic.line, style = SibType.headline, color = c.ink)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(guideIcon(topic.title), size = 48.dp)
+                Spacer(Modifier.size(14.dp))
+                Text(topic.line, style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f))
+            }
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 topic.steps.forEachIndexed { i, step ->

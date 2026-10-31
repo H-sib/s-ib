@@ -404,7 +404,7 @@ fun TemplateGallery(st: AppState, ready: Ready, group: String, onBack: () -> Uni
     Page(group, onBack) {
         Explain(when (group) { CourseTemplates.WORK -> "Pick the work you do and the app is set up for it: your areas, your usual kinds of deadline and how many hours each takes. Something does not match? Edit it, save it, and share it with colleagues."; CourseTemplates.LIFE -> "Pick what fits your days and the app is set up for it. Something does not match? Edit it and make it yours."; else -> "Pick your course and the app is set up for it. Colleges differ, so if something does not match, edit it, then share your version with friends." })
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            CourseTemplates.group(group).forEach { t -> NavRow(t.course.name, t.blurb, { open = t }) }
+            CourseTemplates.group(group).forEach { t -> NavRow(t.course.name, t.blurb, { open = t }, icon = when (group) { CourseTemplates.WORK -> SibIcon.GAUGE; CourseTemplates.LIFE -> SibIcon.HEART; else -> SibIcon.BOOK }) }
         }
         Spacer(Modifier.height(32.dp))
     }

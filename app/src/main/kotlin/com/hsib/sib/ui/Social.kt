@@ -194,7 +194,7 @@ fun FriendsScreen(st: AppState, ready: Ready, onBack: () -> Unit, onOpenRoom: (S
                         room.unread > 0 -> "$people  ·  ${room.unread} new"
                         else -> people
                     }
-                    NavRow(title, sub, { onOpenRoom(room.obligationId) })
+                    NavRow(title, sub, { onOpenRoom(room.obligationId) }, icon = SibIcon.PEOPLE)
                 }
             }
         }
@@ -427,14 +427,14 @@ fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJ
                         room.unread > 0 -> "$people  ·  ${room.unread} new"
                         else -> people
                     }
-                    NavRow(title, sub, { onOpenRoom(room.obligationId) })
+                    NavRow(title, sub, { onOpenRoom(room.obligationId) }, icon = if (direct) SibIcon.CHAT else SibIcon.PEOPLE)
                 }
             }
         }
         Gap(28.dp)
-        NavRow("Join with a code", "A friend gave you a code", onJoin)
+        NavRow("Join with a code", "A friend gave you a code", onJoin, icon = SibIcon.KEY)
         Gap(12.dp)
-        NavRow("Account", "Name, username, blocked people, rules", onAccount)
+        NavRow("Account", "Name, username, blocked people, rules", onAccount, icon = SibIcon.USER)
         Gap(40.dp)
     }
 }

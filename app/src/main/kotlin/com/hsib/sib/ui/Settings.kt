@@ -107,8 +107,8 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
     val c = SibTheme.colors
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
-        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting.
-        Row(
+        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting. It can be hidden.
+        if ("makeit" !in st.settings.uiHidden) Row(
             Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(c.violet.copy(alpha = 0.14f))
                 .border(1.5.dp, c.violet.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).bounceClick { onNav("settings/course") }.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -240,6 +240,14 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
                     pair.forEach { mode -> ThemeSwatch(mode, mode == shown, { choose(mode) }, Modifier.weight(1f)) }
                 }
             }
+        }
+        SectionHeader("Show or hide")
+        Text("Turn off anything you do not need. Nothing here deletes anything.", style = SibType.small, color = SibTheme.colors.inkSoft)
+        listOf(
+            "also" to "Also coming up", "classes" to "Today's classes", "shortfall" to "Needs more time", "counts" to "Day counts",
+            "friends" to "Friends row", "review" to "To review row", "makeit" to "Make it yours card",
+        ).forEach { (key, label) ->
+            ToggleRow(label, null, key !in st.settings.uiHidden, { on -> scope.launch { ready.settings.update { it.copy(uiHidden = if (on) it.uiHidden - key else it.uiHidden + key) } } })
         }
         SectionHeader("Today style")
         Choice(com.hsib.sib.data.HomeStyle.values().map { it to it.label }, st.settings.homeStyle, { v -> scope.launch { ready.settings.update { it.copy(homeStyle = v) } } })
@@ -583,19 +591,19 @@ fun AboutScreen(onBack: () -> Unit, onTerms: () -> Unit = {}) {
                 Text("Made by H-sib", style = SibType.small, color = c.inkSoft)
             }
         }
-        Group("How it works") {
+        CollapsibleGroup("How it works") {
             ExpandItem("Finding dates", "It reads the text you hand it with rules and a very small model that runs on your phone. It tells you why it picked each date, and it ignores publication dates, history and sale offers.")
             GroupDivider()
-            ExpandItem("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit.")
+            ExpandItem("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit. You can always plan your own days.")
             GroupDivider()
             ExpandItem("Reminding", "Few reminders, placed with care, never inside quiet hours. A confirmed deadline never changes by itself.")
             GroupDivider()
-            ExpandItem("The name", "In H-sib, the letters s, i and b stand for Start It Before. They are also the closing sound of the maker's name, Hasib, which can mean one who counts. A sib is a brother or sister, the spirit of Close ones.")
+            NameStory()
         }
-        Group("Credits") {
-            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals and the class diary. Her feedback also shaped version 1.0.1 and 1.1.0: the month view, clearer wording, a checklist with a progress bar, more deadlines on Today, your own plan and Friend in Close ones. Thank you.")
+        CollapsibleGroup("Credits", icon = SibIcon.HEART) {
+            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version of H-sib Reminder. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals, the class diary and the weekly class table. Her feedback shaped versions 1.0.1 to 1.3.0: the month view, clearer wording, a checklist with a progress bar of up to 50 items, your own plan and hours, the subjects of every prof, editable steps and the idea of making the app fit every college, job and way of life. Thank you.", icon = SibIcon.HEART)
         }
-        Group("Legal") {
+        CollapsibleGroup("Legal", icon = SibIcon.SHIELD) {
             NavItem("Privacy policy", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } })
             GroupDivider()
             NavItem("Terms of use", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/terms.html"))) } })

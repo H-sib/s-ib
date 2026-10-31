@@ -502,7 +502,11 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                             }
                         },
                     )
-                    Tab.PLAN -> PlanScreen(st, onOpen = { nav.navigate("item/$it") }, onAdd = { nav.navigate("add") })
+                    Tab.PLAN -> PlanScreen(
+                        st, onOpen = { nav.navigate("item/$it") }, onAdd = { nav.navigate("add") },
+                        onSetEffort = { id, minutes -> scope.launch { ready.store.obligation(id)?.let { o -> ready.store.save(o.copy(effort = com.hsib.sib.core.model.Effort.fromLikely(minutes)), "USER", "estimate changed") } } },
+                        onDaily = { nav.navigate("settings/reminders") },
+                    )
                     Tab.REVIEW -> ReviewScreen(
                         st,
                         onConfirm = { cand, edit -> scope.launch { ready.store.accept(cand.id, edit); afterSave() } },
