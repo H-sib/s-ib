@@ -9,8 +9,18 @@ HOW CLAUDE USES THIS FILE
 OPEN
 ----------------------------------------------------------------------------------------------------------------------
 (paste new feedback below this line)
+(none open)
 
 
 ----------------------------------------------------------------------------------------------------------------------
 DONE
 ----------------------------------------------------------------------------------------------------------------------
+
+Dr. Muser (closed tester), 6 items. DONE in 1.0.1 (versionCode 2):
+ 1 Calendar view marking deadlines: Plan, Month (ui/Month.kt).
+ 2 "Short by 45 mins" and "no way to finish comfortably" confusing: now "Needs X more time" and plain sentence.
+ 3 "0 of 15h" confusing: now "0 min done, about 15 h needed".
+ 4 Several parts in one deadline (7 assignments): ui/Parts.kt, parts with names, tick off, battery and percent; Room v3 column obligation.parts.
+ 5 Only one deadline on Today: "Also coming up" shows the next three below the hero. Home hero and chart unchanged.
+ 6 Friend missing in Close ones: Friend and Best friend added.
+ Credit: Settings, About, Credits.

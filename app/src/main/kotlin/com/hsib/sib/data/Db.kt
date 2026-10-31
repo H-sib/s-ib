@@ -2,6 +2,7 @@ package com.hsib.sib.data
 
 import android.content.Context
 import androidx.room.AutoMigration
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -45,6 +46,7 @@ data class ObligationEntity(
     val person: String,
     val relation: String,
     val since: String?,
+    @ColumnInfo(defaultValue = "") val parts: String = "",
 )
 
 @Entity(tableName = "candidate")
@@ -338,9 +340,9 @@ interface SettingDao {
         SealEntity::class, ReminderEntity::class, DismissedEntity::class, SettingEntity::class,
         RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class SibDatabase : RoomDatabase() {
     abstract fun obligations(): ObligationDao

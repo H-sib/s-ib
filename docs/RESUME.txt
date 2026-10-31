@@ -67,3 +67,9 @@ STATUS 2026-10-30 (closed testing submitted)
 STATUS 2026-10-30 (audit of Play Console and Cloud): see store/PLAY_CONSOLE_RELEASE_GUIDE.txt section 12. All correct except the Android API key has no application restriction (owner to restrict). Play signing SHA-256 was missing in Firebase and has been added.
 
 STATUS 2026-10-31 (cloud handoff): a new Claude session should read CLAUDE.md, then docs/HANDOFF.txt (full context), docs/FEEDBACK_LOG.txt and this tail. Owner steps are in docs/CLOUD_START.txt. tools/cloud-setup.sh prepares a Linux cloud machine.
+
+STATUS 2026-10-31 (cloud session, version 1.0.1 code 2, branch fix/cloud-setup-jdk17 then tester-feedback)
+ - Cloud setup now proven on Linux. The environment needed Network access set to Full (dl.google.com). tools/cloud-setup.sh uses an installed JDK 17.
+ - If Maven Central answers 429 (rate limit): add ~/.gradle/init.d/mirror.gradle that swaps https://repo.maven.apache.org/maven2 for https://maven-central.storage-download.googleapis.com/maven2/ in pluginManagement and dependencyResolutionManagement repositories, and set JAVA_TOOL_OPTIONS with -Drobolectric.dependency.repo.url=https://maven-central.storage-download.googleapis.com/maven2 for Robolectric. Both are local only.
+ - Dr. Muser feedback (6 items) done, see docs/FEEDBACK_LOG.txt. New: ui/Month.kt (Plan, Month), ui/Parts.kt (parts and battery), Room v3 (obligation.parts, auto migration 2 to 3, schema 3.json), Part in core model and backup, Also coming up on Today, Friend in Close ones, Credits in Settings About.
+ - Not seen on a real phone: month grid look, battery look. :core:test and :app:testDebugUnitTest pass. release-gate needs the owner's release build.

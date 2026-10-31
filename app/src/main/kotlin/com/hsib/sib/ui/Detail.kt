@@ -256,6 +256,12 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                 }
             }
 
+            // ---- parts: several pieces due together ----
+            if (active && o.space == Space.WORK) {
+                Gap(12.dp)
+                PartsTile(o.parts) { scope.launch { save(o.copy(parts = it), "parts changed") } }
+            }
+
             // ---- progress ----
             if (active && effort != null) {
                 Gap(12.dp)
@@ -264,7 +270,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconBadge(SibIcon.CLOCK, size = 36.dp)
                         Spacer(Modifier.width(12.dp))
-                        Text("${fmt.minutes(o.progressMin)} of ${fmt.minutes(total)}", style = SibType.bodyStrong, color = c.ink)
+                        Text("${fmt.minutes(o.progressMin)} done, about ${fmt.minutes(total)} needed", style = SibType.bodyStrong, color = c.ink)
                     }
                     Spacer(Modifier.height(12.dp))
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(c.ink.copy(alpha = 0.08f))) {
@@ -295,7 +301,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                             }
                             More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
                         } ?: Text(
-                            if (v.atRiskMin > 0) "There is no longer a comfortable way to finish all of this. ${fmt.minutes(v.atRiskMin)} would not fit." else "No safe start can be worked out yet.",
+                            if (v.atRiskMin > 0) "Not enough days are left to finish this at an easy pace. About ${fmt.minutes(v.atRiskMin)} of the work will not fit." else "No safe start can be worked out yet.",
                             style = SibType.small, color = c.vermilion,
                         )
                         if (v.blocks.isNotEmpty()) {
