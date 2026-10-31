@@ -574,7 +574,7 @@ fun AboutScreen(onBack: () -> Unit, onTerms: () -> Unit = {}) {
             ExpandItem("The name", "In H-sib, the letters s, i and b stand for Start It Before. They are also the closing sound of the maker's name, Hasib, which can mean one who counts. A sib is a brother or sister, the spirit of Close ones.")
         }
         Group("Credits") {
-            ExpandItem("Dr. Muser", "Closed tester. Her feedback shaped version 1.0.1: the month view, clearer wording, deadlines in parts with a battery, more deadlines on Today, and Friend in Close ones. Thank you.")
+            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals and the class diary. Her feedback also shaped version 1.0.1 and 1.1.0: the month view, clearer wording, parts with a battery, more deadlines on Today, your own plan and Friend in Close ones. Thank you.")
         }
         Group("Legal") {
             NavItem("Privacy policy", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } })
