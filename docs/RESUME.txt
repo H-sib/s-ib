@@ -82,3 +82,10 @@ STATUS 2026-10-31 later (version 1.1.0, code 3, branch feature/1.1.0)
  - Voice uses RecognizerIntent (no microphone permission). Privacy page has a sentence for it and for file links. Not seen on a real phone: all new screens, the speech window, the file picker.
  - Open: chat by username search (see FEEDBACK_LOG), real screenshots in the Guide (it uses text examples).
  - Cloud tips: set JAVA_HOME to /usr/lib/jvm/java-17-openjdk-amd64. Mirror and Robolectric repo notes are in the 1.0.1 block above. Do not call pkill -f with a word from your own command line: it kills your shell.
+
+STATUS 2026-11-01 (version 1.1.1, code 4, branch feature/1.1.1)
+ - Database v6: table routine_slot. Class routine screen ui/Routine.kt, Today shows today's classes in medical mode. Core Medical kinds changed (labels, no logbook).
+ - Motivation: core/motivation/Motivation.kt (about 7 pools by days left, plus by kind of deadline, started and medical pools; thousands of lines). Notification channel "motivation" (silent), MotivationReceiver, time of day changes every day between 11:00 and 17:59, hidden on the lock screen. Settings, Motivation turns everything off.
+ - Calendar: platform/PhoneCalendar.kt read only, Settings, Calendar. Manifest has READ_CALENDAR; privacy page updated; Play Data safety form: calendar is read on device and not collected.
+ - Plan: one Plan fold in Detail.kt; the "no safe start" text is gone.
+ - Next ideas from the owner: course profiles (customise, save, share without a server), question flow for any university, optional anonymous counter, messages by username or email (signed in users only), a livelier UI lift. See the analysis in chat.

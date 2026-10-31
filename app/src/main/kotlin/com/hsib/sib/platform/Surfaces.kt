@@ -166,6 +166,7 @@ class MaintenanceWorker(context: Context, params: WorkerParameters) : CoroutineW
         val st = ready.engine.snapshot()
         ready.reminders.sync(st)
         ready.reminders.scheduleDigest(st.settings, ready.digestHour())
+        ready.reminders.scheduleMotivation(st.settings)
         ready.surfaces.refresh(st)
         val s = st.settings
         if (s.backupAuto && s.backupFolder != null && System.currentTimeMillis() - s.backupLastAt > 20 * 3_600_000L) {

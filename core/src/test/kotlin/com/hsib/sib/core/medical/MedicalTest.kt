@@ -20,6 +20,8 @@ class MedicalTest {
         assertFalse(Category.CARD in kinds)
         assertTrue(Category.WARD_FINAL in kinds)
         assertTrue(Category.CARD in Medical.kinds(Medical.prof(1)))
+        assertTrue(Medical.profs.none { p -> Category.REPORT in Medical.kinds(p) })
+        assertTrue(Medical.profs.all { p -> p.practicals.none { it.contains("Log book") } })
     }
 
     @Test fun examMonthsRunTheOtherWayForSupplementary() {
@@ -32,6 +34,8 @@ class MedicalTest {
     @Test fun wholeExamsSplitIntoSubjects() {
         assertEquals(Medical.prof(1).subjects, Medical.partsFor(Category.PROF, Medical.prof(1)))
         assertTrue(Medical.partsFor(Category.ITEM, Medical.prof(1)).isEmpty())
-        assertEquals("Anatomy Card exam", Medical.title(Category.CARD, "Anatomy", Medical.prof(1)))
+        assertEquals("Anatomy Card", Medical.title(Category.CARD, "Anatomy", Medical.prof(1)))
+        assertEquals("1st Professional Exam", Medical.title(Category.PROF, null, Medical.prof(1)))
+        assertEquals("3rd Professional Supplementary Exam", Medical.title(Category.SUPPLEMENTARY, null, Medical.prof(3)))
     }
 }

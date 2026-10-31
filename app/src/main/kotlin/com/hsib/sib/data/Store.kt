@@ -105,6 +105,9 @@ data class CandidateEdit(
     val keepExcerpt: Boolean = false,
 )
 
+/** A class in the weekly routine. [kind] is Lecture, Tutorial or Ward, and [shift] is Morning or Evening for ward and block classes. */
+data class RoutineSlot(val id: String, val day: Int, val kind: String, val shift: String, val subject: String, val room: String, val startMin: Int, val endMin: Int)
+
 /** A class in the diary. [kind] is Lecture, Tutorial or Ward. */
 data class ClassNote(val id: String, val day: LocalDate, val subject: String, val topic: String, val faculty: String, val kind: String)
 
@@ -122,6 +125,17 @@ class Store(
     suspend fun addClassNote(n: ClassNote) =
         db.diary().upsert(ClassNoteEntity(n.id.ifEmpty { newId() }, n.day.toString(), n.subject.take(60), n.topic.take(160), n.faculty.take(80), n.kind.take(30)))
     suspend fun removeClassNote(id: String) = db.diary().delete(id)
+
+    val routine: Flow<List<RoutineSlot>> = db.routine().observeAll().map { l -> l.map { RoutineSlot(it.id, it.day, it.kind, it.shift, it.subject, it.room, it.startMin, it.endMin) } }
+    suspend fun saveRoutineSlot(s: RoutineSlot) =
+        db.routine().upsert(RoutineSlotEntity(s.id.ifEmpty { newId() }, s.day.coerceIn(1, 7), s.kind.take(20), s.shift.take(20), s.subject.take(60), s.room.take(60), s.startMin.coerceIn(0, 1439), s.endMin.coerceIn(0, 1439)))
+    suspend fun removeRoutineSlot(id: String) = db.routine().delete(id)
+
+    /** Replaces everything on [day] with copies of [slots], giving each a new id. */
+    suspend fun replaceRoutineDay(day: Int, slots: List<RoutineSlot>) = db.withTransaction {
+        db.routine().clearDay(day)
+        slots.forEach { saveRoutineSlot(it.copy(id = newId(), day = day)) }
+    }
 
     fun receipts(obligationId: String): Flow<List<Receipt>> = db.receipts().observeFor(obligationId).map { l -> l.map { it.toModel() } }
     fun excerpts(obligationId: String): Flow<List<Evidence>> = db.evidence().observeFor(obligationId).map { l -> l.map { it.toModel() } }
@@ -420,7 +434,7 @@ class Store(
     /** Deletes everything the app holds except the vault itself. */
     suspend fun wipeAll() = db.withTransaction {
         wipeRows()
-        db.diary().clear()
+        db.diary().clear(); db.routine().clear()
         db.rooms().clear(); db.roomKeys().clear(); db.roomMembers().clear(); db.roomMessages().clear(); db.blocked().clear()
         db.settings().all().filter { it.key != "historyKeys" }.forEach { db.settings().delete(it.key) }
         blobs.deleteAll()

@@ -19,13 +19,15 @@ import kotlinx.coroutines.launch
 /** Chat and mail apps H-sib Reminder offers to read. Only the ones installed on the phone are shown, and none is read until chosen. */
 object KnownApps {
     val all: List<Pair<String, String>> = listOf(
+        "com.google.android.gm" to "Gmail",
+        "com.google.android.calendar" to "Google Calendar",
+        "com.samsung.android.calendar" to "Samsung Calendar",
         "com.whatsapp" to "WhatsApp",
         "com.whatsapp.w4b" to "WhatsApp Business",
-        "org.telegram.messenger" to "Telegram",
         "com.facebook.orca" to "Messenger",
         "com.google.android.apps.messaging" to "Messages",
         "com.samsung.android.messaging" to "Samsung Messages",
-        "com.google.android.gm" to "Gmail",
+        "org.telegram.messenger" to "Telegram",
         "com.microsoft.office.outlook" to "Outlook",
         "com.Slack" to "Slack",
         "com.discord" to "Discord",

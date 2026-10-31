@@ -194,6 +194,7 @@ fun TodayScreen(
     onFriends: () -> Unit = {},
     whatsNew: List<WhatsNew.Entry> = emptyList(),
     onWhatsNewSeen: () -> Unit = {},
+    classes: List<com.hsib.sib.data.RoutineSlot> = emptyList(),
 ) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
@@ -228,6 +229,11 @@ fun TodayScreen(
                 if (dueToday > 0) StatPill(dueToday, "today", Tone.ALERT, onAll)
                 if (thisWeek > 0) StatPill(thisWeek, "this week", Tone.WARN, onAll)
             }
+        }
+
+        if (st.settings.medicalMode && classes.any { it.day == st.today.dayOfWeek.value }) {
+            Gap(16.dp)
+            TodayClasses(classes, st.today, fmt)
         }
 
         if (whatsNew.isNotEmpty()) {
@@ -559,10 +565,10 @@ fun ReviewScreen(
 private fun RoutineCard(routine: List<Candidate>, onSeparate: () -> Unit, onOne: () -> Unit) {
     val c = SibTheme.colors
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(c.violetWash).padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a part for each exam, and tick the parts off as you go.", style = SibType.title)
+        InfoTitle("This looks like an exam routine", "You can keep every exam as its own deadline, each with its own reminders, or keep them as one deadline on the last exam date with a checklist item for each exam, and tick them off as you go.", style = SibType.title)
         Text("${routine.size} exams were found. How do you want to keep them?", style = SibType.body, color = c.ink)
         SibButton("${routine.size} separate deadlines", onSeparate, Modifier.fillMaxWidth())
-        SibButton("One deadline with ${routine.size} parts", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+        SibButton("One deadline, ${routine.size} checklist items", onOne, Modifier.fillMaxWidth(), ButtonKind.QUIET)
     }
 }
 

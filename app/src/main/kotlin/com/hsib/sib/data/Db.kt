@@ -196,6 +196,36 @@ data class ClassNoteEntity(
     val kind: String,
 )
 
+/** One class in a weekly routine. [day] is 1 for Monday to 7 for Sunday. Times are minutes after midnight. */
+@Entity(tableName = "routine_slot")
+data class RoutineSlotEntity(
+    @PrimaryKey val id: String,
+    val day: Int,
+    val kind: String,
+    val shift: String,
+    val subject: String,
+    val room: String,
+    val startMin: Int,
+    val endMin: Int,
+)
+
+@Dao
+interface RoutineSlotDao {
+    @Query("SELECT * FROM routine_slot ORDER BY day, startMin")
+    fun observeAll(): Flow<List<RoutineSlotEntity>>
+
+    @Upsert suspend fun upsert(e: RoutineSlotEntity)
+
+    @Query("DELETE FROM routine_slot WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("DELETE FROM routine_slot WHERE day = :day")
+    suspend fun clearDay(day: Int)
+
+    @Query("DELETE FROM routine_slot")
+    suspend fun clear()
+}
+
 @Dao
 interface ClassNoteDao {
     @Query("SELECT * FROM class_note ORDER BY day DESC, subject")
@@ -365,17 +395,18 @@ interface SettingDao {
     entities = [
         ObligationEntity::class, CandidateEntity::class, StepEntity::class, ReceiptEntity::class, EvidenceEntity::class,
         SealEntity::class, ReminderEntity::class, DismissedEntity::class, SettingEntity::class,
-        RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class, ClassNoteEntity::class,
+        RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class, ClassNoteEntity::class, RoutineSlotEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6)],
 )
 abstract class SibDatabase : RoomDatabase() {
     abstract fun obligations(): ObligationDao
     abstract fun candidates(): CandidateDao
     abstract fun steps(): StepDao
     abstract fun diary(): ClassNoteDao
+    abstract fun routine(): RoutineSlotDao
     abstract fun receipts(): ReceiptDao
     abstract fun evidence(): EvidenceDao
     abstract fun seals(): SealDao

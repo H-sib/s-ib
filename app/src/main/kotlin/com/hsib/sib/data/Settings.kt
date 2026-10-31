@@ -59,6 +59,11 @@ data class AppSettings(
     /** Medical student mode: MBBS exam types, subjects and a class diary. Off until the person asks for it. */
     val medicalMode: Boolean = false,
     val medicalAsked: Boolean = false,
+    /** Encouraging lines. [motivationOn] is the master switch; the others turn off one place or one kind of deadline. */
+    val motivationOn: Boolean = true,
+    val motivationShow: Boolean = true,
+    val motivationNotify: Boolean = true,
+    val motivationOff: Set<String> = emptySet(),
     val homeStyle: HomeStyle = HomeStyle.FOCUS,
     /** Packages whose notifications H-sib Reminder may read for deadlines. Empty means it reads none. Never restored from a backup. */
     val notificationReaderApps: Set<String> = emptySet(),
@@ -103,6 +108,7 @@ object SettingsCodec {
         put("notificationPermissionAsked", s.notificationPermissionAsked.toString())
         put("closeOnesEnabled", s.closeOnesEnabled.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
+        put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -154,6 +160,10 @@ object SettingsCodec {
             medicalMode = m.bool("medicalMode", d.medicalMode),
             medicalAsked = m.bool("medicalAsked", d.medicalAsked),
             homeStyle = m.enum("homeStyle", d.homeStyle),
+            motivationOn = m.bool("motivationOn", d.motivationOn),
+            motivationShow = m.bool("motivationShow", d.motivationShow),
+            motivationNotify = m.bool("motivationNotify", d.motivationNotify),
+            motivationOff = m["motivationOff"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..20 }?.take(10)?.toSet() ?: d.motivationOff,
             notificationReaderApps = m["notificationReaderApps"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..160 }?.take(60)?.toSet() ?: d.notificationReaderApps,
             readerPromptDismissed = m.bool("readerPromptDismissed", d.readerPromptDismissed),
             dashboardPromptDismissed = m.bool("dashboardPromptDismissed", d.dashboardPromptDismissed),

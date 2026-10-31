@@ -30,6 +30,8 @@ class Notifier(internal val context: Context) {
         const val CH_TODAY = "today"
         const val CH_REVIEW = "review"
         const val CH_CLOSE = "close_ones"
+        const val CH_MOTIVATION = "motivation"
+        const val ID_MOTIVATION = 1008
         const val ID_DIGEST = 1001
         const val ID_TODAY = 1002
         const val ID_REVIEW = 1003
@@ -60,6 +62,7 @@ class Notifier(internal val context: Context) {
                 ch(CH_URGENT, "Due today and past due", "Deadlines that need attention now.", NotificationManager.IMPORTANCE_HIGH),
                 ch(CH_DIGEST, "Daily summary", "One quiet summary of today.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_TODAY, "Dashboard", "Your next deadlines as a card in the notification bar, shown only when something needs you.", NotificationManager.IMPORTANCE_LOW),
+                ch(CH_MOTIVATION, "A little push", "One quiet line a day to get you going. Never makes a sound. Turn it off in Settings, Motivation.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_REVIEW, "New suggestions", "Possible deadlines found in what you shared.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_CLOSE, "Close ones", "Gentle reminders for anniversaries, birthdays and other occasions. Never shows details on the lock screen.", NotificationManager.IMPORTANCE_DEFAULT),
             ),
@@ -156,6 +159,20 @@ class Notifier(internal val context: Context) {
             .setPublicVersion(publicVersion(CH_CLOSE, "A reminder"))
             .build()
     }
+
+    /** The daily encouraging line. Silent, gone by evening, and never shown on the lock screen. */
+    fun motivation(line: String): Notification =
+        NotificationCompat.Builder(context, CH_MOTIVATION)
+            .setSmallIcon(R.drawable.ic_stat_sib)
+            .setContentTitle("A little push")
+            .setContentText(line)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(line))
+            .setAutoCancel(true)
+            .setSilent(true)
+            .setTimeoutAfter(8 * 3_600_000L)
+            .setContentIntent(openIntent(null, ID_MOTIVATION))
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .build()
 
     fun digest(st: AppState, extraDigestOnly: Int): Notification? {
         val active = st.active

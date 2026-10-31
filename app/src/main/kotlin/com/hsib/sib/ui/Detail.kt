@@ -222,6 +222,15 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     Text(pressureWords(v.pressure), style = SibType.small, color = c.inkSoft)
                 }
             }
+            if (active && st.settings.motivationOn && st.settings.motivationShow && due != null) {
+                val group = com.hsib.sib.core.motivation.Motivation.groupFor(o.category)
+                if (group.name !in st.settings.motivationOff && o.space == Space.WORK) {
+                    val daysLeft = java.time.temporal.ChronoUnit.DAYS.between(st.today, due.dayIn(st.zone))
+                    val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, o.id, st.today.toEpochDay(), o.progressMin > 0 || o.parts.any { it.done }, st.settings.medicalMode && o.category.medical, group)
+                    Spacer(Modifier.height(10.dp))
+                    Text(line, style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(horizontal = 6.dp))
+                }
+            }
             if (locked) {
                 Spacer(Modifier.height(8.dp))
                 Text("Only ${shared.ownerName} can change the title and date. Ask in the chat.", style = SibType.small, color = c.inkSoft)
@@ -299,24 +308,27 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             // ---- everything else stays folded until asked for ----
             Group(null) {
                 if (active && effort != null) {
-                    FoldItem(SibIcon.GAUGE, "Plan", hint = if (o.manualPlan.isNotEmpty()) "Your own" else v.latestStart?.let { "Start by " + fmt.dayShort(it) }, info = "The plan says which days to work on this and for how long. Normally the app spreads the hours over your free days, sharing them fairly with your other deadlines. You can set your own hours below, and then the app follows you.") {
-                        v.latestStart?.let {
-                            Row {
-                                Text("Latest safe start", style = SibType.small, color = c.inkSoft, modifier = Modifier.width(130.dp))
-                                Text(fmt.dayShort(it) + "  ·  " + fmt.daysFrom(st.today, it), style = SibType.bodyStrong, color = c.ink)
+                    FoldItem(
+                        SibIcon.GAUGE, "Plan", hint = if (o.manualPlan.isNotEmpty()) "Your own" else v.latestStart?.let { "Start by " + fmt.dayShort(it) } ?: "Automatic",
+                        info = "The plan says which days to work on this and for how long. Until you change it, the app spreads the hours over your free days and shares them fairly with your other deadlines. Choose your own minutes for any day and the app follows you instead. Your hours are taken off those days for your other deadlines.",
+                    ) {
+                        if (o.manualPlan.isEmpty()) {
+                            v.latestStart?.let {
+                                Row {
+                                    Text("Latest safe start", style = SibType.small, color = c.inkSoft, modifier = Modifier.width(130.dp))
+                                    Text(fmt.dayShort(it) + "  ·  " + fmt.daysFrom(st.today, it), style = SibType.bodyStrong, color = c.ink)
+                                }
+                                More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
                             }
-                            More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
-                        } ?: Text(
-                            if (o.manualPlan.isNotEmpty()) "You are using your own plan, so no start day is worked out." else if (v.atRiskMin > 0) "Not enough days are left to finish this at an easy pace. About ${fmt.minutes(v.atRiskMin)} of the work will not fit." else "No safe start can be worked out yet.",
-                            style = SibType.small, color = c.vermilion,
-                        )
-                        if (v.blocks.isNotEmpty()) {
-                            Text("Planned: ${v.blocks.size} ${if (v.blocks.size == 1) "session" else "sessions"}, ${fmt.minutes(v.blocks.sumOf { it.minutes })} in total.", style = SibType.small, color = c.inkSoft)
+                            if (v.latestStart == null && v.atRiskMin > 0) {
+                                Text("Not enough days are left to finish this at an easy pace. About ${fmt.minutes(v.atRiskMin)} of the work will not fit. You can choose your own hours below.", style = SibType.small, color = c.vermilion)
+                            }
+                            if (v.blocks.isNotEmpty()) {
+                                Text("Planned for you: ${v.blocks.size} ${if (v.blocks.size == 1) "session" else "sessions"}, ${fmt.minutes(v.blocks.sumOf { it.minutes })} in total.", style = SibType.small, color = c.inkSoft)
+                            }
+                            if (st.calibration > 1.05) More("Your past jobs ran longer than planned, so estimates are raised by ${((st.calibration - 1) * 100).toInt()}%.", label = "Estimates raised ${((st.calibration - 1) * 100).toInt()}%")
+                            Text("Change a day below and the plan becomes yours.", style = SibType.small, color = c.inkSoft)
                         }
-                        if (st.calibration > 1.05) More("Your past jobs ran longer than planned, so estimates are raised by ${((st.calibration - 1) * 100).toInt()}%.", label = "Estimates raised ${((st.calibration - 1) * 100).toInt()}%")
-                    }
-                    GroupDivider()
-                    FoldItem(SibIcon.CALENDAR, "My own plan", hint = if (o.manualPlan.isNotEmpty()) "On" else "Automatic", info = "Choose how many minutes to give on each day yourself, for example one whole day for this deadline and another day for a different one. Your hours are taken off those days for your other deadlines. Turn it off to let the app plan again.") {
                         ManualPlanEditor(o.manualPlan, st.today, v.planDay, fmt) { scope.launch { save(o.copy(manualPlan = it), "own plan changed") } }
                     }
                     GroupDivider()

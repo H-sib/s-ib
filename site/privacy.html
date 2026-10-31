@@ -49,7 +49,7 @@ it from another app. It reads them on your phone. Text in pictures is recognised
 the app. If you use the Scan button, Google's document scanner is provided through Google Play services and runs on the
 phone; H-sib Reminder receives the scanned pages and does not send them anywhere. Google Play services is governed by Google's
 own privacy policy.</p>
-<p>The clipboard is read only when you tap Paste. H-sib Reminder does not read your email, contacts or calendar. It reads
+<p>The clipboard is read only when you tap Paste. H-sib Reminder does not read your email or contacts. It reads your phone's calendar only if you switch on Calendar in Settings and allow it, and then only to offer entries in Review. It never writes to your calendar. It reads
 notifications only if you switch on Chats and notifications, described below.</p>
 
 <h2>Reading notifications (optional, off by default)</h2>
@@ -130,6 +130,7 @@ sharing, and are left out of calendar export.</p>
   <tr><th>Permission</th><th>Why</th></tr>
   <tr><td>Internet and network state</td><td>Only for sharing and chat, after you sign in, and the app check described above.</td></tr>
   <tr><td>Notifications</td><td>To show your reminders. You are asked at the moment it is useful, and can say no.</td></tr>
+  <tr><td>Read calendar (optional)</td><td>Only if you switch on Calendar in Settings. Entries from the next 60 days are read on the phone and offered in Review. Nothing is written to the calendar and nothing is sent anywhere.</td></tr>
   <tr><td>Receive boot completed</td><td>To set your reminders again after the phone restarts.</td></tr>
   <tr><td>Biometric or screen lock</td><td>Only if you turn on the optional app lock.</td></tr>
   <tr><td>Notification access (optional)</td><td>Only if you turn on Chats and notifications. You grant it yourself in Android's notification access list; it is not a pop-up permission.</td></tr>

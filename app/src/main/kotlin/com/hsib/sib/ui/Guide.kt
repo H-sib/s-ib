@@ -35,7 +35,7 @@ object Guide {
         )))
         if (medical) add(GuideTopic("Medical student mode", "Made for MBBS students.", listOf(
             "Tap [Add]. At the top, pick your prof, then the kind of exam, then the subject.",
-            "The title, the time needed and the study steps are filled in. A prof or term exam gets one part for each subject.",
+            "The title, the time needed and the study steps are filled in. A prof or term exam gets a checklist with one item for each subject.",
             "Open [More], [Settings], [Medical student], [Class diary] to write each class: subject, topic, faculty.",
         ), listOf(
             "Item is the weekly class test, then card, then term, then prof. Practical, ward final and supplementary are kept apart.",
@@ -61,11 +61,11 @@ object Guide {
             "Tap the small eye next to a title to read what it means.",
             "[Log time] buttons add the time you really worked. Hours done count toward the estimate.",
         ), "Nov 3: 4 h   Nov 4: 2 h   Nov 5: none"))
-        add(GuideTopic("Parts and the battery", "One deadline, several pieces.", listOf(
-            "Open a deadline and find the [Parts] card. Choose how many pieces and tap [Split into parts].",
-            "Tap a name to rename it. Tap the circle when a piece is done.",
-            "The battery fills with each piece you finish.",
-        ), listOf("Exam timetables can be kept as one deadline with a part for each exam. The app asks after you scan one."), "3 of 7 done  ·  43%"))
+        add(GuideTopic("Checklist and progress bar", "One deadline, several pieces.", listOf(
+            "Open a deadline and find the [Checklist] card. Choose how many pieces, up to 50, and tap [Make a checklist].",
+            "Tap a name to give it your own, for example Renal Carcinoma. Tap the circle when a piece is done.",
+            "The progress bar, drawn in the shape of a battery, fills with each piece you finish.",
+        ), listOf("Exam timetables can be kept as one deadline with a checklist item for each exam. The app asks after you scan one."), "3 of 7 done  ·  43%"))
         add(GuideTopic("Month calendar", "See every deadline on a month.", listOf(
             "Open [Plan], then [Month].",
             "Days with a deadline have a dot: red when close or late, violet otherwise.",

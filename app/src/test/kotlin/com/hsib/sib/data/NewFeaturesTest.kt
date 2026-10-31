@@ -73,6 +73,20 @@ class NewFeaturesTest {
         scope.cancel()
     }
 
+    @Test fun theWeeklyRoutineIsKeptCopiedAndRemoved() = runBlocking {
+        val scope = CoroutineScope(Job())
+        val ready = TestReady.create(context, scope)
+        ready.store.saveRoutineSlot(RoutineSlot("a", 6, "Lecture", "", "Anatomy", "Gallery 2", 8 * 60, 9 * 60))
+        ready.store.saveRoutineSlot(RoutineSlot("b", 6, "Ward", "Morning", "Medicine", "", 10 * 60, 13 * 60))
+        assertEquals(2, ready.store.routine.first().size)
+        ready.store.replaceRoutineDay(7, ready.store.routine.first().filter { it.day == 6 })
+        val sunday = ready.store.routine.first().filter { it.day == 7 }
+        assertEquals(listOf("Anatomy", "Medicine"), sunday.map { it.subject })
+        ready.store.removeRoutineSlot("a")
+        assertEquals(1, ready.store.routine.first().count { it.day == 6 })
+        scope.cancel()
+    }
+
     @Test fun medicalCategoriesSurviveTheDatabase() = runBlocking {
         val scope = CoroutineScope(Job())
         val ready = TestReady.create(context, scope)

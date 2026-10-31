@@ -212,14 +212,8 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
             }
         }
         if (date != null) {
-            ToggleRow("Include a time", null, time != null, { time = if (it) (time ?: LocalTime.of(23, 59)) else null; touchedDate = true })
-            time?.let { t ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    SibButton("− 15 min", { time = t.minusMinutes(15); touchedDate = true }, kind = ButtonKind.QUIET)
-                    Text(fmt.time(t), style = SibType.headline, color = c.ink, modifier = Modifier.padding(horizontal = 16.dp))
-                    SibButton("+ 15 min", { time = t.plusMinutes(15); touchedDate = true }, kind = ButtonKind.QUIET)
-                }
-            }
+            ToggleRow("Include a time", "Turn on if it is due at a certain hour, such as 10:00. Off means it is due any time that day.", time != null, { time = if (it) (time ?: LocalTime.of(23, 59)) else null; touchedDate = true })
+            time?.let { t -> TimePick(t, fmt) { time = it; touchedDate = true } }
         }
 
         Gap(12.dp)

@@ -10,6 +10,8 @@
     -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Only to read upcoming calendar entries into Review, after the person switches on Calendar in Settings. Never written to. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <!--
       Libraries such as ML Kit and WorkManager add network and foreground service permissions for features S-IB does not
@@ -27,6 +29,8 @@
         <package android:name="com.google.android.apps.messaging" />
         <package android:name="com.samsung.android.messaging" />
         <package android:name="com.google.android.gm" />
+        <package android:name="com.google.android.calendar" />
+        <package android:name="com.samsung.android.calendar" />
         <package android:name="com.microsoft.office.outlook" />
         <package android:name="com.Slack" />
         <package android:name="com.discord" />
@@ -111,6 +115,7 @@
 
         <receiver android:name=".platform.ReminderReceiver" android:exported="false" />
         <receiver android:name=".platform.DigestReceiver" android:exported="false" />
+        <receiver android:name=".platform.MotivationReceiver" android:exported="false" />
         <receiver android:name=".platform.ActionReceiver" android:exported="false" />
         <receiver android:name=".platform.BootReceiver" android:exported="false">
             <intent-filter>

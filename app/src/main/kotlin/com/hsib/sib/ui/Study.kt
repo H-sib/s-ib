@@ -73,20 +73,22 @@ fun MedicalPicker(today: LocalDate, onPick: (kind: Category, title: String, part
                 }
             }
             Spacer(Modifier.height(10.dp))
-            Text("A normal week: ${prof.week}.", style = SibType.small, color = c.inkSoft)
+            Text("${prof.week.replaceFirstChar { it.uppercase() }}. Your own numbers go in Class routine.", style = SibType.small, color = c.inkSoft)
         }
     }
 }
 
 /** Settings page for medical student mode. */
 @Composable
-fun StudySettings(st: AppState, ready: Ready, onBack: () -> Unit, onDiary: () -> Unit) {
+fun StudySettings(st: AppState, ready: Ready, onBack: () -> Unit, onDiary: () -> Unit, onRoutine: () -> Unit) {
     val scope = rememberCoroutineScope()
     Page("Medical student", onBack) {
         Explain("Made for MBBS students. It adds your exam types (item, card, term, prof, practical, ward final, supplementary), your subjects by prof, study steps, and a class diary. Nothing leaves your phone.")
         ToggleRow("Medical student mode", "Turn this on if you study medicine. You can turn it off any time. Your deadlines stay.", st.settings.medicalMode, { v -> scope.launch { ready.settings.update { it.copy(medicalMode = v, medicalAsked = true) } } })
         if (st.settings.medicalMode) {
             Group("Your course") {
+                NavItem("Class routine", "Your week, Saturday to Thursday: lectures, tutorials, ward classes", onRoutine)
+                GroupDivider()
                 NavItem("Class diary", "Which lecture, which subject, which topic, who taught it", onDiary)
                 GroupDivider()
                 ExpandItem("How the course is laid out", Medical.STRUCTURE)

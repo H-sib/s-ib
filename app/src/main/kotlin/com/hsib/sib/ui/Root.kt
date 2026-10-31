@@ -371,8 +371,11 @@ private fun Running(
         composable("settings/health") { HealthScreen(st, ready, back) }
         composable("settings/about") { AboutScreen(back, onTerms = { nav.navigate("settings/terms") }) }
         composable("settings/close") { CloseOnesSettings(st, ready, back) }
-        composable("settings/study") { StudySettings(st, ready, back, onDiary = { nav.navigate("study/diary") }) }
+        composable("settings/motivation") { MotivationSettings(st, ready, back) }
+        composable("settings/calendar") { CalendarSettings(st, ready, back) }
+        composable("settings/study") { StudySettings(st, ready, back, onDiary = { nav.navigate("study/diary") }, onRoutine = { nav.navigate("study/routine") }) }
         composable("study/diary") { ClassDiaryScreen(st, ready, back) }
+        composable("study/routine") { ClassRoutineScreen(st, ready, back) }
         composable("settings/reader") { ReaderScreen(st, ready, back) }
         composable("settings/feedback") { FeedbackScreen(back) }
         composable("settings/guide") { GuideScreen(online = ready.social?.practice == false, onBack = back, medical = st.settings.medicalMode) }
@@ -449,6 +452,7 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
     val c = SibTheme.colors
     val scope = rememberCoroutineScope()
     val reduce = LocalReduceMotion.current
+    val classes by ready.store.routine.collectAsState(initial = emptyList())
     // Null when this build has no sharing, so the entries for it simply do not appear.
     val social = if (ready.social != null) rememberSocial(ready) else null
     Column(Modifier.fillMaxSize().background(c.paper)) {
@@ -466,6 +470,7 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onCloseOnes = { nav.navigate("close") },
                         social = social,
                         onFriends = { nav.navigate("friends") },
+                        classes = classes,
                         whatsNew = WhatsNew.unseen(st.settings.lastSeenVersion, BuildConfig.VERSION_CODE),
                         onWhatsNewSeen = { scope.launch { ready.settings.update { it.copy(lastSeenVersion = BuildConfig.VERSION_CODE) } } },
                         onPrompt = { p ->

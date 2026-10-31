@@ -32,3 +32,13 @@ Dr. Muser and the owner, second round. DONE in 1.1.0 (versionCode 3):
  - Month calendar redesigned. Info eye next to features. Guide rewritten with steps, examples and tips.
  - Files: attach by link only. Voice: Speak button uses the phone's speech window. Exam routine: choice of separate deadlines or one with parts.
  - Medical student mode with its own theme, exam types by prof, subjects, practicals, quick start in Add, class diary. Source: Dr. Muser's video, told by the owner. Subject lists per prof are her college; unclear words were guessed (see docs/RESUME.txt).
+
+Dr. Muser, third round (tablet screenshots with handwriting). DONE in 1.1.1 (versionCode 4):
+ 1 Checklist up to 50 items, names up to 60 letters, "Parts" renamed Checklist, "progress bar in the shape of a battery".
+ 2 Time steps of 1 hour plus minute chips (:00 :15 :30 :45). Include a time now has a plain explanation.
+ 3 Wording: progress bar, not battery.
+ 4 Calendar: Settings, Calendar reads the next 60 days from the phone calendar (READ_CALENDAR, optional) into Review. Gmail, Google Calendar and Samsung Calendar come first in the notification app list.
+ 5 Medical kinds: Item, Term/Assessment, Card, Professional Exam, Supplementary Exam (then Practical and Ward final). Logbook removed.
+ 6 Class routine Saturday to Thursday: lectures up to 8, tutorials up to 2, ward or block up to 2 (Morning or Evening) per day, each with subject, colour by subject, room for lectures, start and end time. Counts are the student's choice, never fixed per phase.
+Owner: one Plan section, no "no safe start" message; motivational lines by kind of deadline (core/motivation), one quiet notification a day, every part can be turned off (Settings, Motivation).
+OPEN: handwritten note "sending proper sub names, fix this" on the medical quick start screenshot is unclear (owner to explain). Counting users of a university profile: owner agrees to an optional anonymous counter. Email search only for signed in users.
