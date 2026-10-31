@@ -143,9 +143,9 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
     Page("Add", onBack) {
         Spacer(Modifier.height(4.dp))
         if (st.settings.medicalMode) {
-            MedicalPicker(st.today) { kind, medTitle, parts, day ->
+            MedicalPicker(st.settings.course, st.today) { kind, medTitle, parts, day, hours ->
                 category = kind; touchedCategory = true; importance = Defaults.importance(kind)
-                if (!touchedEffort) effortMin = Defaults.effort(kind).likelyMin
+                if (!touchedEffort) effortMin = hours?.let { it * 60 } ?: Defaults.effort(kind).likelyMin
                 if (!touchedTitle) title = medTitle
                 medParts = parts
                 if (!touchedDate && day != null) date = day

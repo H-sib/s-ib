@@ -43,7 +43,18 @@ object Guide {
             "1st, 2nd and 3rd prof are in November, the 4th prof in May. Supplementary runs the other way round. Set the exact day yourself.",
             "Choose the days and how many lectures, tutorials and ward classes each day has. Phases differ, so every number is yours to set.",
             "Turn the mode off in Settings and your deadlines stay.",
-        ), "Anatomy Card exam, 1st Prof\nNeeds 8 h  ·  Read, MCQ practice, Viva"))
+        ), "Anatomy Card, 1st Prof\nNeeds 8 h  ·  Read, MCQ practice, Viva"))
+        add(GuideTopic("Make it yours", "Set the app up for your life.", listOf(
+            "Open [More], then [Make it yours] at the top.",
+            "Choose [University and college], [Work and profession] or [Daily life], then pick the one that fits you.",
+            "In [Add] you now see your own kinds of deadline, with the usual hours filled in.",
+            "Something does not match? Tap [Edit] and change the areas, subjects, kinds of deadline and hours. Tap a subject to move it to another phase.",
+            "Tap [Share] to send your setup to friends or colleagues as a short piece of text. They paste it under [Take a setup from a friend].",
+        ), listOf(
+            "A setup holds only subjects or areas, kinds of deadline, hours and months. Nothing personal is shared.",
+            "You can make one for any college or job by answering a few questions.",
+            "Switch it off any time and your deadlines stay.",
+        ), "Engineering university: Year 1, Mathematics, Physics, Chemistry"))
         add(GuideTopic("Review suggestions", "Nothing becomes a deadline until you say yes.", listOf(
             "Dates found in what you shared wait in Review.",
             "Each one shows the sentence it came from and why it was chosen. Tap Check this for doubts.",

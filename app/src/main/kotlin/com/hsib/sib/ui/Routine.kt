@@ -91,7 +91,7 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
     var editing by remember { mutableStateOf<RoutineSlot?>(null) }
     val day = days[dayIndex.coerceIn(0, days.lastIndex)]
     val today = all.filter { it.day == day.value }.sortedBy { it.startMin }
-    val subjects = remember { Medical.profs.flatMap { it.subjects }.distinct() }
+    val subjects = remember(st.settings.course) { st.settings.course.phases.flatMap { it.subjects }.distinct() }
 
     fun change(f: (com.hsib.sib.data.AppSettings) -> com.hsib.sib.data.AppSettings) { scope.launch { ready.settings.update(f) } }
     fun newSlot(d: DayOfWeek, kind: String): RoutineSlot {

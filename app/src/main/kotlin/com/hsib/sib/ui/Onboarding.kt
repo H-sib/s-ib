@@ -67,12 +67,12 @@ fun Onboarding(
     today: LocalDate,
     demo: suspend (String) -> Extraction?,
     onRestore: () -> Unit,
-    onFinish: (medical: Boolean) -> Unit,
+    onFinish: (choice: String) -> Unit,
 ) {
     val c = SibTheme.colors
     var page by rememberSaveable { mutableIntStateOf(0) }
     val last = 4
-    var medical by rememberSaveable { mutableStateOf(false) }
+    var choice by rememberSaveable { mutableStateOf("none") }
     val ms = if (rememberMotionEnabled()) 280 else 0
     Column(Modifier.fillMaxSize().background(c.paper).windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -90,7 +90,7 @@ fun Onboarding(
                         0 -> PageOne()
                         1 -> PageTry(today, demo)
                         2 -> PagePlan(today)
-                        3 -> PageStudy(medical) { medical = it }
+                        3 -> PageStudy(choice) { choice = it }
                         else -> PagePrivacy()
                     }
                     Gap(24.dp)
@@ -103,22 +103,25 @@ fun Onboarding(
             }
             if (page == 0) SibButton("I have a backup", onRestore, kind = ButtonKind.TEXT) else SibButton("Back", { page-- }, kind = ButtonKind.TEXT)
             Spacer(Modifier.size(6.dp))
-            ActionButton(if (page == last) "Start" else "Next", { if (page == last) onFinish(medical) else page++ })
+            ActionButton(if (page == last) "Start" else "Next", { if (page == last) onFinish(choice) else page++ })
         }
     }
 }
 
 @Composable
-private fun PageStudy(medical: Boolean, onChange: (Boolean) -> Unit) {
+private fun PageStudy(choice: String, onChange: (String) -> Unit) {
     val c = SibTheme.colors
     Gap(24.dp)
-    Text("Are you studying medicine?", style = SibType.display, color = c.ink)
+    Text("What fits your days?", style = SibType.display, color = c.ink)
     Gap(12.dp)
-    Text("MBBS students can switch on a version made for them: item, card, term and prof exams, subjects by prof, study steps and a class diary. You can change this later in Settings.", style = SibType.body.copy(fontSize = 17.sp, lineHeight = 26.sp), color = c.inkSoft)
+    Text("Pick one and the app is set up for you: your own kinds of deadline, subjects or areas, and usual hours. You can change or edit it later under More.", style = SibType.body.copy(fontSize = 17.sp, lineHeight = 26.sp), color = c.inkSoft)
     Gap(24.dp)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SelectChip("Yes, I study medicine", medical, { onChange(true) }, Modifier.fillMaxWidth())
-        SelectChip("No, not now", !medical, { onChange(false) }, Modifier.fillMaxWidth())
+        SelectChip("I study medicine", choice == "medical", { onChange("medical") }, Modifier.fillMaxWidth())
+        SelectChip("I study at a university or college", choice == "university", { onChange("university") }, Modifier.fillMaxWidth())
+        SelectChip("I have a job or profession", choice == "work", { onChange("work") }, Modifier.fillMaxWidth())
+        SelectChip("I want it for daily life", choice == "life", { onChange("life") }, Modifier.fillMaxWidth())
+        SelectChip("None of these, keep it plain", choice == "none", { onChange("none") }, Modifier.fillMaxWidth())
     }
 }
 

@@ -152,7 +152,7 @@ fun SibRoot(
     val introMs = remember { introDuration(prefs) }
     var introDone by rememberSaveable { mutableStateOf(route != null || introMs == 0) }
 
-    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion, settingsKnown && st.settings.medicalMode) {
+    Themed(mode, Space.WORK, settingsKnown && st.settings.reduceMotion, settingsKnown && st.settings.medicalMode && com.hsib.sib.core.medical.Courses.isMedical(st.settings.course)) {
         val motion = rememberMotionEnabled()
         Crossfade(introDone, animationSpec = tween(if (motion) 520 else 0), label = "intro") { done ->
             when {
@@ -254,7 +254,20 @@ private fun Running(
         } else {
             Onboarding(
                 st.today, vm::demo, onRestore = { showRestore = true },
-                onFinish = { med -> scope.launch { ready.settings.update { it.copy(onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE, medicalMode = med, medicalAsked = true) } } },
+                onFinish = { choice ->
+                    scope.launch {
+                        // The first pick sets the app up with a sensible default for it. It can be changed under More, Make it yours.
+                        val pick = when (choice) { "university" -> "University (general)"; "work" -> "Corporate office"; "life" -> "Home and family"; else -> null }
+                        val course = com.hsib.sib.core.medical.CourseTemplates.all.firstOrNull { it.course.name == pick }?.course
+                        ready.settings.update {
+                            it.copy(
+                                onboardingDone = true, lastSeenVersion = BuildConfig.VERSION_CODE, medicalAsked = true,
+                                medicalMode = choice != "none", courses = if (course != null) listOf(course) else it.courses,
+                                courseActive = course?.name ?: if (choice == "medical") com.hsib.sib.core.medical.Courses.mbbs.name else it.courseActive,
+                            )
+                        }
+                    }
+                },
             )
         }
         return
@@ -373,7 +386,12 @@ private fun Running(
         composable("settings/close") { CloseOnesSettings(st, ready, back) }
         composable("settings/motivation") { MotivationSettings(st, ready, back) }
         composable("settings/calendar") { CalendarSettings(st, ready, back) }
-        composable("settings/study") { StudySettings(st, ready, back, onDiary = { nav.navigate("study/diary") }, onRoutine = { nav.navigate("study/routine") }) }
+        composable("settings/course") { CourseScreen(st, ready, back, onEdit = { nav.navigate("course/edit/" + android.net.Uri.encode(it)) }, onWizard = { nav.navigate("course/wizard") }, onImport = { nav.navigate("course/import") }, onTemplates = { nav.navigate("course/templates/" + android.net.Uri.encode(it)) }) }
+        composable("course/templates/{group}") { e -> TemplateGallery(st, ready, e.arguments?.getString("group").orEmpty(), back, onDone = { nav.popBackStack("settings/course", inclusive = false) }) }
+        composable("course/edit/{name}") { e -> CourseEditor(st, ready, e.arguments?.getString("name").orEmpty(), back) }
+        composable("course/wizard") { CourseWizard(st, ready, back, onDone = { nav.popBackStack("settings/course", inclusive = false) }) }
+        composable("course/import") { CourseImport(st, ready, back, onDone = { nav.popBackStack("settings/course", inclusive = false) }) }
+        composable("settings/study") { StudySettings(st, ready, back, onDiary = { nav.navigate("study/diary") }, onRoutine = { nav.navigate("study/routine") }, onCourse = { nav.navigate("settings/course") }) }
         composable("study/diary") { ClassDiaryScreen(st, ready, back) }
         composable("study/routine") { ClassRoutineScreen(st, ready, back) }
         composable("settings/reader") { ReaderScreen(st, ready, back) }

@@ -110,7 +110,7 @@ fun iconFor(title: String): SibIcon? = when (title) {
     "Close ones" -> SibIcon.HEART
     "Motivation" -> SibIcon.CHECK
     "Calendar" -> SibIcon.CALENDAR
-    "Medical student" -> SibIcon.BOOK
+    "Medical student", "Study course", "Study tools", "My course" -> SibIcon.BOOK
     "Appearance" -> SibIcon.PALETTE
     "Backup and restore", "In backups" -> SibIcon.CLOUD
     "Security", "Lock screen", "On this phone" -> SibIcon.LOCK

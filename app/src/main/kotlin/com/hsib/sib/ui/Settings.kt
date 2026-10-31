@@ -107,6 +107,19 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
     val c = SibTheme.colors
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
+        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting.
+        Row(
+            Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(c.violet.copy(alpha = 0.14f))
+                .border(1.5.dp, c.violet.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).bounceClick { onNav("settings/course") }.padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconBadge(SibIcon.PALETTE, size = 52.dp)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Make it yours", style = SibType.title, color = c.ink)
+                Text(if (st.settings.medicalMode) "Set up for ${st.settings.course.name}. Tap to change" else "Study, work or daily life: set the app up for you", style = SibType.small, color = c.inkSoft)
+            }
+        }
         Group(null, Modifier.padding(top = 0.dp)) {
             NavItem("Guide", "Everything the app can do, in a few lines", { onNav("settings/guide") })
         }
@@ -128,8 +141,10 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
             GroupDivider()
             NavItem("Calendar", "Offer entries from Samsung or Google Calendar in Review", { onNav("settings/calendar") })
             GroupDivider()
-            NavItem("Medical student", "Exam types, subjects and a class diary", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
-            GroupDivider()
+            if (!st.settings.medicalMode || !com.hsib.sib.core.medical.Courses.isWork(st.settings.course)) {
+                NavItem("Study tools", "Class routine, class diary and the study switch", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
+                GroupDivider()
+            }
             NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
         }
         Group("Data and safety") {

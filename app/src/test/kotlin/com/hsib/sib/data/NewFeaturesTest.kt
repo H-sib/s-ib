@@ -99,6 +99,15 @@ class NewFeaturesTest {
         assertEquals(true, back.medicalMode)
     }
 
+    @Test fun savedCoursesSurviveTheSettingsCodec() {
+        val mine = com.hsib.sib.core.medical.Courses.mbbs.copy(name = "IUB test")
+        val s = AppSettings(courses = listOf(mine), courseActive = "IUB test")
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(listOf(mine), back.courses)
+        assertEquals("IUB test", back.course.name)
+        assertEquals("MBBS", AppSettings().course.name)
+    }
+
     @Test fun medicalCategoriesSurviveTheDatabase() = runBlocking {
         val scope = CoroutineScope(Job())
         val ready = TestReady.create(context, scope)
