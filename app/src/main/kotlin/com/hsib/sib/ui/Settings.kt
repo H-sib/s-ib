@@ -103,7 +103,7 @@ private fun LocalTime.hhmm() = "%02d:%02d".format(hour, minute)
 // ---- root ---------------------------------------------------------------------------------------
 
 @Composable
-fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> Unit, onEasy: (Boolean) -> Unit = {}) {
+fun SettingsHome(st: AppState, social: SocialState? = null, onEasy: (Boolean) -> Unit = {}, onNav: (String) -> Unit) {
     val c = SibTheme.colors
     val easy = st.settings.easyMode
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
