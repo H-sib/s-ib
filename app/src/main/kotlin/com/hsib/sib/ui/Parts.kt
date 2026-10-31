@@ -77,7 +77,7 @@ fun PartsTile(parts: List<Part>, onChange: (List<Part>) -> Unit) {
     var draft by remember { mutableStateOf("") }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised).padding(18.dp)) {
         if (parts.isEmpty()) {
-            Text("Parts", style = SibType.bodyStrong, color = c.ink)
+            InfoTitle("Parts", "Use parts when one deadline holds several pieces, such as 7 assignments or 5 exams. You name each part, tick it when done, and the battery shows how far you are.")
             Text("Several pieces due on the same day, such as 7 assignments? Split them and tick each one off.", style = SibType.small, color = c.inkSoft)
             Spacer(Modifier.size(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

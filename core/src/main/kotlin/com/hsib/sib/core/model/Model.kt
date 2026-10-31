@@ -125,6 +125,10 @@ data class Obligation(
     val since: LocalDate? = null,
     /** Smaller pieces of one deadline, for example seven assignments due together. Empty when the deadline is a single piece. */
     val parts: List<Part> = emptyList(),
+    /** Minutes the person chose to give on given days. When not empty the planner leaves this deadline alone and uses these. */
+    val manualPlan: Map<LocalDate, Int> = emptyMap(),
+    /** Files and links the person pointed to. Only the address and a name are kept; the file itself stays where it is. */
+    val links: List<FileLink> = emptyList(),
 ) {
     val partsDone: Int get() = parts.count { it.done }
 
@@ -140,6 +144,27 @@ data class Obligation(
         due != null -> due.dayIn(deviceZone)
         else -> null
     }
+}
+
+/** A file the person chose with the system file picker. H-sib Reminder keeps the address, never a copy. */
+data class FileLink(val name: String, val uri: String) {
+    companion object {
+        fun encode(links: List<FileLink>): String = links.joinToString("\n") { it.name.replace('\t', ' ').replace('\n', ' ') + "\t" + it.uri }
+
+        fun decode(text: String): List<FileLink> =
+            if (text.isEmpty()) emptyList() else text.split("\n").filter { '\t' in it }.map { FileLink(it.substringBefore('\t'), it.substringAfter('\t')) }
+    }
+}
+
+object ManualPlan {
+    fun encode(plan: Map<LocalDate, Int>): String = plan.toSortedMap().entries.filter { it.value > 0 }.joinToString(",") { "${it.key}:${it.value}" }
+
+    fun decode(text: String): Map<LocalDate, Int> =
+        if (text.isEmpty()) emptyMap() else text.split(",").mapNotNull { e ->
+            val d = runCatching { LocalDate.parse(e.substringBefore(':')) }.getOrNull() ?: return@mapNotNull null
+            val m = e.substringAfter(':').toIntOrNull() ?: return@mapNotNull null
+            d to m
+        }.toMap()
 }
 
 /** One piece of a deadline, with a name the person can change and a done mark. */

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -291,5 +292,46 @@ fun AccountScreen(ready: Ready, onBack: () -> Unit, onSignedOut: () -> Unit) {
             },
             dismissButton = { TextButton({ confirmDelete = false }) { Text("Keep it", style = SibType.body, color = c.ink) } },
         )
+    }
+}
+
+/** The Messages tab: chats come first, joining with a code and the account are small options below. */
+@Composable
+fun MessagesScreen(st: AppState, ready: Ready, onOpenRoom: (String) -> Unit, onJoin: () -> Unit, onAccount: () -> Unit) {
+    val social = ready.social ?: return
+    val s = rememberSocial(ready)
+    val c = SibTheme.colors
+    Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
+        Gap(20.dp)
+        Text("Messages", style = SibType.display, color = c.ink)
+        Gap(16.dp)
+        if (s.practice) PracticeBanner()
+        if (s.user == null) {
+            SignInCard(social)
+            Gap(40.dp)
+            return@Column
+        }
+        val rooms = s.rooms.values.sortedByDescending { it.unread }
+        if (rooms.isEmpty()) {
+            Text("No chats yet. Open a deadline and tap Share to start one, or join a friend with a code.", style = SibType.body, color = c.inkSoft)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                for (room in rooms) {
+                    val title = st.items.firstOrNull { it.o.id == room.obligationId }?.o?.title ?: "Shared deadline"
+                    val people = if (room.members.size == 1) "Only you" else "${room.members.size} people"
+                    val sub = when {
+                        room.removed -> "You are no longer in this"
+                        room.unread > 0 -> "$people  ·  ${room.unread} new"
+                        else -> people
+                    }
+                    NavRow(title, sub, { onOpenRoom(room.obligationId) })
+                }
+            }
+        }
+        Gap(28.dp)
+        NavRow("Join with a code", "A friend gave you a code", onJoin)
+        Gap(12.dp)
+        NavRow("Account", "Name, blocked people, rules", onAccount)
+        Gap(40.dp)
     }
 }

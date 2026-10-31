@@ -3,10 +3,12 @@ package com.hsib.sib.core.backup
 import com.hsib.sib.core.model.Category
 import com.hsib.sib.core.model.DueSpec
 import com.hsib.sib.core.model.Effort
+import com.hsib.sib.core.model.FileLink
 import com.hsib.sib.core.model.FogWindow
 import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Lifecycle
+import com.hsib.sib.core.model.ManualPlan
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
@@ -51,6 +53,8 @@ data class ObligationDto(
     val relation: String = "",
     val since: String? = null,
     val parts: String = "",
+    val manualPlan: String = "",
+    val links: String = "",
 ) {
     fun toModel(): Obligation = Obligation(
         id = id, title = title, notes = notes,
@@ -71,6 +75,7 @@ data class ObligationDto(
         repeatAnchor = repeatAnchor?.let(LocalDate::parse),
         leadDays = leadDays.split(",").mapNotNull { it.toIntOrNull() },
         person = person, relation = relation, since = since?.let(LocalDate::parse), parts = Part.decode(parts),
+        manualPlan = ManualPlan.decode(manualPlan), links = FileLink.decode(links),
     )
 
     companion object {
@@ -84,6 +89,7 @@ data class ObligationDto(
             createdAt = o.createdAt.toEpochMilli(), updatedAt = o.updatedAt.toEpochMilli(), completedAt = o.completedAt?.toEpochMilli(),
             space = o.space.name, repeat = o.repeat.name, repeatAnchor = o.repeatAnchor?.toString(), leadDays = o.leadDays.joinToString(","),
             person = o.person, relation = o.relation, since = o.since?.toString(), parts = Part.encode(o.parts),
+            manualPlan = ManualPlan.encode(o.manualPlan), links = FileLink.encode(o.links),
         )
     }
 }

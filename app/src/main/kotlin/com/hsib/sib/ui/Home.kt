@@ -75,20 +75,20 @@ fun rememberFmt(): Fmt {
 
 // ---- bottom bar ------------------------------------------------------------------------------
 
-enum class Tab(val label: String) { TODAY("Today"), PLAN("Plan"), REVIEW("Review"), SETTINGS("More") }
+enum class Tab(val label: String) { TODAY("Today"), PLAN("Plan"), REVIEW("Review"), MESSAGES("Messages"), SETTINGS("More") }
 
 /** A floating pill: the chosen tab opens up to show its name, the others stay as icons. */
 @Composable
-fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int) {
+fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int, unreadMessages: Int = 0, tabs: List<Tab> = Tab.values().toList()) {
     val c = SibTheme.colors
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp).clip(RoundedCornerShape(34.dp)).background(c.raised).padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        for (tab in Tab.values()) {
+        for (tab in tabs) {
             val on = tab == selected
             val weight by animateFloatAsState(if (on) 1.7f else 1f, tween(260), label = "tabWeight")
-            val desc = tab.label + (if (tab == Tab.REVIEW && reviewCount > 0) ", $reviewCount waiting" else "")
+            val desc = tab.label + (if (tab == Tab.REVIEW && reviewCount > 0) ", $reviewCount waiting" else "") + (if (tab == Tab.MESSAGES && unreadMessages > 0) ", $unreadMessages new" else "")
             Row(
                 Modifier.weight(weight).height(54.dp).clip(RoundedCornerShape(28.dp))
                     .then(if (on) Modifier.background(c.violetWash) else Modifier)
@@ -97,9 +97,10 @@ fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int) {
             ) {
                 Box {
                     TabGlyph(tab, if (on) c.violet else c.inkSoft)
-                    if (tab == Tab.REVIEW && reviewCount > 0) {
+                    val badge = if (tab == Tab.REVIEW) reviewCount else if (tab == Tab.MESSAGES) unreadMessages else 0
+                    if (badge > 0) {
                         Text(
-                            reviewCount.coerceAtMost(99).toString(), style = SibType.label.copy(fontSize = 10.sp), color = c.paper,
+                            badge.coerceAtMost(99).toString(), style = SibType.label.copy(fontSize = 10.sp), color = c.paper,
                             modifier = Modifier.align(Alignment.TopEnd).padding(start = 18.dp).clip(RoundedCornerShape(8.dp)).background(c.vermilion).padding(horizontal = 5.dp, vertical = 1.dp),
                         )
                     }
@@ -131,6 +132,11 @@ private fun TabGlyph(tab: Tab, color: androidx.compose.ui.graphics.Color) {
                 drawLine(color, Offset(3f * u, 12f * u), Offset(size.width * 0.65f, 12f * u), sw, StrokeCap.Round)
                 drawLine(color, Offset(3f * u, 17f * u), Offset(size.width * 0.4f, 17f * u), sw, StrokeCap.Round)
                 drawLine(color, Offset(size.width - 3f * u, 3f * u), Offset(size.width - 3f * u, 21f * u), sw, StrokeCap.Round)
+            }
+            Tab.MESSAGES -> {
+                drawRoundRect(color, Offset(3f * u, 4f * u), androidx.compose.ui.geometry.Size(18f * u, 12f * u), androidx.compose.ui.geometry.CornerRadius(4f * u), style = Stroke(sw))
+                drawLine(color, Offset(8f * u, 16f * u), Offset(7f * u, 21f * u), sw, StrokeCap.Round)
+                drawLine(color, Offset(7f * u, 21f * u), Offset(12f * u, 16f * u), sw, StrokeCap.Round)
             }
             Tab.REVIEW -> drawCircle(color, size.minDimension / 2 - 3f * u, style = Stroke(sw, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f * u, 4f * u))))
             Tab.SETTINGS -> {

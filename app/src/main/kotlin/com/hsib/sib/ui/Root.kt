@@ -483,12 +483,18 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         onSnooze = { id -> scope.launch { ready.store.snooze(id, Instant.now().plus(Duration.ofDays(3))) } },
                         onAdd = { nav.navigate("add") },
                     )
+                    Tab.MESSAGES -> if (ready.social != null) MessagesScreen(
+                        st, ready,
+                        onOpenRoom = { nav.navigate("room/$it") },
+                        onJoin = { nav.navigate("friends/join") },
+                        onAccount = { nav.navigate("friends/account") },
+                    )
                     Tab.SETTINGS -> SettingsHome(st, social = social, onNav = { nav.navigate(it) })
                 }
             }
         }
         Box(Modifier.background(c.paper).windowInsetsPadding(WindowInsets.navigationBars)) {
-            SibBottomBar(tab, onTab, st.pending.size)
+            SibBottomBar(tab, onTab, st.pending.size, social?.rooms?.values?.sumOf { it.unread } ?: 0, if (social != null) Tab.values().toList() else Tab.values().filter { it != Tab.MESSAGES })
         }
     }
 }

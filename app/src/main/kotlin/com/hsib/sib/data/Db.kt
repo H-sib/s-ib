@@ -47,6 +47,8 @@ data class ObligationEntity(
     val relation: String,
     val since: String?,
     @ColumnInfo(defaultValue = "") val parts: String = "",
+    @ColumnInfo(defaultValue = "") val manualPlan: String = "",
+    @ColumnInfo(defaultValue = "") val links: String = "",
 )
 
 @Entity(tableName = "candidate")
@@ -340,9 +342,9 @@ interface SettingDao {
         SealEntity::class, ReminderEntity::class, DismissedEntity::class, SettingEntity::class,
         RoomEntity::class, RoomKeyEntity::class, RoomMemberEntity::class, RoomMessageEntity::class, BlockedEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
 )
 abstract class SibDatabase : RoomDatabase() {
     abstract fun obligations(): ObligationDao

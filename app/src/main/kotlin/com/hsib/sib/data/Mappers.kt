@@ -4,11 +4,13 @@ import com.hsib.sib.core.model.Candidate
 import com.hsib.sib.core.model.Category
 import com.hsib.sib.core.model.DueSpec
 import com.hsib.sib.core.model.Effort
+import com.hsib.sib.core.model.FileLink
 import com.hsib.sib.core.model.Flag
 import com.hsib.sib.core.model.FogWindow
 import com.hsib.sib.core.model.Importance
 import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Lifecycle
+import com.hsib.sib.core.model.ManualPlan
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
@@ -49,6 +51,8 @@ fun ObligationEntity.toModel(): Obligation = Obligation(
     person = person, relation = relation,
     since = since?.let(LocalDate::parse),
     parts = Part.decode(parts),
+    manualPlan = ManualPlan.decode(manualPlan),
+    links = FileLink.decode(links),
 )
 
 fun Obligation.toEntity(): ObligationEntity = ObligationEntity(
@@ -60,7 +64,7 @@ fun Obligation.toEntity(): ObligationEntity = ObligationEntity(
     createdAt = createdAt.toEpochMilli(), updatedAt = updatedAt.toEpochMilli(), completedAt = completedAt?.toEpochMilli(),
     space = space.name, repeat = repeat.name, repeatAnchor = repeatAnchor?.toString(), leadDays = leadDays.joinToString(","),
     person = person, relation = relation, since = since?.toString(),
-    parts = Part.encode(parts),
+    parts = Part.encode(parts), manualPlan = ManualPlan.encode(manualPlan), links = FileLink.encode(links),
 )
 
 @Serializable

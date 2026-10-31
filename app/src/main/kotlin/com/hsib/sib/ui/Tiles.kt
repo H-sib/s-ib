@@ -69,9 +69,10 @@ fun IconAction(icon: SibIcon, label: String, modifier: Modifier = Modifier, desc
  * meant to sit inside a [Group], with a [GroupDivider] between them.
  */
 @Composable
-fun FoldItem(icon: SibIcon, title: String, hint: String? = null, content: @Composable ColumnScope.() -> Unit) {
+fun FoldItem(icon: SibIcon, title: String, hint: String? = null, info: String? = null, content: @Composable ColumnScope.() -> Unit) {
     val c = SibTheme.colors
     var open by rememberSaveable(title) { mutableStateOf(false) }
+    var showInfo by rememberSaveable(title, "info") { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().animateContentSize()) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(role = Role.Button, onClickLabel = if (open) "Hide" else "Show") { open = !open }
@@ -80,7 +81,9 @@ fun FoldItem(icon: SibIcon, title: String, hint: String? = null, content: @Compo
         ) {
             IconBadge(icon)
             Spacer(Modifier.width(14.dp))
-            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
+            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f, fill = false))
+            if (info != null) { Spacer(Modifier.width(6.dp)); InfoEye(showInfo, { showInfo = !showInfo }, title) }
+            Spacer(Modifier.weight(1f))
             if (hint != null && !open) {
                 Text(hint, style = SibType.small, color = c.inkSoft, textAlign = TextAlign.End, modifier = Modifier.widthIn(max = 150.dp))
                 Spacer(Modifier.width(10.dp))
@@ -93,6 +96,7 @@ fun FoldItem(icon: SibIcon, title: String, hint: String? = null, content: @Compo
                 drawPath(p, c.violet, style = Stroke(2.6f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
+        if (showInfo && info != null) Box(Modifier.padding(start = 18.dp, end = 18.dp)) { InfoCard(info) }
         if (open) Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }
 }

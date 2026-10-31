@@ -270,7 +270,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconBadge(SibIcon.CLOCK, size = 36.dp)
                         Spacer(Modifier.width(12.dp))
-                        Text("${fmt.minutes(o.progressMin)} done, about ${fmt.minutes(total)} needed", style = SibType.bodyStrong, color = c.ink)
+                        InfoTitle("${fmt.minutes(o.progressMin)} done, about ${fmt.minutes(total)} needed", "Add the time you really worked with the buttons below. The bar shows how much of your estimate is done. Change the estimate under Hours and importance.", style = SibType.bodyStrong)
                     }
                     Spacer(Modifier.height(12.dp))
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(c.ink.copy(alpha = 0.08f))) {
@@ -290,10 +290,16 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                 }
             }
 
+            // ---- files: only remembered, never copied ----
+            if (active && o.space == Space.WORK) {
+                Gap(12.dp)
+                FilesTile(o.links) { scope.launch { save(o.copy(links = it), "files changed") } }
+            }
+
             // ---- everything else stays folded until asked for ----
             Group(null) {
                 if (active && effort != null) {
-                    FoldItem(SibIcon.GAUGE, "Plan", hint = v.latestStart?.let { "Start by " + fmt.dayShort(it) }) {
+                    FoldItem(SibIcon.GAUGE, "Plan", hint = if (o.manualPlan.isNotEmpty()) "Your own" else v.latestStart?.let { "Start by " + fmt.dayShort(it) }, info = "The plan says which days to work on this and for how long. Normally the app spreads the hours over your free days, sharing them fairly with your other deadlines. You can set your own hours below, and then the app follows you.") {
                         v.latestStart?.let {
                             Row {
                                 Text("Latest safe start", style = SibType.small, color = c.inkSoft, modifier = Modifier.width(130.dp))
@@ -301,7 +307,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                             }
                             More("If you begin by this day, even the slow case still finishes in time.", label = "What is this?")
                         } ?: Text(
-                            if (v.atRiskMin > 0) "Not enough days are left to finish this at an easy pace. About ${fmt.minutes(v.atRiskMin)} of the work will not fit." else "No safe start can be worked out yet.",
+                            if (o.manualPlan.isNotEmpty()) "You are using your own plan, so no start day is worked out." else if (v.atRiskMin > 0) "Not enough days are left to finish this at an easy pace. About ${fmt.minutes(v.atRiskMin)} of the work will not fit." else "No safe start can be worked out yet.",
                             style = SibType.small, color = c.vermilion,
                         )
                         if (v.blocks.isNotEmpty()) {
@@ -310,8 +316,14 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                         if (st.calibration > 1.05) More("Your past jobs ran longer than planned, so estimates are raised by ${((st.calibration - 1) * 100).toInt()}%.", label = "Estimates raised ${((st.calibration - 1) * 100).toInt()}%")
                     }
                     GroupDivider()
-                    FoldItem(SibIcon.SLIDERS, "Tune") {
-                        Text("Effort", style = SibType.bodyStrong, color = c.ink)
+                    FoldItem(SibIcon.CALENDAR, "My own plan", hint = if (o.manualPlan.isNotEmpty()) "On" else "Automatic", info = "Choose how many minutes to give on each day yourself, for example one whole day for this deadline and another day for a different one. Your hours are taken off those days for your other deadlines. Turn it off to let the app plan again.") {
+                        ManualPlanEditor(o.manualPlan, st.today, v.planDay, fmt) { scope.launch { save(o.copy(manualPlan = it), "own plan changed") } }
+                    }
+                    GroupDivider()
+                    FoldItem(SibIcon.SLIDERS, "Hours and importance", info = "Hours is how long you think the whole job will take. The app uses it to work out when to start. Importance decides which deadline gets time first when days are short. Both are your call and you can change them any time.") {
+                        HoursField(effort.likelyMin) { m -> scope.launch { save(o.copy(effort = Effort.fromLikely(m)), "estimate changed") } }
+                        Spacer(Modifier.height(6.dp))
+                        Text("Quick picks", style = SibType.bodyStrong, color = c.ink)
                         Choice(EffortChoices, listOf(30, 120, 240, 480, 960).minBy { kotlin.math.abs(it - effort.likelyMin) },
                             { scope.launch { save(o.copy(effort = Effort.fromLikely(it)), "estimate changed") } })
                         Spacer(Modifier.height(6.dp))
