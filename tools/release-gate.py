@@ -45,7 +45,7 @@ if aapt and apk:
     perms = set(re.findall(r"name='android\.permission\.(\w+)'", dumped))
 asks = {
     'POST_NOTIFICATIONS': 'Notifications', 'RECEIVE_BOOT_COMPLETED': 'boot completed', 'USE_BIOMETRIC': 'Biometric',
-    'USE_FINGERPRINT': 'Biometric', 'WAKE_LOCK': 'Wake lock', 'INTERNET': 'Internet', 'ACCESS_NETWORK_STATE': 'network state',
+    'READ_CALENDAR': 'Read calendar', 'USE_FINGERPRINT': 'Biometric', 'WAKE_LOCK': 'Wake lock', 'INTERNET': 'Internet', 'ACCESS_NETWORK_STATE': 'network state',
 }
 for perm in sorted(perms):
     word = asks.get(perm)
