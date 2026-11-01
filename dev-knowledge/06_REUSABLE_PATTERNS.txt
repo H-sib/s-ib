@@ -25,3 +25,6 @@ REUSABLE (READ from S-IB and Workshop records)
 APP-SPECIFIC (do not copy without thinking)
  S-IB: deadline extraction and "start it before" planner, week load chart, Close ones, medical student mode, course setups, notification dashboard art,
  H-sib wordmark. Workshop: formula, projectdef, bridge, runtimecore, sqlstore, forge, renderer modules.
+ R20 FitText + breaksWord (ui/Components.kt of H-sib Reminder): shrink text until no word splits. Copy with the audit test.
+ R21 Pure Kotlin stats over a log (core/medical/Diary.kt): buckets by day, week, month, year, normalised names so spelling and capitals do not split groups, tested.
+ R22 Stacked bar chart in a horizontal scroll with a text summary for screen readers and an exact table beside it (ui/Diary.kt).

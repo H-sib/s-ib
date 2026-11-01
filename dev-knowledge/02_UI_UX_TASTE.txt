@@ -35,3 +35,9 @@ RESPONSIVE AND ACCESSIBILITY
  - NOT yet done: screen reader pass and right-to-left pass (READ: RESUME). Treat as open for every new app.
 GEN Z BUT PLAIN: usable by older and minimalist people; Easy mode and hide-switches exist as a pattern.
 APP-SPECIFIC (do not copy blindly): the name styling "H-" faded, "sib" gradient heavy (S-IB); quiet chat look; medical student theme.
+
+LARGE FONT RULE (owner, 2026-11-01, READ his message): many older people and people with eye problems set the phone font very large. A word
+must never be split over two lines ("WOR" then "D"). The default look stays beautiful; at any phone font size it adapts. Implementation in
+H-sib Reminder: FitText plus stacking at font scale above 1.15; audit test fails on split words at 1.0, 1.3, 2.0. Every new app gets this audit on day one.
+QUANTITY INPUTS: any count the user chooses (classes a day, items) is limitless in practice: plus and minus AND a typed number, one high safety ceiling.
+DATA SCREENS: when a diary or log grows, give it Write, Charts (day, week, month, year) and Tables; keep one spelling per name with chips; allow edit and delete with confirm.

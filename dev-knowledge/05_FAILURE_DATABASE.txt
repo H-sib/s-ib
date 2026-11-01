@@ -27,3 +27,11 @@ F21 Guessed unclear words from a spoken video transcript (subject lists). Preven
 F22 Cloud setup first checked on the owner's PC by mistake, so not proven on Linux. Prevent: say where a check really ran.
 F23 Release upload used the wrong old bundle name risk. Prevent: state the single correct file name in the handoff.
 Open and unproven (READ): Firestore rules emulator tests never run; screen reader and RTL; long battery runs; Play Integrity enforcement; translations BN/HI partial.
+F24 Words split over two lines at large phone fonts ("Plan" became "Pl" and "an"; seen by the owner on old people's phones, then MEASURED by a new
+   audit that found 17 cases at scales 1.0, 1.3 and 2.0). Cause: weighted rows squeezed titles to a few dp next to hints, values or buttons;
+   fixed width day labels; buttons too narrow. Found: LayoutAudit now fails when a line ends inside a word. Fix: FitText (shrinks letters to
+   45 percent until a whole word fits), hint or value moved under the title when font scale is above 1.15, buttons stacked.
+   Prevent: use FitText for every short label, never weight(1f, fill = false) next to a long hint, run the audit on every new screen.
+F25 Quantity limits too low (lectures 8, tutorials 2). Owner wants quantity inputs limitless. The settings codec also silently reset saved values
+   above the old limit. Prevent: one ceiling constant used by UI, codec and sanitizer (999 as a safety net), typed entry beside plus and minus.
+F26 A git stash applied on the wrong branch produced conflicts. Prevent: commit work first, then switch branches; untracked files are not stashed.
