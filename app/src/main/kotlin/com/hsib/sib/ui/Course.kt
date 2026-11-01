@@ -38,7 +38,6 @@ import com.hsib.sib.core.medical.CourseTemplate
 import com.hsib.sib.core.medical.CourseTemplates
 import com.hsib.sib.core.medical.Courses
 import com.hsib.sib.core.model.Category
-import com.hsib.sib.data.AppSettings
 import com.hsib.sib.domain.AppState
 import kotlinx.coroutines.launch
 import java.time.Month

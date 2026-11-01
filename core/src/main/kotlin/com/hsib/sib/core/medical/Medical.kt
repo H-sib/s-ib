@@ -42,9 +42,12 @@ object Medical {
             "1st, 2nd and 3rd prof are in November and the 4th prof is in May. Supplementary exams for the failed run the other way round."
 }
 
-/** The most classes of each kind in one day. A phase can use fewer, never more; the student chooses the numbers. */
+/**
+ * The most classes of each kind in one day. The student chooses the numbers; the ceiling is only a safety net so a typing
+ * slip such as 99999 cannot freeze the screen. It is far above any real timetable.
+ */
 object RoutineLimits {
-    const val LECTURES = 8
-    const val TUTORIALS = 2
-    const val WARDS = 2
+    const val LECTURES = 999
+    const val TUTORIALS = 999
+    const val WARDS = 999
 }

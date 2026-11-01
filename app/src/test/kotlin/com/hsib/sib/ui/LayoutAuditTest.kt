@@ -44,6 +44,10 @@ class LayoutAuditTest {
 
     private val noImport = ImportActions(paste = {}, photo = {}, scan = {}, file = {})
     private val st = Fixtures.soon
+    private val diaryFixture = (0 until 90).map { i ->
+        com.hsib.sib.core.medical.DiaryEntry("d$i", java.time.LocalDate.of(2026, 11, 1).minusDays((i / 2).toLong()), listOf("Anatomy", "Physiology", "Biochemistry")[i % 3],
+            "Topic ${i % 11}", "Dr. " + listOf("Rahman", "Akter", "Hossain", "Karim")[i % 4], listOf("Lecture", "Lecture", "Tutorial", "Ward")[i % 4])
+    }
 
     private fun problems(label: String): List<String> {
         val out = ArrayList<String>()
@@ -55,6 +59,12 @@ class LayoutAuditTest {
             // didOverflowWidth is true for ordinary wrapped text in this test setup, so only the two reliable signals are used:
             // text cut at its height (maxLines or a fixed box) and a line ended with an ellipsis.
             val ellipsized = (0 until r.lineCount).any { r.isLineEllipsized(it) }
+            val text = r.layoutInput.text.text
+            val broken = (0 until r.lineCount - 1).any { i ->
+                val end = r.getLineEnd(i, visibleEnd = false)
+                end in 1 until text.length && !text[end - 1].isWhitespace() && !text[end].isWhitespace() && text[end - 1] != '-' && text[end - 1] != '/'
+            }
+            if (broken) out += "$label: \"${text.take(48)}\" breaks a word across two lines"
             if (r.didOverflowHeight || ellipsized) {
                 out += "$label: \"${r.layoutInput.text.text.take(48)}\" is cut off (${if (ellipsized) "dots" else "height"})"
             }
@@ -76,6 +86,10 @@ class LayoutAuditTest {
             "add" to { AddScreen(Fixtures.empty, ready, noImport, {}) {} },
             "detail" to { DetailScreen("a", st, ready, {}, {}) },
             "appearance" to { AppearanceSettings(st, ready) {} },
+            "diary" to { ClassDiaryScreen(st, ready) {} },
+            "diary charts" to { Page("Class diary", {}) { DiaryCharts(diaryFixture, java.time.LocalDate.of(2026, 11, 1), rememberFmt()) } },
+            "diary tables" to { Page("Class diary", {}) { DiaryTables(diaryFixture) } },
+            "routine" to { ClassRoutineScreen(st, ready) {} },
         )
         var which by mutableIntStateOf(0)
         rule.setContent {

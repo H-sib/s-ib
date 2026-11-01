@@ -302,7 +302,7 @@ fun WeekStrip(cells: List<DayCell>, selected: LocalDate, today: LocalDate, fmt: 
                     },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(fmt.weekday(cell.date).take(3), style = SibType.small.copy(fontSize = 12.sp), color = c.inkSoft)
+                FitText(fmt.weekday(cell.date).take(3), SibType.small.copy(fontSize = 12.sp), c.inkSoft)
                 Spacer(Modifier.height(4.dp))
                 Text(cell.date.dayOfMonth.toString(), style = SibType.title, color = if (cell.date == today) c.vermilion else c.ink)
                 Spacer(Modifier.height(10.dp))

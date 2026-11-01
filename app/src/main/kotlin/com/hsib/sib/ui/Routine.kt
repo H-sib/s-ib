@@ -30,11 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hsib.sib.Ready
-import com.hsib.sib.core.medical.Medical
 import com.hsib.sib.core.medical.RoutineLimits
 import com.hsib.sib.data.RoutineSlot
 import com.hsib.sib.domain.AppState
@@ -102,7 +103,7 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
 
     Page("Class routine", onBack) {
         Explain("Your week as a table. Choose which days it covers and how many lectures, tutorials and ward or block classes a day has. Tap a cell to set the subject, the classroom and the time. The colours follow the subject.")
-        InfoTitle("Days and numbers", "Each phase has its own timetable, so you decide the numbers. Lectures can be 0 to 8 a day, tutorials 0 to 2, and ward or block classes 0 to 2 (morning or evening). Turn Friday on or any day off.")
+        InfoTitle("Days and numbers", "Each phase has its own timetable, so you decide the numbers. Use the plus and minus buttons, or tap the number and type it, for as many lectures, tutorials and ward or block classes a day as you have. Turn Friday on or any day off.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ROUTINE_ORDER.forEach { d ->
                 SelectChip(d.name.take(3).lowercase().replaceFirstChar { it.uppercase() }, d.value in st.settings.routineDays, {
@@ -134,7 +135,7 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
                 for (kind in listOf("Lecture", "Tutorial", "Ward")) {
                     val n = today.count { it.kind == kind }
                     val max = limitFor(kind)
-                    SibButton("Add " + (if (kind == "Ward") "ward or block" else kind.lowercase()) + " ($n of $max)", { editing = newSlot(day, kind) }, kind = ButtonKind.QUIET, enabled = n < max)
+                    SibButton("Add " + (if (kind == "Ward") "ward or block" else kind.lowercase()) + " ($n)", { editing = newSlot(day, kind) }, kind = ButtonKind.QUIET, enabled = n < max)
                 }
             }
         }
@@ -214,7 +215,17 @@ private fun CountStepper(label: String, value: Int, min: Int, max: Int, onChange
     val controls: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SibButton("-", { onChange((value - 1).coerceAtLeast(min)) }, kind = ButtonKind.QUIET, compact = true, enabled = value > min)
-            Text("$value", style = SibType.title, color = c.ink, modifier = Modifier.width(28.dp))
+            // The number can also be typed, so 100 does not need 100 taps.
+            var text by remember(value) { mutableStateOf(value.toString()) }
+            androidx.compose.foundation.text.BasicTextField(
+                value = text,
+                onValueChange = { t -> val d = t.filter { it.isDigit() }.take(3); text = d; d.toIntOrNull()?.let { onChange(it.coerceIn(min, max)) } },
+                textStyle = SibType.title.copy(color = c.ink, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+                singleLine = true,
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(c.violet),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                modifier = Modifier.width(64.dp).heightIn(min = 46.dp).clip(RoundedCornerShape(14.dp)).background(c.lifted).padding(vertical = 8.dp).semantics { contentDescription = "$label, $value" },
+            )
             SibButton("+", { onChange((value + 1).coerceAtMost(max)) }, kind = ButtonKind.QUIET, compact = true, enabled = value < max)
         }
     }
@@ -245,7 +256,7 @@ private fun RoutineTable(days: List<DayOfWeek>, all: List<RoutineSlot>, lectures
             }
             days.forEach { d ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(d.name.take(3).lowercase().replaceFirstChar { it.uppercase() }, style = SibType.label, color = if (d == DayOfWeek.FRIDAY) c.vermilion else c.violet,
+                    FitText(d.name.take(3).lowercase().replaceFirstChar { it.uppercase() }, SibType.label, if (d == DayOfWeek.FRIDAY) c.vermilion else c.violet,
                         modifier = Modifier.width(48.dp).padding(top = 14.dp))
                     columns.forEach { (kind, i) ->
                         val slot = of(d, kind).getOrNull(i)

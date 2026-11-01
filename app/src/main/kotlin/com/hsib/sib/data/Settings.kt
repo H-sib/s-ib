@@ -1,5 +1,6 @@
 package com.hsib.sib.data
 
+import com.hsib.sib.core.medical.RoutineLimits
 import com.hsib.sib.core.time.DateOrder
 import com.hsib.sib.core.urgency.ReminderSettings
 import kotlinx.coroutines.flow.Flow
@@ -199,9 +200,9 @@ object SettingsCodec {
             medicalAsked = m.bool("medicalAsked", d.medicalAsked),
             homeStyle = m.enum("homeStyle", d.homeStyle),
             routineDays = m["routineDays"]?.split(",")?.mapNotNull { it.trim().toIntOrNull() }?.filter { it in 1..7 }?.toSet()?.takeIf { it.isNotEmpty() } ?: d.routineDays,
-            routineLectures = m.int("routineLectures", d.routineLectures, 0..8),
-            routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..2),
-            routineWards = m.int("routineWards", d.routineWards, 0..2),
+            routineLectures = m.int("routineLectures", d.routineLectures, 0..RoutineLimits.LECTURES),
+            routineTutorials = m.int("routineTutorials", d.routineTutorials, 0..RoutineLimits.TUTORIALS),
+            routineWards = m.int("routineWards", d.routineWards, 0..RoutineLimits.WARDS),
             userName = m["userName"]?.filter { !it.isISOControl() }?.trim()?.take(30) ?: d.userName,
             useName = m.bool("useName", d.useName),
             helpHints = m.bool("helpHints", d.helpHints),

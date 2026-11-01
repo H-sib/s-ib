@@ -73,8 +73,8 @@ class ImportActions(
 fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val c = SibTheme.colors
     val shape = RoundedCornerShape(50)
-    Text(
-        tr(text), style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (selected) c.onAction else c.ink,
+    FitText(
+        tr(text), SibType.bodyStrong.copy(fontSize = 14.sp), if (selected) c.onAction else c.ink,
         modifier = modifier.heightIn(min = 48.dp).clip(shape)
             .then(if (selected) Modifier.background(c.action) else Modifier.background(c.lifted))
             .bounceClick(role = Role.RadioButton, onClick = onClick)

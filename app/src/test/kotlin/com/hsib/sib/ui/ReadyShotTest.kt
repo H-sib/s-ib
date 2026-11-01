@@ -69,4 +69,13 @@ class ReadyShotTest {
     @Test fun closeDetailDark() = shot("close-detail-dark", space = Space.CLOSE) { CloseDetailScreen("x1", Fixtures.withClose, it, {}, {}, {}) }
 
     @Test fun closeEditorDark() = shot("close-editor-dark", space = Space.CLOSE) { CloseEditorScreen(null, "anniversary", Fixtures.withClose, it, {}) {} }
+
+    private val diary: List<com.hsib.sib.core.medical.DiaryEntry> = (0 until 90).map { i ->
+        com.hsib.sib.core.medical.DiaryEntry("d$i", java.time.LocalDate.of(2026, 11, 1).minusDays((i / 2).toLong()), listOf("Anatomy", "Physiology", "Biochemistry")[i % 3],
+            "Topic ${i % 11}", "Dr. " + listOf("Rahman", "Akter", "Hossain", "Karim")[i % 4], listOf("Lecture", "Lecture", "Tutorial", "Ward")[i % 4])
+    }
+
+    @Test fun diaryChartsDark() = shot("diary-charts-dark") { Page("Class diary", {}) { DiaryCharts(diary, java.time.LocalDate.of(2026, 11, 1), rememberFmt()) } }
+
+    @Test fun diaryTablesDark() = shot("diary-tables-dark") { Page("Class diary", {}) { DiaryTables(diary) } }
 }
