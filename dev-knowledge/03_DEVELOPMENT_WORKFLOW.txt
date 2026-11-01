@@ -1,0 +1,43 @@
+03 DEVELOPMENT WORKFLOW (READ from S-IB HANDOFF, CLOUD_START, RESUME and Workshop HANDOFF)
+
+ROLES
+ - Cloud Claude session: writes code, tests, docs, opens a branch / pull request. Cannot reach his phone, Play Console, Firebase.
+ - Owner on his Windows PC: merges, runs the release pipeline, uploads, taps anything security related.
+
+START OF A SESSION
+ 1. Read CLAUDE.md, then the project HANDOFF, FEEDBACK_LOG (open items), last 60 lines of RESUME.
+ 2. Fresh cloud machine: bash tools/cloud-setup.sh, then ./gradlew --version. Needs Network access set to Full (blocked hosts otherwise).
+ 3. Plan in short steps. Group the owner's requests; confirm only new product decisions.
+
+BUILD AND TEST
+ - Narrow first: ./gradlew :app:testDebugUnitTest --tests "<class>" -q
+ - Once before a pull request: ./gradlew :core:test :app:testDebugUnitTest -q
+ - Before every commit: python3 tools/hygiene.py and python3 tools/words-check.py (also contrast-check.py when colours change).
+ - Visual change: render one screen with -Precord=true, open that one image, LOOK at it.
+ - Logic goes in a pure Kotlin module with no Android imports; the UI is thin. This made fast cloud tests possible (READ).
+ - Add a test for every fixed bug. Tests that cannot fail are worthless: check an assertion can fail (a tautological test was caught).
+
+ENFORCED BY TESTS (keep for new apps)
+ Architecture test (module import rules), layout audit (no cut-off text at 3 font scales), Room migration test with exported schemas,
+ hygiene (dashes, unused imports), words check, contrast check, release gate (manifest vs privacy page, what's new entry, secrets scan).
+
+COMMITS AND BRANCHES
+ - Small commits on a branch. Author and no-attribution rules: see 01. Never push secrets. Pull request only when asked.
+
+RELEASE (READ: HANDOFF section 6; the owner does the PC part)
+ Claude: fix, test, bump versionCode and versionName in app/build.gradle.kts, add the WhatsNew entry, keep store listing text in step
+ (500 char max), raise Terms.VERSION if what people agree to changes (update site pages first), append a block to RESUME.txt.
+ Owner: merge PR, git pull, run powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1, read offline-report.txt (0 failures),
+ upload release\<app>-release.aab to the Play closed track, paste notes in <en-GB> tags, Next, Save, Publishing overview, Submit changes for review.
+ Play closed testing needs 12 or more testers opted in for 14 days before a production application (READ).
+
+HANDOFF DISCIPLINE
+ - End every working block with a dated RESUME entry: what changed, what is open, what is NOT proven, risky lines to watch.
+ - Keep one decisions ledger (what, why, who can overrule) and one tester feedback log (verbatim, one block per item, OPEN then DONE).
+ - Workshop used a status ledger (F fixed / D decided / P proven / O open), numbered verified facts (V) and standing rules (R). Reuse if the project is large.
+
+CLOUD TIPS (READ/measured in session)
+ - Maven Central may answer 429: use the Google mirror in a local Gradle init script. Robolectric needs
+   -Drobolectric.dependency.repo.url if it cannot fetch android-all.
+ - Never pkill -f with words from your own command line (it killed the shell). Kill by PID.
+ - A test that starts a ticker flow can keep runBlocking alive: give tests their own CoroutineScope(Job()) and cancel it.

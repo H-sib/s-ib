@@ -1,0 +1,11 @@
+# <App name>: start here (save this file as CLAUDE.md in the new repo root)
+Owner: H-sib (Chowdhury Hasibur Rahaman). Small AI budget, not an Android expert: be short, plain, careful.
+1. Read dev-knowledge/README.txt, then 01_WORKING_WITH_THE_OWNER.txt, 02_UI_UX_TASTE.txt and 05_FAILURE_DATABASE.txt.
+2. For a new app follow dev-knowledge/08_NEW_APP_KICKOFF.txt. For fixes follow 03 and 07.
+3. Then read this project's docs/HANDOFF.txt, FEEDBACK_LOG.txt and the end of RESUME.txt (create them if missing).
+4. Apply recorded preferences without asking again. Ask only about new product decisions.
+5. Test, do not assume. Say which evidence you have (unit test, screenshot, emulator, real phone).
+6. Reuse proven parts from dev-knowledge/06. Keep this app's own identity.
+Hard rules: no em or en dashes; no new .md files (use .txt); commit as Chowdhury Hasibur Rahaman <chr.siam7@gmail.com> with no Co-Authored-By;
+never commit secrets; never change Firebase, Google Cloud or Play settings (give exact clicks); send nothing to anyone; pull request only when asked.
+After each milestone update dev-knowledge per 09_LEARNING_LOOP.txt.

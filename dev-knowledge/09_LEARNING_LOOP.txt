@@ -1,0 +1,8 @@
+09 CONTINUOUS IMPROVEMENT OF THIS KNOWLEDGE BASE
+After each milestone (release, big feature, tester round, bug found), do 5 minutes:
+ - New owner preference or rule -> 01 or 02 (general) or projects/<app>.txt (app-specific). Mark the date.
+ - New technique or component -> 06. New failure -> 05 with what/cause/found/fix/prevent. New test method -> 04 or 07.
+ - Keep project-specific and general apart. If unsure, put it in the project file first and promote it after it repeats in a second app.
+ - Never delete or overwrite a lesson without the owner's review; mark it SUPERSEDED with the reason and date and keep the old text.
+ - Keep evidence tags. Add the source to 10. Run hygiene.py and words-check.py (no dashes, no .md).
+ - Mention what was added in the end-of-task note to the owner (one or two lines).

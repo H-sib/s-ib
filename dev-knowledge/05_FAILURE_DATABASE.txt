@@ -1,0 +1,29 @@
+05 BUG AND FAILURE PREVENTION DATABASE (what / cause / found by / fix / prevent)
+
+F1 Cloud setup failed 403 on dl.google.com and adoptium. Cause: sandbox network policy. Found: setup log. Fix: owner set Network access Full;
+   script prefers installed JDK 17. Prevent: check network policy first; script detects /usr/lib/jvm/java-17*.
+F2 Maven Central 429. Cause: rate limit. Fix: Google mirror via init script. Prevent: mirror in cloud-setup.
+F3 Robolectric could not fetch android-all-instrumented. Fix: -Drobolectric.dependency.repo.url. Prevent: put in setup.
+F4 pkill -f killed own shell (exit 144). Cause: pattern matched my own command. Prevent: kill by PID.
+F5 Tests hang forever. Cause: ticker Flow kept runBlocking alive. Fix: own CoroutineScope(Job()) cancelled in test.
+F6 Robolectric hang with infinite animations. Prevent: finite animations only.
+F7 Intro 80 to 89 percent janky on Adreno 610. Cause: full-screen gradient repaint each frame. Found: phone frame stats (MEASURED).
+   Fix: cached and shrunk glow. Prevent: never repaint big gradients per frame; measure on the weak phone.
+F8 Text cut off at big font. Found: LayoutAuditTest. Fix: stack buttons when fontScale over 1.15, no ellipsis. Prevent: keep the audit.
+F9 Shader fill lost transparency. Cause: paint colour alpha applies to shader. Fix: set an opaque colour first.
+F10 Sign-in cancelled mid-way. Cause: coroutine tied to a composable. Fix: finish in NonCancellable. Prevent: long work not in composition scope.
+F11 Account switch leaked rooms of the other account. Fix: forget rooms of other account first in every sync.
+F12 Contrast below target (6.88 vs 7; 4.08 vs 4.5). Found: contrast-check. Fix: darken / lighten palette. Prevent: run the script on every colour change.
+F13 Banned word "just" in own generated text. Found: words-check. Prevent: run before commit.
+F14 Tautological test (always passing). Found: own review. Fix: real SHA-256 vector. Prevent: make each test able to fail.
+F15 Kotlin compile slips: missing imports, wrong visibility (private helper used elsewhere), trailing lambda binding after a parameter
+   reorder broke callers. Prevent: compile the narrow test after each edit; update all callers and screenshot tests together.
+F16 Text replace hit the wrong occurrence (two similar screens). Prevent: include enough context in the match; check the diff.
+F17 CRLF and LF mixed in sources. Prevent: edit with line-ending-safe tools.
+F18 ctrl+a typed as letter a through browser automation. Prevent: avoid it when editing store text.
+F19 Privacy page and manifest disagreed (INTERNET permission). Prevent: release-gate checks it; network permission stripped without google-services.json.
+F20 Wording confused testers: "short by 45 mins", "0 of 15h". Found: tester Dr. Muser. Fix: plain sentences. Prevent: read every number as a user would.
+F21 Guessed unclear words from a spoken video transcript (subject lists). Prevent: record guesses in RESUME and ask the tester to confirm.
+F22 Cloud setup first checked on the owner's PC by mistake, so not proven on Linux. Prevent: say where a check really ran.
+F23 Release upload used the wrong old bundle name risk. Prevent: state the single correct file name in the handoff.
+Open and unproven (READ): Firestore rules emulator tests never run; screen reader and RTL; long battery runs; Play Integrity enforcement; translations BN/HI partial.

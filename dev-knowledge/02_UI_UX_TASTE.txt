@@ -1,0 +1,37 @@
+02 UI AND UX TASTE (recurring taste first, app-specific marked)
+Source: docs/DESIGN_REDO.txt (his own review, READ), HANDOFF section 2 (READ), design tokens contract of Workshop (READ),
+QUALITY_GAP_REPORT (READ/MEASURED). Look at images before claiming a screen is good: render with Roborazzi and LOOK (his rule).
+
+HIERARCHY
+ - One idea per screen, one main action. Bold tiles, little text, plenty of empty space.
+ - Layered screens: three surfaces (base, raised, higher). Extra options folded behind one-word rows (FoldItem pattern).
+ - Few paragraphs. At most one sentence of body text per screen. Headings are plain nouns.
+TYPOGRAPHY
+ - One typeface family per app, bundled, open licence. S-IB uses Sora; Workshop uses Bricolage Grotesque (READ). Ask before downloading any font.
+ - Text must be readable, never faded: secondary text is smaller or lighter, not low contrast. Test at font scale 1.0, 1.3, 2.0.
+SPACING
+ - Generous. Stack buttons vertically when font scale is above 1.15. Never ellipsise titles (LayoutAuditTest enforces).
+COLOUR
+ - Graded colour, striking dashboard, atmosphere glow only behind big shapes, never behind small text or as button fill.
+ - State ramp calm to urgent (done, warn, fix, blocked), each paired with a shape and a word, never colour alone.
+ - WCAG numbers checked by tools/contrast-check.py: 7:1 body, 4.5:1 buttons, 3:1 shapes. Done state is solid green.
+ - Several themes (S-IB: Light, Twilight, Black, Neon; later Medical, Cosmos, Dune, Forest, Ocean). Theme as data (SibColors), one source.
+CARDS AND TILES
+ - Date tile with countdown, icon tiles with short titles, grouped settings cards with auto icons (iconFor(title)).
+NAVIGATION
+ - Bottom tabs for main areas (S-IB: Today, Plan, Review, Messages, More). Back arrow in the app, never rely on system Back for scripts.
+BUTTONS AND WORDING
+ - Flat and solid. Buttons are one or two verb words. No exclamation marks, no emoji, no "Simply", no "just".
+ - Avoid the word "template" in user text; say plain things like "quick start". "Parts" became "Checklist". Prefer words the real user says
+   ("progress bar in the shape of a battery"). Careful wording matters to him; he corrected several labels.
+ANIMATION
+ - A cool intro is wanted (long the first time, short after; Settings can change it). Subtle scroll cue (three bounces then rests).
+ - Only finite animations (Robolectric hangs on infinite ones). Never repaint a full screen gradient each frame (weak GPU).
+EMPTY / LOADING / ERROR STATES
+ - Plain sentence plus one action. Honest errors (READ: 1.0.1 round replaced "no way to finish comfortably" with plain text).
+ - Confusing numbers are rewritten as sentences ("0 min done, about 15 h needed" instead of "0 of 15h").
+RESPONSIVE AND ACCESSIBILITY
+ - 360 dp wide is the test size. Font scale 1.0/1.3/2.0 audit. Contrast script. Content descriptions on icons.
+ - NOT yet done: screen reader pass and right-to-left pass (READ: RESUME). Treat as open for every new app.
+GEN Z BUT PLAIN: usable by older and minimalist people; Easy mode and hide-switches exist as a pattern.
+APP-SPECIFIC (do not copy blindly): the name styling "H-" faded, "sib" gradient heavy (S-IB); quiet chat look; medical student theme.

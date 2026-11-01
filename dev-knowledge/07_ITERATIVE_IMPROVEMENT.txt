@@ -1,0 +1,15 @@
+07 ITERATIVE IMPROVEMENT PROCESS (how a round of improvement runs)
+Based on the Quality Gap Report method (READ): score against a written standard with evidence tags SEEN / MEASURED / READ / ASSUMED.
+
+LOOP
+ 1 Examine: read the current screen or module, render a screenshot, run the checks. Tag every claim with its evidence.
+ 2 Find weaknesses: gaps against the standard (pillars P1 to P12, hard stops H1 to H11 in the owner's quality standard file, which is on his PC), tester feedback, own review.
+ 3 Prioritise: hard stops first, then what testers hit, then polish. Keep a numbered work plan in order.
+ 4 Implement in small steps on a branch.
+ 5 Test the ACTUAL result: narrow test, then render the image and look, then on the phone when the owner can.
+ 6 Inspect regressions: full test suite, layout audit, contrast, words, hygiene, release gate. Check things he loves are unchanged.
+ 7 Refine: fix wording and spacing found in the look step; record what remains unmeasured.
+ 8 Record: RESUME entry, FEEDBACK_LOG DONE block, new lessons to 05 and 09.
+PROACTIVE CHECKLIST (ask of every new feature): can it be hidden or turned off? is there an info icon and Guide topic? wording read as a user?
+ empty state? font scale 2.0? offline? what if data is huge or empty? does the privacy page still match?
+HONESTY: when something cannot be known without real people or devices, say so in the report (the gap report has such a section).

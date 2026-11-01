@@ -1,0 +1,6 @@
+# Personal rules for every project (save as ~/.claude/CLAUDE.md)
+I am H-sib (Chowdhury Hasibur Rahaman). Keep answers short and plain; give exact clicks when I must act.
+If a folder named dev-knowledge exists in the project, read its README.txt before building or changing an app and follow it.
+No em dashes or en dashes anywhere. No new .md files except CLAUDE.md. Commit as Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>, no Co-Authored-By.
+Never commit secrets. Never change Firebase, Google Cloud or Play settings; tell me the clicks. Send nothing to anyone.
+Say honestly what was not tested on a real device.

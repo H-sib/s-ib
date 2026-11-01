@@ -1,0 +1,27 @@
+06 REUSABLE COMPONENTS AND TECHNICAL PATTERNS (reusable first, app-specific last)
+
+REUSABLE (READ from S-IB and Workshop records)
+ R1 Pure Kotlin core module with no Android imports (planning, parsing, crypto, models) plus a thin UI. Fast tests in the cloud.
+ R2 Effects as plain data (Workshop): logic returns what to do, a thin layer does it. Easy to test.
+ R3 Theme tokens as one data class per palette (base, raised, higher, text, textSecondary, track, action, positive, done/warn/fix/blocked, glowA/B)
+    with a script that checks contrast. Themes switch by data, not by code.
+ R4 Architecture test: only named packages may import a risky package (network, social). Keeps offline promise checkable.
+ R5 Layout audit test at font scales 1.0, 1.3, 2.0 on 360 dp.
+ R6 Room with exported schemas, AutoMigrations, a migration test. SQLCipher for local encryption.
+ R7 Release gate script: manifest vs privacy page, what's new entry present, secrets scan, 16 KB alignment, permissions list.
+ R8 Offline pipeline script: one command runs tests, builds, checks and the signed bundle, writes a report file.
+ R9 First-run terms gate with stored version and date, asked again when the version changes.
+ R10 What's new card per release; Guide with steps; Send feedback that adds app version and phone model.
+ R11 Settings as grouped cards with auto icons; hide-switches for every feature (uiHidden set); Easy mode flag.
+ R12 Sanitize limits on every user-made data structure (names up to 60, checklist up to 50) and share codes for shareable setups.
+ R13 Help hints by heuristics: first visit 12 s, return after 14 days 8 s, idle 40 s, 20 minute gap, snooze 3 or 7 days; opens the matching Guide topic.
+ R14 Deterministic content lines (motivation) from seed plus day, so tests are stable; pools combined by kind; one quiet notification a day; off switch.
+ R15 tr() translation helper in shared components; users read English and give feedback in other languages.
+ R16 End to end sealed sharing: XChaCha20-Poly1305, X25519 key wrap, invite codes, server holds ciphertext only (design in docs/FRIENDS_AND_CHAT_DESIGN.txt).
+ R17 Firebase kept dormant without google-services.json; network permissions stripped from the merged manifest in that case.
+ R18 Phone driving scripts that find controls by words (see 04).
+ R19 Mutation testing and an independent reviewer for engine code (Workshop).
+
+APP-SPECIFIC (do not copy without thinking)
+ S-IB: deadline extraction and "start it before" planner, week load chart, Close ones, medical student mode, course setups, notification dashboard art,
+ H-sib wordmark. Workshop: formula, projectdef, bridge, runtimecore, sqlstore, forge, renderer modules.

@@ -1,0 +1,8 @@
+PROJECT NOTES (copy into projects/<app>.txt)
+Name, package, repo, store state:
+Idea in 3 lines:
+Decisions (date, what, why, who can overrule):
+App-specific taste:
+Measured on phone:
+Open and unproven:
+Lessons promoted to general files (date, file):

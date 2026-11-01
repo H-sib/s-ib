@@ -1,0 +1,32 @@
+04 REAL-DEVICE TESTING AND USB DEBUGGING
+Only what the records show. Anything else is marked ASSUMED. No command here was run in this knowledge-base task.
+
+REFERENCE DEVICES (READ)
+ - Physical: Sony SOV43, Android 12, Adreno 610 (low end). Used by the owner for USB debugging (RESUME.txt: "USB debugging").
+ - Workshop: also an emulator (3 GB RAM, 4 cores) per its verified-facts list; a real phone was optional there (D13).
+
+TOOLS THAT EXIST IN THE REPO (READ: tools/phone_drive.py, phone_look.py, phone_ui.py)
+ - adb lives in the project toolchain: <project>\.toolchain\android-sdk\platform-tools\adb.exe (RESUME) or a hsib-toolchain folder (scripts).
+ - If adb lists no device: adb kill-server then adb start-server (READ: RESUME). The device serial was hard coded in the scripts.
+ - Scripts drive the phone by on-screen words, not by guessed coordinates: dump the screen with uiautomator (adb shell uiautomator dump),
+   read text / content-desc and bounds, tap the centre. They refuse to tap when the target app is not in front (checked with dumpsys window).
+ - phone_look.py prints the words on screen and saves a small screenshot (adb exec-out screencap -p). phone_drive.py can record the screen
+   and log taps with time for demo videos. They never press the system Back key (it can leave the app); they tap the in-app back arrow.
+ - These scripts run on the owner's Windows PC. The cloud session cannot reach the phone.
+
+WHAT WAS MEASURED ON THE PHONE (MEASURED, QUALITY_GAP_REPORT)
+ - Release cold start about 1.65 s. Intro animation was 80 to 89 percent janky because a full screen gradient repainted every frame on the
+   Adreno 610; fixed with a cached and shrunk glow. Today, Plan, Guide scrolling and a 30 minute monkey run were still unmeasured.
+
+OWNER-ASSISTED STEPS
+ - First run needs the owner to tap Accept on terms. Claude never taps terms or attestations.
+ - The owner installed from the Play closed test and signed in with Google on the Sony phone (verified, READ).
+
+NOT KNOWN / DO NOT ASSUME
+ - How USB debugging was first switched on (the usual route is Settings, About phone, tap Build number 7 times, Developer options,
+   USB debugging: ASSUMED standard Android, not found in records for this phone).
+ - Wireless debugging was not evidenced. No battery, memory, or low-RAM numbers exist. Screen reader and right-to-left never tested.
+
+TEST EVIDENCE RULE
+ Write what was run and where: "unit test", "Robolectric shot", "emulator", "real phone". Never write "tested" for the wrong one.
+ New screens from a cloud session are unproven on a real phone until the owner or a phone script shows them.
