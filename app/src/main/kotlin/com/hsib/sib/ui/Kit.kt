@@ -158,7 +158,7 @@ fun ActionTile(label: String, icon: TileIcon, onClick: () -> Unit, modifier: Mod
                 Modifier.size(42.dp).clip(CircleShape).background(if (accent) c.onAction.copy(alpha = 0.14f) else c.violetWash),
                 contentAlignment = Alignment.Center,
             ) { TileGlyph(icon, if (accent) c.onAction else c.violet, size = 24.dp) }
-            Text(label, style = SibType.title, color = if (accent) c.onAction else c.ink)
+            Text(tr(label), style = SibType.title, color = if (accent) c.onAction else c.ink)
         }
     }
 }

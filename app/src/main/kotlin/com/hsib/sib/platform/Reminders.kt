@@ -201,8 +201,8 @@ class ReminderSync(
                 val group = com.hsib.sib.core.motivation.Motivation.groupFor(v.o.category)
                 val daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, v.dueInstant!!.atZone(st.zone).toLocalDate())
                 val started = v.o.progressMin > 0 || v.o.parts.any { it.done }
-                val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, v.o.id, today.toEpochDay() + if (force) System.nanoTime() % 1000 else 0, started, s.medicalMode && v.o.category.medical, group)
-                notifier.post(Notifier.ID_MOTIVATION, notifier.motivation(line))
+                val line = com.hsib.sib.core.motivation.Motivation.line(daysLeft, v.o.id, today.toEpochDay() + if (force) System.nanoTime() % 1000 else 0, started, s.medicalMode && v.o.category.medical, group, s.callName)
+                notifier.post(Notifier.ID_MOTIVATION, notifier.motivation(line, s.callName))
             }
         }
         scheduleMotivation(s)

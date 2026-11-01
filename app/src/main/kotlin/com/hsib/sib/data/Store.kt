@@ -3,6 +3,8 @@ package com.hsib.sib.data
 import androidx.room.withTransaction
 import com.google.crypto.tink.subtle.XChaCha20Poly1305
 import com.hsib.sib.core.backup.BackupSnapshot
+import com.hsib.sib.core.backup.ClassNoteDto
+import com.hsib.sib.core.backup.RoutineDto
 import com.hsib.sib.core.backup.EvidenceDto
 import com.hsib.sib.core.backup.MergeResult
 import com.hsib.sib.core.backup.ObligationDto
@@ -348,6 +350,9 @@ class Store(
 
     suspend fun removeStep(id: String) = db.steps().delete(id)
 
+    /** Saves a change to one step. An edited step belongs to the person from then on, not to the suggestions. */
+    suspend fun updateStep(step: UserStep) = db.steps().upsert(step.copy(title = step.title.take(120), suggested = false, updatedAt = now()).toEntity())
+
     suspend fun addStep(obligationId: String, title: String, minutes: Int, day: LocalDate?, position: Int) =
         db.steps().upsert(UserStep(newId(), obligationId, title.take(120), minutes, day, false, false, position, now()).toEntity())
 
@@ -392,6 +397,8 @@ class Store(
             evidence = db.evidence().all().map { EvidenceDto(it.id, it.obligationId, it.excerpt, it.at) },
             seal = db.seals().all().map { SealDto.from(it.obligationId, it.toEntry()) },
             dismissed = db.dismissed().fingerprints(),
+            classNotes = db.diary().all().map { ClassNoteDto(it.id, it.day, it.subject, it.topic, it.faculty, it.kind) },
+            routine = db.routine().all().map { RoutineDto(it.id, it.day, it.kind, it.shift, it.subject, it.room, it.startMin, it.endMin) },
             settings = settings + ("historyKeys" to keys.serialized()) +
                 (db.settings().all().firstOrNull { it.key == SOCIAL_DEVICE_KEY }?.let { mapOf(SOCIAL_DEVICE_KEY to it.value) } ?: emptyMap()),
         )
@@ -422,6 +429,10 @@ class Store(
             for (e in target.evidence) db.evidence().upsert(EvidenceEntity(e.id, e.obligationId, e.excerpt, e.at))
             for (s in target.seal) db.seals().upsert(SealEntity(s.obligationId, s.seq, s.at, s.field, s.oldValue, s.newValue, s.actor, s.reason, s.prevHash, s.hash))
             for (f in target.dismissed) db.dismissed().upsert(DismissedEntity(f, now().toEpochMilli()))
+            // The class diary and routine are the person's own and have no clash to settle, so they are taken from the backup directly.
+            if (!merge) { db.diary().clear(); db.routine().clear() }
+            for (n in snap.classNotes) db.diary().upsert(ClassNoteEntity(n.id, n.day, n.subject, n.topic, n.faculty, n.kind))
+            for (r in snap.routine) db.routine().upsert(RoutineSlotEntity(r.id, r.day, r.kind, r.shift, r.subject, r.room, r.startMin, r.endMin))
         }
         return stats
     }

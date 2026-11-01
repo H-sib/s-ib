@@ -145,8 +145,46 @@ private val MedicalDark = SibColors(
 
 val LocalMedical = staticCompositionLocalOf { false }
 
+/** Cosmos: deep space, with nebula blue and violet and the warm yellow of a star. */
+private val CosmosColors = SibColors(
+    paper = Color(0xFF05060F), raised = Color(0xFF0C1024), lifted = Color(0xFF151A38), ink = Color(0xFFF2F5FF), inkSoft = Color(0xFFC5CDF2),
+    rule = Color(0xFF232B55), vermilion = Color(0xFFFF8A7A), ochre = Color(0xFFFFC95C), verdigris = Color(0xFF5CF0D0), violet = Color(0xFF8FA8FF),
+    vermilionWash = Color(0xFF35192A), ochreWash = Color(0xFF342A10), verdigrisWash = Color(0xFF0F3A3A), violetWash = Color(0xFF1A2352),
+    glowA = Color(0xFF6C7BFF), glowB = Color(0xFFB06BFF), onGlow = Color(0xFF05060F), action = Color(0xFFF2F5FF), onAction = Color(0xFF05060F), dark = true,
+)
+
+/** Dune: warm sand in daylight, terracotta and the orange of a desert sunset. */
+private val DuneColors = SibColors(
+    paper = Color(0xFFF6EBD9), raised = Color(0xFFFFF9EE), lifted = Color(0xFFEBD9BC), ink = Color(0xFF2E1D0F), inkSoft = Color(0xFF52391F),
+    rule = Color(0xFFD8C09A), vermilion = Color(0xFFA82F1A), ochre = Color(0xFF734300), verdigris = Color(0xFF2B6340), violet = Color(0xFF9A4510),
+    vermilionWash = Color(0xFFF7D9CF), ochreWash = Color(0xFFF3DFA8), verdigrisWash = Color(0xFFD5E6CC), violetWash = Color(0xFFF0D6BE),
+    glowA = Color(0xFFF2A65A), glowB = Color(0xFFEE7B6E), onGlow = Color(0xFF2E1D0F), action = Color(0xFF2E1D0F), onAction = Color(0xFFF6EBD9), dark = false,
+)
+
+/** Forest: deep green with leaf light and a touch of late sun. */
+private val ForestColors = SibColors(
+    paper = Color(0xFF08130E), raised = Color(0xFF0F1F17), lifted = Color(0xFF172E22), ink = Color(0xFFEEF8F0), inkSoft = Color(0xFFBFD9C6),
+    rule = Color(0xFF24402F), vermilion = Color(0xFFFF8F7A), ochre = Color(0xFFF2C060), verdigris = Color(0xFF6FE8A0), violet = Color(0xFF9BE08A),
+    vermilionWash = Color(0xFF3A1D1B), ochreWash = Color(0xFF33290E), verdigrisWash = Color(0xFF123D26), violetWash = Color(0xFF1C3A22),
+    glowA = Color(0xFF3FBF7A), glowB = Color(0xFFE8C65A), onGlow = Color(0xFF08130E), action = Color(0xFFEEF8F0), onAction = Color(0xFF08130E), dark = true,
+)
+
+/** Ocean: deep blue water, with coral and the green of shallows. */
+private val OceanColors = SibColors(
+    paper = Color(0xFF06121F), raised = Color(0xFF0C2033), lifted = Color(0xFF12304B), ink = Color(0xFFEEF7FF), inkSoft = Color(0xFFBCD6EC),
+    rule = Color(0xFF1D4466), vermilion = Color(0xFFFF8C7A), ochre = Color(0xFFFFCB6B), verdigris = Color(0xFF5FE6D0), violet = Color(0xFF6FC3FF),
+    vermilionWash = Color(0xFF3B1D26), ochreWash = Color(0xFF38290F), verdigrisWash = Color(0xFF0E3B3A), violetWash = Color(0xFF103A5C),
+    glowA = Color(0xFF2FA6FF), glowB = Color(0xFF5FE6D0), onGlow = Color(0xFF06121F), action = Color(0xFFEEF7FF), onAction = Color(0xFF06121F), dark = true,
+)
+
 /** The palette for a theme and space. SYSTEM is resolved by [SibTheme]; asked for directly it means Light. */
-fun paletteFor(mode: ThemeMode, space: Space = Space.WORK, medical: Boolean = false): SibColors = if (medical && space == Space.WORK && (mode == ThemeMode.DARK || mode == ThemeMode.LIGHT || mode == ThemeMode.SYSTEM)) {
+fun paletteFor(mode: ThemeMode, space: Space = Space.WORK, medical: Boolean = false): SibColors = if (space == Space.WORK && mode in setOf(ThemeMode.COSMOS, ThemeMode.DUNE, ThemeMode.FOREST, ThemeMode.OCEAN)) {
+    when (mode) { ThemeMode.COSMOS -> CosmosColors; ThemeMode.DUNE -> DuneColors; ThemeMode.FOREST -> ForestColors; else -> OceanColors }
+} else if (space == Space.CLOSE && mode in setOf(ThemeMode.COSMOS, ThemeMode.FOREST, ThemeMode.OCEAN)) {
+    CloseDark
+} else if (space == Space.CLOSE && mode == ThemeMode.DUNE) {
+    CloseLight
+} else if (medical && space == Space.WORK && (mode == ThemeMode.DARK || mode == ThemeMode.LIGHT || mode == ThemeMode.SYSTEM)) {
     if (mode == ThemeMode.DARK) MedicalDark else MedicalLight
 } else when (mode) {
     ThemeMode.BLACK -> if (space == Space.CLOSE) BlackClose else BlackColors

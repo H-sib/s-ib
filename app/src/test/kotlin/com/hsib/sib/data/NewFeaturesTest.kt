@@ -9,6 +9,7 @@ import com.hsib.sib.core.model.FileLink
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Precision
+import com.hsib.sib.data.Lang
 import com.hsib.sib.ui.TestReady
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -106,6 +107,41 @@ class NewFeaturesTest {
         assertEquals(listOf(mine), back.courses)
         assertEquals("IUB test", back.course.name)
         assertEquals("MBBS", AppSettings().course.name)
+    }
+
+    @Test fun theRoutineAndDiaryComeBackFromABackup() = runBlocking {
+        val scope = CoroutineScope(Job())
+        val ready = TestReady.create(context, scope)
+        ready.store.saveRoutineSlot(RoutineSlot("r1", 6, "Lecture", "", "Anatomy", "Room 2", 480, 540))
+        ready.store.addClassNote(ClassNote("n1", LocalDate.of(2026, 11, 2), "Anatomy", "Male genital", "Dr. A", "Lecture"))
+        val snap = com.hsib.sib.core.backup.BackupSnapshot.fromBytes(ready.store.exportSnapshot(emptyMap()).toBytes())
+        ready.store.removeRoutineSlot("r1"); ready.store.removeClassNote("n1")
+        assertTrue(ready.store.routine.first().isEmpty())
+        ready.store.importSnapshot(snap, merge = false, localSettings = emptyMap())
+        assertEquals("Room 2", ready.store.routine.first().single().room)
+        assertEquals("Male genital", ready.store.classNotes.first().single().topic)
+        scope.cancel()
+    }
+
+    @Test fun languageNameEasyModeAndHiddenPartsSurviveTheSettingsCodec() {
+        val s = AppSettings(language = Lang.BN, languageChosen = true, easyMode = true, userName = "Rafi", useName = false, helpHints = false, uiHidden = setOf("also", "focus"), theme = ThemeMode.COSMOS)
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(Lang.BN, back.language)
+        assertTrue(back.languageChosen && back.easyMode && !back.useName && !back.helpHints)
+        assertEquals("Rafi", back.userName)
+        assertEquals(null, back.callName)
+        assertEquals(setOf("also", "focus"), back.uiHidden)
+        assertEquals(ThemeMode.COSMOS, back.theme)
+        assertEquals("Rafi", back.copy(useName = true).callName)
+    }
+
+    @Test fun everyTranslationHasAMatchAndNothingIsBlank() {
+        val bn = com.hsib.sib.ui.Strings.bn
+        val hi = com.hsib.sib.ui.Strings.hi
+        assertTrue(bn.keys.all { it in hi }.also { if (!it) println("missing in hi: " + (bn.keys - hi.keys)) })
+        assertTrue(hi.keys.all { it in bn }.also { if (!it) println("missing in bn: " + (hi.keys - bn.keys)) })
+        assertTrue((bn + hi).values.none { it.isBlank() })
+        assertTrue((bn + hi).all { (k, v) -> !v.contains("!") && v != k })
     }
 
     @Test fun medicalCategoriesSurviveTheDatabase() = runBlocking {

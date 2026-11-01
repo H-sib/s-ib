@@ -74,7 +74,7 @@ fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: M
     val c = SibTheme.colors
     val shape = RoundedCornerShape(50)
     Text(
-        text, style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (selected) c.onAction else c.ink,
+        tr(text), style = SibType.bodyStrong.copy(fontSize = 14.sp), color = if (selected) c.onAction else c.ink,
         modifier = modifier.heightIn(min = 48.dp).clip(shape)
             .then(if (selected) Modifier.background(c.action) else Modifier.background(c.lifted))
             .bounceClick(role = Role.RadioButton, onClick = onClick)
@@ -142,7 +142,7 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
 
     Page("Add", onBack) {
         Spacer(Modifier.height(4.dp))
-        if (st.settings.medicalMode) {
+        if (st.settings.medicalMode && !st.settings.easyMode) {
             MedicalPicker(st.settings.course, st.today) { kind, medTitle, parts, day, hours ->
                 category = kind; touchedCategory = true; importance = Defaults.importance(kind)
                 if (!touchedEffort) effortMin = hours?.let { it * 60 } ?: Defaults.effort(kind).likelyMin
@@ -217,8 +217,8 @@ fun AddScreen(st: AppState, ready: Ready, importActions: ImportActions, onBack: 
         }
 
         Gap(12.dp)
-        SibButton(if (moreOptions) "Fewer options" else "More options", { moreOptions = !moreOptions }, kind = ButtonKind.TEXT)
-        if (moreOptions) {
+        if (!st.settings.easyMode) SibButton(if (moreOptions) "Fewer options" else "More options", { moreOptions = !moreOptions }, kind = ButtonKind.TEXT)
+        if (moreOptions && !st.settings.easyMode) {
         Spacer(Modifier.height(16.dp))
         Text("Kind", style = SibType.bodyStrong, color = c.ink)
         Spacer(Modifier.height(6.dp))

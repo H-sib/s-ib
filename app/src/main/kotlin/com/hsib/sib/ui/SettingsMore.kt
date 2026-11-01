@@ -53,6 +53,21 @@ fun MotivationSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
     }
 }
 
+/** What to call this person, and the small hints that offer help. Both can be turned off. */
+@Composable
+fun YouSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var name by remember { mutableStateOf(st.settings.userName) }
+    Page("Your name and hints", onBack) {
+        Explain("The app can greet you by name, in Today, in its reminders and in some of the encouraging lines. Your name stays on this phone and goes nowhere. You can leave it empty.")
+        Field("What should we call you?", name, { name = it.filter { ch -> !ch.isISOControl() }.take(30); scope.launch { ready.settings.update { cur -> cur.copy(userName = name.trim()) } } }, placeholder = "Your first name")
+        Spacer(Modifier.height(8.dp))
+        ToggleRow("Use my name", "Off means the app never says your name, even if one is saved.", st.settings.useName, { v -> scope.launch { ready.settings.update { it.copy(useName = v) } } }, icon = SibIcon.USER)
+        ToggleRow("Help hints", "When you open something new, come back after a long time, or sit still on a screen, a small card offers the Guide page for it. It goes away by itself.", st.settings.helpHints, { v -> scope.launch { ready.settings.update { it.copy(helpHints = v) } } }, icon = SibIcon.INFO)
+        Spacer(Modifier.height(32.dp))
+    }
+}
+
 /** Reads the next two months from the calendar apps on the phone, only after permission, and only into Review. */
 @Composable
 fun CalendarSettings(st: AppState, ready: Ready, onBack: () -> Unit) {

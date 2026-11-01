@@ -108,7 +108,7 @@ fun SibBottomBar(selected: Tab, onSelect: (Tab) -> Unit, reviewCount: Int, unrea
                 }
                 if (on) {
                     Spacer(Modifier.width(8.dp))
-                    Text(tab.label, style = SibType.bodyStrong, color = c.ink, maxLines = 1)
+                    Text(tr(tab.label), style = SibType.bodyStrong, color = c.ink, maxLines = 1)
                 }
             }
         }
@@ -178,6 +178,13 @@ private fun weekPhrase(st: AppState, fmt: Fmt): String {
     }
 }
 
+/** "Good morning, Rafi. " when a name is set, and nothing at all when it is not or the person switched it off. */
+private fun greeting(st: AppState): String {
+    val name = st.settings.callName ?: return ""
+    val hour = st.now.atZone(st.zone).hour
+    return (if (hour < 12) "Good morning" else if (hour < 17) "Good afternoon" else "Good evening") + ", $name. "
+}
+
 @Composable
 fun TodayScreen(
     st: AppState,
@@ -207,14 +214,14 @@ fun TodayScreen(
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
         Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink)
-        Text(weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
+        Text(greeting(st) + weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
 
         Gap(24.dp)
         DeadlineDeck(st.settings.homeStyle, items, next, st, fmt, onOpen, onAdd, nextStep(st), onLog, social)
 
         // The hero shows the next one; the others wait right below it so nothing is hidden behind "All deadlines".
         val others = items.filter { it !== next && it.urgency != UrgencyState.MOVED }.take(3)
-        if (others.isNotEmpty() && st.settings.homeStyle == HomeStyle.FOCUS) {
+        if (others.isNotEmpty() && st.settings.homeStyle == HomeStyle.FOCUS && "also" !in st.settings.uiHidden) {
             Gap(20.dp)
             SectionHeader("Also coming up", count = others.size)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -222,7 +229,7 @@ fun TodayScreen(
             }
         }
 
-        if (overdue + dueToday + thisWeek > 0) {
+        if (overdue + dueToday + thisWeek > 0 && "counts" !in st.settings.uiHidden) {
             Gap(16.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (overdue > 0) StatPill(overdue, "past due", Tone.ALERT, onAll)
@@ -231,7 +238,7 @@ fun TodayScreen(
             }
         }
 
-        if (st.settings.medicalMode && classes.any { it.day == st.today.dayOfWeek.value }) {
+        if (st.settings.medicalMode && "classes" !in st.settings.uiHidden && classes.any { it.day == st.today.dayOfWeek.value }) {
             Gap(16.dp)
             TodayClasses(classes, st.today, fmt)
         }
@@ -249,7 +256,7 @@ fun TodayScreen(
             PromptCard(askDashboard, onPrompt)
         }
 
-        if (st.pending.isNotEmpty()) {
+        if (st.pending.isNotEmpty() && "review" !in st.settings.uiHidden) {
             Gap(16.dp)
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.violetWash).bounceClick(onClick = onReview).padding(horizontal = 20.dp, vertical = 16.dp),
@@ -262,7 +269,7 @@ fun TodayScreen(
             }
         }
 
-        st.plan.shortfall?.let { s ->
+        st.plan.shortfall?.takeIf { "shortfall" !in st.settings.uiHidden }?.let { s ->
             Gap(12.dp)
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(c.vermilionWash).bounceClick(onClick = onPlan).padding(horizontal = 20.dp, vertical = 16.dp),
@@ -286,7 +293,7 @@ fun TodayScreen(
 
         Gap(28.dp)
         NavRow("All deadlines", if (items.isEmpty()) "Nothing yet" else "${items.size} open", onAll)
-        if (social != null) {
+        if (social != null && "friends" !in st.settings.uiHidden) {
             Gap(12.dp)
             val unread = social.rooms.values.sumOf { it.unread }
             NavRow(
@@ -360,7 +367,9 @@ internal fun NextCard(
 @Composable
 fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, sharedIds: Set<String> = emptySet()) {
     val fmt = rememberFmt()
-    val items = st.items.filter { it.urgency != UrgencyState.DONE && it.o.space == Space.WORK }
+    var query by rememberSaveable { mutableStateOf("") }
+    val all = st.items.filter { it.urgency != UrgencyState.DONE && it.o.space == Space.WORK }
+    val items = if (query.isBlank()) all else all.filter { it.o.title.contains(query.trim(), ignoreCase = true) || it.o.notes.contains(query.trim(), ignoreCase = true) }
     val groups = listOf(
         "Past due" to items.filter { it.urgency == UrgencyState.OVERDUE },
         "Today" to items.filter { it.urgency == UrgencyState.DUE_TODAY },
@@ -369,6 +378,10 @@ fun AllScreen(st: AppState, onOpen: (String) -> Unit, onBack: () -> Unit, shared
         "Later" to items.filter { it.urgency == UrgencyState.PLANNED || it.urgency == UrgencyState.MOVED },
     )
     Page("All deadlines", onBack) {
+        if (all.size >= 4 || query.isNotBlank()) {
+            Field("Search", query, { query = it.take(60) }, placeholder = "A word from the title or notes")
+            Spacer(Modifier.height(4.dp))
+        }
         for ((title, list) in groups) {
             if (list.isEmpty()) continue
             SectionHeader(title, count = list.size)
@@ -396,7 +409,7 @@ internal fun nextStep(st: AppState): NextStep? {
 // ---- plan ------------------------------------------------------------------------------------
 
 @Composable
-fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
+fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit, onSetEffort: (String, Int) -> Unit = { _, _ -> }, onDaily: () -> Unit = {}) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
     var view by rememberSaveable { mutableStateOf(PlanView.WEEK) }
@@ -405,15 +418,17 @@ fun PlanScreen(st: AppState, onOpen: (String) -> Unit, onAdd: () -> Unit) {
         Gap(20.dp)
         ScreenHeader("Plan", weekPhrase(st, fmt), SibIcon.GAUGE, action = { PlusButton(onClick = onAdd) })
         st.plan.shortfall?.let { s ->
-            Gap(20.dp)
-            ShortfallCard(s, st, fmt)
+            if ("shortfall" !in st.settings.uiHidden) {
+                Gap(20.dp)
+                ShortfallCard(s, st, fmt, onOpen, onSetEffort, onDaily)
+            }
         }
         Gap(24.dp)
-        InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
+        if (!st.settings.easyMode) InfoTitle("Views", "Week shows the next seven days. Month is a calendar with a dot on every day something is due. Runway shows how much room each deadline has. Load shows how busy each week is. They show the same plan in four ways.")
         Gap(8.dp)
-        Choice(PlanView.values().map { it to it.label }, view, { view = it })
+        if (!st.settings.easyMode) Choice(PlanView.values().map { it to it.label }, view, { view = it })
         Gap(24.dp)
-        when (view) {
+        when (if (st.settings.easyMode) PlanView.WEEK else view) {
             PlanView.WEEK -> WeekView(st, fmt, selected, { selected = it }, onOpen)
             PlanView.MONTH -> MonthView(st, fmt, selected, { selected = it }, onOpen)
             PlanView.RUNWAY -> Runway(remember(st.items, st.pending, st.today) { runwayItems(st) }, st.today, fmt, onOpen)
@@ -476,29 +491,68 @@ fun DayDetails(st: AppState, fmt: Fmt, selected: LocalDate, onOpen: (String) -> 
     }
 }
 
-/** When the work does not fit: the size of the gap up front, the ways out one tap deeper. */
+/** When the work does not fit: the size of the gap up front, and each way out with a button that lets you change it. */
 @Composable
-private fun ShortfallCard(s: com.hsib.sib.core.plan.Shortfall, st: AppState, fmt: Fmt) {
+private fun ShortfallCard(s: com.hsib.sib.core.plan.Shortfall, st: AppState, fmt: Fmt, onOpen: (String) -> Unit, onSetEffort: (String, Int) -> Unit, onDaily: () -> Unit) {
     val c = SibTheme.colors
     var open by rememberSaveable { mutableStateOf(false) }
+    var info by rememberSaveable { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Remedy.ReduceScope?>(null) }
     Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(30.dp)).background(c.vermilionWash).padding(22.dp)) {
-        Text("Needs ${fmt.minutes(s.missingMin)} more time", style = SibType.display, color = c.vermilion)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Needs ${fmt.minutes(s.missingMin)} more time", style = SibType.display, color = c.vermilion, modifier = Modifier.weight(1f, fill = false))
+            Spacer(Modifier.width(8.dp))
+            InfoEye(info, { info = !info }, "Needs more time")
+        }
         Text("Before ${fmt.dayNoWeek(s.toDay)}", style = SibType.body, color = c.ink)
+        if (info) {
+            Spacer(Modifier.height(10.dp))
+            InfoCard("The days you have set aside are not enough for all the work due before ${fmt.dayNoWeek(s.toDay)}. Nothing is wrong with you or the app: it only means the hours do not fit yet. Below are ways to make them fit. Every one of them can be changed, and you can also plan your own days in each deadline.")
+        }
         Gap(14.dp)
         SibButton(if (open) "Hide options" else "See options", { open = !open }, kind = ButtonKind.QUIET)
         if (open) {
             Gap(14.dp)
             s.remedies.forEach { r ->
-                val text = when (r) {
-                    is Remedy.MoreTimePerDay -> "Find ${fmt.minutes(r.extraMinPerDay)} more a day, ${fmt.dayNoWeek(r.fromDay)} to ${fmt.dayNoWeek(r.toDay)}"
-                    is Remedy.ExtendDeadline -> "Ask for ${r.byDays} more ${if (r.byDays == 1) "day" else "days"} on ${st.items.firstOrNull { it.o.id == r.taskId }?.o?.title ?: ""}"
-                    is Remedy.ReduceScope -> "Cut ${fmt.minutes(r.minutes)} from ${st.items.firstOrNull { it.o.id == r.taskId }?.o?.title ?: ""}"
+                val title = { id: String -> st.items.firstOrNull { it.o.id == id }?.o?.title ?: "" }
+                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    when (r) {
+                        is Remedy.MoreTimePerDay -> {
+                            Text("Find ${fmt.minutes(r.extraMinPerDay)} more a day, ${fmt.dayNoWeek(r.fromDay)} to ${fmt.dayNoWeek(r.toDay)}", style = SibType.body, color = c.ink)
+                            SibButton("Change my daily time", onDaily, kind = ButtonKind.QUIET, compact = true)
+                        }
+                        is Remedy.ExtendDeadline -> {
+                            Text("Ask for ${r.byDays} more ${if (r.byDays == 1) "day" else "days"} on ${title(r.taskId)}", style = SibType.body, color = c.ink)
+                            SibButton("Open it to change the date", { onOpen(r.taskId) }, kind = ButtonKind.QUIET, compact = true)
+                        }
+                        is Remedy.ReduceScope -> {
+                            Text("Cut ${fmt.minutes(r.minutes)} from ${title(r.taskId)}", style = SibType.body, color = c.ink)
+                            SibButton("Change the hours", { editing = r }, kind = ButtonKind.QUIET, compact = true)
+                        }
+                    }
                 }
-                Text(text, style = SibType.body, color = c.ink, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
             }
         }
     }
+    editing?.let { r ->
+        val current = st.items.firstOrNull { it.o.id == r.taskId }?.o?.effort?.likelyMin ?: 0
+        var text by remember(r.taskId) { mutableStateOf(trimHoursText(((current - r.minutes).coerceAtLeast(15)) / 60.0)) }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { editing = null }, containerColor = c.raised,
+            title = { Text(st.items.firstOrNull { it.o.id == r.taskId }?.o?.title ?: "", style = SibType.title, color = c.ink) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("It is planned at ${fmt.minutes(current)}. Cutting ${fmt.minutes(r.minutes)} would make it about ${trimHoursText(((current - r.minutes).coerceAtLeast(15)) / 60.0)} hours. Type any number you like.", style = SibType.small, color = c.inkSoft)
+                    Field("Hours for this deadline", text, { text = it.filter { ch -> ch.isDigit() || ch == '.' }.take(6) })
+                }
+            },
+            confirmButton = { androidx.compose.material3.TextButton({ text.toDoubleOrNull()?.let { h -> onSetEffort(r.taskId, (h * 60).toInt().coerceIn(15, 999 * 60)); editing = null } }) { Text("Save", style = SibType.bodyStrong, color = c.ink) } },
+            dismissButton = { androidx.compose.material3.TextButton({ editing = null }) { Text("Cancel", style = SibType.body, color = c.inkSoft) } },
+        )
+    }
 }
+
+private fun trimHoursText(h: Double): String = if (h == h.toLong().toDouble()) h.toLong().toString() else "%.1f".format(h)
 
 fun runwayItems(st: AppState): List<RunwayItem> {
     val real = st.items.filter { it.o.lifecycle == com.hsib.sib.core.model.Lifecycle.ACTIVE && it.o.space == Space.WORK && it.dueInstant != null }.map { v ->

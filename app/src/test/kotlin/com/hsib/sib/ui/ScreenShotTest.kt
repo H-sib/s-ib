@@ -79,6 +79,14 @@ class ScreenShotTest {
 
     @Test fun todayNeon() = shot("today-soon-neon", ThemeMode.NEON, content = today(Fixtures.soon))
 
+    @Test fun todayCosmos() = shot("today-soon-cosmos", ThemeMode.COSMOS, content = today(Fixtures.soon))
+
+    @Test fun todayDune() = shot("today-soon-dune", ThemeMode.DUNE, content = today(Fixtures.soon))
+
+    @Test fun todayForest() = shot("today-soon-forest", ThemeMode.FOREST, content = today(Fixtures.soon))
+
+    @Test fun todayOcean() = shot("today-soon-ocean", ThemeMode.OCEAN, content = today(Fixtures.soon))
+
     @Test fun closeHomeBlack() = shot("close-home-black", ThemeMode.BLACK, Space.CLOSE) { CloseHomeScreen(Fixtures.withClose, {}, {}, {}) }
 
     @Test fun closeHomeNeon() = shot("close-home-neon", ThemeMode.NEON, Space.CLOSE) { CloseHomeScreen(Fixtures.withClose, {}, {}, {}) }
@@ -91,7 +99,7 @@ class ScreenShotTest {
 
     @Test fun closeHomeLight() = shot("close-home-light", ThemeMode.LIGHT, Space.CLOSE) { CloseHomeScreen(Fixtures.withClose, {}, {}, {}) }
 
-    @Test fun onboardingDark() = shot("onboarding-dark") { Onboarding(Fixtures.today, { null }, {}, {}) }
+    @Test fun onboardingDark() = shot("onboarding-dark") { Onboarding(Fixtures.today, { null }, {}, { _, _, _ -> }) }
 
     @Test fun promptsDark() = shot("prompts-dark") {
         Column(Modifier.padding(24.dp)) { PromptCard(true, {}); Spacer(Modifier.height(16.dp)); PromptCard(false, {}) }

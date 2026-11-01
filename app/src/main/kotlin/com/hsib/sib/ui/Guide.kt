@@ -55,6 +55,38 @@ object Guide {
             "You can make one for any college or job by answering a few questions.",
             "Switch it off any time and your deadlines stay.",
         ), "Engineering university: Year 1, Mathematics, Physics, Chemistry"))
+        add(GuideTopic("Steps you can edit", "Cut a job into pieces that suit you.", listOf(
+            "Open a deadline, then the [Steps] tab.",
+            "Tap [Use these steps] to take the suggestions, or [Write my own step] to start from nothing.",
+            "Tap a step, or its pencil, to change what it says, how long it takes and which day.",
+            "Tap [Add a step] for more, the box to tick one off, and the cross to remove it.",
+        ), listOf("A step you change belongs to you from then on. [Go back to suggested steps] starts again."), "Draft the introduction, 45 min, Thu 12 Nov"))
+        add(GuideTopic("Focus sessions", "Add the time you really worked.", listOf(
+            "Open a deadline and find the [Focus session] card.",
+            "Tap [Start a focus session] when you sit down to work.",
+            "When you finish, tap [Stop and add] and the real minutes go into the progress bar.",
+        ), listOf("You can close the app in between. Turn the card off in Settings, Appearance, Show or hide.")))
+        add(GuideTopic("Find a friend and chat", "Chat first, share a deadline later.", listOf(
+            "Open [Messages]. Type a friend's exact username, or their exact email if they allowed it, and tap [Search].",
+            "Tap [Message]. They see \"wants to chat\" and choose to accept, decline or block.",
+            "Set your own name in [Account] under [Username], so friends can find you.",
+            "[Join with a code] is still there for shared deadlines.",
+        ), listOf(
+            "Nobody can browse names. A person is found only by typing the exact username.",
+            "Chats are sealed on your phone, so the service that stores them cannot read them.",
+        ), "@rafi.k"))
+        add(GuideTopic("Language and easy mode", "Read it your way, with only what you need.", listOf(
+            "The first screen after the opening asks for your language: English, Bengali or Hindi.",
+            "Change it later under [More], [Language].",
+            "Later in the first setup you can choose [Easy: only the basics]. Easy mode shows Today, Plan, Review and the basic settings.",
+            "Switch [Easy mode] off at the top of [More] to see everything.",
+        ), listOf("Bengali and Hindi cover the main screens, buttons and settings. Anything not yet translated stays in English.")))
+        add(GuideTopic("Hide what you do not need", "Everything can be turned off.", listOf(
+            "Open [More], [Settings], [Appearance], [Show or hide].",
+            "Switch off any part of Today you do not want: the other deadlines, today's classes, the day counts and more.",
+            "Under [Motivation], turn off the daily line for any kind of deadline, or all of it.",
+            "Under [Your name and hints], stop being greeted by name or stop the help hints.",
+        ), listOf("Nothing you hide is deleted. Switch it back on any time.")))
         add(GuideTopic("Review suggestions", "Nothing becomes a deadline until you say yes.", listOf(
             "Dates found in what you shared wait in Review.",
             "Each one shows the sentence it came from and why it was chosen. Tap Check this for doubts.",
@@ -144,25 +176,54 @@ object Guide {
     }
 }
 
+/** One icon for each topic, so nothing in the Guide is a bare line of words. */
+fun guideIcon(title: String): SibIcon = when (title) {
+    "Add a deadline" -> SibIcon.PLUS
+    "Make it yours" -> SibIcon.PALETTE
+    "Medical student mode" -> SibIcon.BOOK
+    "Review suggestions" -> SibIcon.DOC_CHECK
+    "The plan", "Own plan and hours" -> SibIcon.GAUGE
+    "Steps you can edit" -> SibIcon.ROUTE
+    "Focus sessions" -> SibIcon.CLOCK
+    "Checklist and progress bar" -> SibIcon.CHECK
+    "Month calendar" -> SibIcon.CALENDAR
+    "Say it out loud" -> SibIcon.CHAT
+    "Attach files" -> SibIcon.FILE
+    "Reminders", "Class reminders" -> SibIcon.BELL
+    "Close ones" -> SibIcon.HEART
+    "Chats and notifications", "Find a friend and chat" -> SibIcon.CHAT
+    "Card, widget and tile", "Today style" -> SibIcon.GRID
+    "Back up and restore" -> SibIcon.CLOUD
+    "Share with friends" -> SibIcon.PEOPLE
+    "Send to a friend" -> SibIcon.SEND
+    "Hide what you do not need" -> SibIcon.EYE
+    "Language and easy mode" -> SibIcon.GLOBE
+    else -> SibIcon.PALETTE
+}
+
 /** The Guide: a list of topics, then one topic at a time. Reached from Settings. */
 @Composable
-fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false) {
+fun GuideScreen(online: Boolean, onBack: () -> Unit, medical: Boolean = false, startTopic: String? = null) {
     val c = SibTheme.colors
     val topics = Guide.topics(online, medical)
-    var open by rememberSaveable { mutableIntStateOf(-1) }
+    var open by rememberSaveable { mutableIntStateOf(topics.indexOfFirst { it.title == startTopic }) }
     val topic = topics.getOrNull(open)
     if (topic == null) {
         Page("Guide", onBack) {
             ScreenHeader("Guide", "Everything the app can do, in a few steps each", SibIcon.BOOK)
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }) }
+                topics.forEachIndexed { i, t -> NavRow(t.title, t.line, { open = i }, icon = guideIcon(t.title)) }
             }
             Gap(40.dp)
         }
     } else {
         Page(topic.title, { open = -1 }) {
-            Text(topic.line, style = SibType.headline, color = c.ink)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconBadge(guideIcon(topic.title), size = 48.dp)
+                Spacer(Modifier.size(14.dp))
+                Text(topic.line, style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f))
+            }
             Gap(20.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 topic.steps.forEachIndexed { i, step ->

@@ -103,12 +103,13 @@ private fun LocalTime.hhmm() = "%02d:%02d".format(hour, minute)
 // ---- root ---------------------------------------------------------------------------------------
 
 @Composable
-fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> Unit) {
+fun SettingsHome(st: AppState, social: SocialState? = null, onEasy: (Boolean) -> Unit = {}, onNav: (String) -> Unit) {
     val c = SibTheme.colors
+    val easy = st.settings.easyMode
     Column(Modifier.fillMaxWidth().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Text("Settings", style = SibType.display, color = c.ink, modifier = Modifier.padding(top = 20.dp, bottom = 20.dp))
-        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting.
-        Row(
+        // The way to set the app up for you. Tinted and outlined so it is easy to find, without shouting. It can be hidden.
+        if ("makeit" !in st.settings.uiHidden && !easy) Row(
             Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(c.violet.copy(alpha = 0.14f))
                 .border(1.5.dp, c.violet.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).bounceClick { onNav("settings/course") }.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -121,9 +122,11 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
             }
         }
         Group(null, Modifier.padding(top = 0.dp)) {
+            ToggleRow("Easy mode", "Only the basics are shown. Switch it off to see everything the app can do.", easy, onEasy, icon = SibIcon.CHECK)
+            GroupDivider()
             NavItem("Guide", "Everything the app can do, in a few lines", { onNav("settings/guide") })
         }
-        if (social != null) {
+        if (social != null && !easy) {
             Group("Account") {
                 NavItem("Friends", social.user?.let { "Signed in as ${it.displayName}" } ?: "Share a deadline and chat about it", { onNav("friends") })
             }
@@ -131,11 +134,16 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
         Group("Daily use") {
             NavItem("Reminders", "Your time each day, quiet hours, how many reminders", { onNav("settings/reminders") })
             GroupDivider()
+            NavItem("Language", st.settings.language.native, { onNav("settings/language") }, icon = SibIcon.GLOBE)
+            GroupDivider()
+            if (!easy) {
             NavItem("Chats and notifications", if (st.settings.notificationReaderApps.isEmpty()) "Find deadlines in your chats" else "Reading ${st.settings.notificationReaderApps.size} apps", { onNav("settings/reader") })
             GroupDivider()
             NavItem("Notification dashboard", null, { onNav("settings/notifications") }, trailing = if (st.settings.todayNotification) "On" else "Off")
             GroupDivider()
             NavItem("Close ones", null, { onNav("settings/close") }, trailing = if (st.settings.closeOnesEnabled) "On" else "Hidden")
+            GroupDivider()
+            NavItem("Your name and hints", st.settings.callName ?: "Greeting and help hints", { onNav("settings/you") })
             GroupDivider()
             NavItem("Motivation", "A light line to get you going, for each kind of deadline", { onNav("settings/motivation") }, trailing = if (st.settings.motivationOn) "On" else "Off")
             GroupDivider()
@@ -145,17 +153,22 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onNav: (String) -> U
                 NavItem("Study tools", "Class routine, class diary and the study switch", { onNav("settings/study") }, trailing = if (st.settings.medicalMode) "On" else "Off")
                 GroupDivider()
             }
+            }
             NavItem("Appearance", "Theme, motion, the opening", { onNav("settings/appearance") })
         }
         Group("Data and safety") {
             NavItem("Backup and restore", null, { onNav("settings/backup") }, trailing = if (st.settings.backupFolder != null) "On" else "Not set up")
             GroupDivider()
-            NavItem("Security", null, { onNav("settings/security") }, trailing = if (st.settings.appLock) "App lock on" else "App lock off")
-            GroupDivider()
+            if (!easy) {
+                NavItem("Security", null, { onNav("settings/security") }, trailing = if (st.settings.appLock) "App lock on" else "App lock off")
+                GroupDivider()
+            }
             NavItem("Privacy and data", "What is stored and which permissions it has", { onNav("settings/privacy") })
             GroupDivider()
-            NavItem("Sources", "What it can read, and what it keeps", { onNav("settings/sources") })
-            GroupDivider()
+            if (!easy) {
+                NavItem("Sources", "What it can read, and what it keeps", { onNav("settings/sources") })
+                GroupDivider()
+            }
             NavItem("Terms and security", "What you agreed to, and how data is protected", { onNav("settings/terms") })
         }
         Group("Help") {
@@ -235,11 +248,19 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         )
         Gap(12.dp)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            listOf(listOf(ThemeMode.LIGHT, ThemeMode.DARK), listOf(ThemeMode.BLACK, ThemeMode.NEON)).forEach { pair ->
+            listOf(listOf(ThemeMode.LIGHT, ThemeMode.DARK), listOf(ThemeMode.BLACK, ThemeMode.NEON), listOf(ThemeMode.COSMOS, ThemeMode.DUNE), listOf(ThemeMode.FOREST, ThemeMode.OCEAN)).forEach { pair ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     pair.forEach { mode -> ThemeSwatch(mode, mode == shown, { choose(mode) }, Modifier.weight(1f)) }
                 }
             }
+        }
+        SectionHeader("Show or hide")
+        Text("Turn off anything you do not need. Nothing here deletes anything.", style = SibType.small, color = SibTheme.colors.inkSoft)
+        listOf(
+            "also" to "Also coming up", "classes" to "Today's classes", "shortfall" to "Needs more time", "counts" to "Day counts",
+            "friends" to "Friends row", "review" to "To review row", "makeit" to "Make it yours card", "focus" to "Focus session",
+        ).forEach { (key, label) ->
+            ToggleRow(label, null, key !in st.settings.uiHidden, { on -> scope.launch { ready.settings.update { it.copy(uiHidden = if (on) it.uiHidden - key else it.uiHidden + key) } } })
         }
         SectionHeader("Today style")
         Choice(com.hsib.sib.data.HomeStyle.values().map { it to it.label }, st.settings.homeStyle, { v -> scope.launch { ready.settings.update { it.copy(homeStyle = v) } } })
@@ -583,19 +604,19 @@ fun AboutScreen(onBack: () -> Unit, onTerms: () -> Unit = {}) {
                 Text("Made by H-sib", style = SibType.small, color = c.inkSoft)
             }
         }
-        Group("How it works") {
+        CollapsibleGroup("How it works") {
             ExpandItem("Finding dates", "It reads the text you hand it with rules and a very small model that runs on your phone. It tells you why it picked each date, and it ignores publication dates, history and sale offers.")
             GroupDivider()
-            ExpandItem("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit.")
+            ExpandItem("Planning", "It works out the latest day you can start, spreads the work over the days you have, and says exactly how short you are when it does not fit. You can always plan your own days.")
             GroupDivider()
             ExpandItem("Reminding", "Few reminders, placed with care, never inside quiet hours. A confirmed deadline never changes by itself.")
             GroupDivider()
-            ExpandItem("The name", "In H-sib, the letters s, i and b stand for Start It Before. They are also the closing sound of the maker's name, Hasib, which can mean one who counts. A sib is a brother or sister, the spirit of Close ones.")
+            NameStory()
         }
-        Group("Credits") {
-            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals and the class diary. Her feedback also shaped version 1.0.1 and 1.1.0: the month view, clearer wording, a checklist with a progress bar, more deadlines on Today, your own plan and Friend in Close ones. Thank you.")
+        CollapsibleGroup("Credits", icon = SibIcon.HEART) {
+            ExpandItem("Dr. Muser", "Closed tester, and the voice behind the medical student version of H-sib Reminder. She explained how an MBBS course works: the profs, the cards, items and terms, the practicals, the class diary and the weekly class table. Her feedback shaped versions 1.0.1 to 1.3.0: the month view, clearer wording, a checklist with a progress bar of up to 50 items, your own plan and hours, the subjects of every prof, editable steps and the idea of making the app fit every college, job and way of life. Thank you.", icon = SibIcon.HEART)
         }
-        Group("Legal") {
+        CollapsibleGroup("Legal", icon = SibIcon.SHIELD) {
             NavItem("Privacy policy", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/privacy.html"))) } })
             GroupDivider()
             NavItem("Terms of use", "Opens in your browser", { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://h-sib.github.io/s-ib/terms.html"))) } })

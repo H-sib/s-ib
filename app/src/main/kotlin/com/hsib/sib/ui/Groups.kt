@@ -53,8 +53,74 @@ import androidx.compose.ui.unit.sp
 fun Group(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val c = SibTheme.colors
     Column(modifier.fillMaxWidth().padding(top = 28.dp)) {
-        if (title != null) Text(title, style = SibType.label.copy(letterSpacing = 0.8.sp), color = c.inkSoft, modifier = Modifier.padding(start = 8.dp, bottom = 10.dp))
+        if (title != null) Text(tr(title), style = SibType.label.copy(letterSpacing = 0.8.sp), color = c.inkSoft, modifier = Modifier.padding(start = 8.dp, bottom = 10.dp))
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised), content = content)
+    }
+}
+
+/** A group whose title is a tappable header. Only the title shows until it is opened, so long pages stay short. */
+@Composable
+fun CollapsibleGroup(title: String, icon: SibIcon? = iconFor(title), content: @Composable ColumnScope.() -> Unit) {
+    val c = SibTheme.colors
+    var open by rememberSaveable(title, "group") { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(top = 20.dp).clip(RoundedCornerShape(24.dp)).background(c.raised).animateContentSize()) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(role = Role.Button, onClickLabel = if (open) "Close" else "Open") { open = !open }.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) { IconBadge(icon, size = 40.dp); Spacer(Modifier.width(14.dp)) }
+            Text(tr(title), style = SibType.title, color = c.ink, modifier = Modifier.weight(1f))
+            Canvas(Modifier.size(14.dp, 10.dp)) {
+                val p = Path().apply {
+                    if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }
+                    else { moveTo(1f, 1f); lineTo(size.width / 2, size.height - 1f); lineTo(size.width - 1f, 1f) }
+                }
+                drawPath(p, c.violet, style = Stroke(2.6f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+        }
+        if (open) { GroupDivider(); Column(Modifier.fillMaxWidth(), content = content) }
+    }
+}
+
+/** The story of the name as three big letters and two short lines, not a paragraph. */
+@Composable
+fun NameStory() {
+    val c = SibTheme.colors
+    var open by rememberSaveable("nameStory") { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().animateContentSize().clickable(role = Role.Button) { open = !open }.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(SibIcon.SPARK, size = 36.dp)
+            Spacer(Modifier.width(14.dp))
+            Text("The name", style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
+            Canvas(Modifier.size(14.dp, 10.dp)) {
+                val p = Path().apply {
+                    if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }
+                    else { moveTo(1f, 1f); lineTo(size.width / 2, size.height - 1f); lineTo(size.width - 1f, 1f) }
+                }
+                drawPath(p, c.violet, style = Stroke(2.6f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+        }
+        if (open) {
+            Spacer(Modifier.height(14.dp))
+            listOf(Triple("S", "tart", c.violet), Triple("I", "t", c.verdigris), Triple("B", "efore", c.vermilion)).forEach { (letter, rest, tone) ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(RoundedCornerShape(18.dp)).background(tone.copy(alpha = 0.12f)).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(letter, style = SibType.display, color = tone)
+                    Text(rest, style = SibType.headline, color = c.ink)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                SibIconView(SibIcon.USER, size = 22.dp, tint = c.violet)
+                Spacer(Modifier.width(12.dp))
+                Text("Hasib, the maker's name, ends in the same sound. It can mean one who counts.", style = SibType.body, color = c.inkSoft)
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                SibIconView(SibIcon.HEART, size = 22.dp, tint = c.vermilion)
+                Spacer(Modifier.width(12.dp))
+                Text("A sib is a brother or sister: the spirit of Close ones.", style = SibType.body, color = c.inkSoft)
+            }
+        }
     }
 }
 
@@ -98,7 +164,7 @@ fun ExpandItem(title: String, body: String, icon: SibIcon? = iconFor(title)) {
     Column(Modifier.fillMaxWidth().animateContentSize().clickable(role = Role.Button) { open = !open }.padding(horizontal = 20.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
-            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
+            Text(tr(title), style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
             Canvas(Modifier.size(14.dp, 10.dp)) {
                 val p = Path().apply {
                     if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }

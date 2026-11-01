@@ -109,6 +109,9 @@ fun iconFor(title: String): SibIcon? = when (title) {
     "Notification dashboard" -> SibIcon.GRID
     "Close ones" -> SibIcon.HEART
     "Motivation" -> SibIcon.CHECK
+    "Your name and hints" -> SibIcon.USER
+    "Language" -> SibIcon.GLOBE
+    "Easy mode" -> SibIcon.CHECK
     "Calendar" -> SibIcon.CALENDAR
     "Medical student", "Study course", "Study tools", "My course" -> SibIcon.BOOK
     "Appearance" -> SibIcon.PALETTE
@@ -128,6 +131,24 @@ fun iconFor(title: String): SibIcon? = when (title) {
     "History" -> SibIcon.CLOCK
     "The honest limits", "About" -> SibIcon.INFO
     "Everywhere else" -> SibIcon.EYE
+    "Encouraging lines" -> SibIcon.SPARK
+    "On a deadline's page" -> SibIcon.DOC_CHECK
+    "One quiet notification a day" -> SibIcon.BELL
+    "Follow my phone" -> SibIcon.MOON
+    "Block screenshots" -> SibIcon.LOCK
+    "Reduce motion" -> SibIcon.PAUSE
+    "Show Close ones on Today" -> SibIcon.HEART
+    "Use my setup" -> SibIcon.BOOK
+    "Count my setup anonymously" -> SibIcon.GLOBE
+    "Let people find me by my email" -> SibIcon.USER
+    "Assignments" -> SibIcon.BOOK
+    "Exams" -> SibIcon.DOC_CHECK
+    "Applications" -> SibIcon.FILE
+    "Meetings and appointments" -> SibIcon.PEOPLE
+    "Bills and renewals" -> SibIcon.BELL
+    "Personal and other" -> SibIcon.USER
+    "Also coming up", "Today's classes", "Needs more time", "Day counts", "Friends row", "To review row", "Make it yours card" -> SibIcon.GRID
+    "Focus session" -> SibIcon.CLOCK
     "Blocked people" -> SibIcon.BLOCK
     "Sign out" -> SibIcon.LOGOUT
     else -> null

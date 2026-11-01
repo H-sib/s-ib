@@ -64,6 +64,24 @@ class MotivationTest {
         assertEquals(Motivation.Group.BILL, Motivation.groupFor(com.hsib.sib.core.model.Category.BILL))
     }
 
+    @Test fun aNameIsUsedInSomeLinesAndNeverBreaksTheRules() {
+        val lines = (0 until 300).map { Motivation.line(5, "k$it", 20000L, name = "Rafi") }
+        val named = lines.count { it.startsWith("Rafi, ") }
+        assertTrue("named $named of 300", named in 60..140)
+        assertTrue(lines.none { it.contains("Rafi, Rafi") })
+        assertTrue(lines.filter { it.startsWith("Rafi, ") }.all { it.length > 12 && it.endsWith(".") })
+        assertEquals(Motivation.line(5, "k1", 20000L), Motivation.line(5, "k1", 20000L, name = null))
+        assertEquals(Motivation.line(5, "k1", 20000L), Motivation.line(5, "k1", 20000L, name = "  "))
+    }
+
+    @Test fun finishingGetsAKindLineThatFollowsTheRules() {
+        val lines = (0 until 200).map { Motivation.doneLine("k$it", 20000L, "Rafi") }.toSet()
+        assertTrue("distinct ${lines.size}", lines.size >= 10)
+        assertTrue(lines.filter { it.contains("!") || it.contains("just", true) }.toString(), lines.none { it.contains("!") || it.contains("just", true) || it.any { ch -> ch.code == 0x2013 || ch.code == 0x2014 } })
+        assertTrue("none named: $lines", lines.any { it.startsWith("Rafi, ") })
+        assertEquals(Motivation.doneLine("a", 1L), Motivation.doneLine("a", 1L, null))
+    }
+
     @Test fun startedAndMedicalPoolsAreUsed() {
         val plain = (0 until 300).map { Motivation.line(5, "k$it", 20000L) }.toSet()
         val started = (0 until 300).map { Motivation.line(5, "k$it", 20000L, started = true) }.toSet()
