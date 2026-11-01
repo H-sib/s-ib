@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,13 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -29,11 +26,9 @@ import com.hsib.sib.core.medical.Course
 import com.hsib.sib.core.medical.CoursePhase
 import com.hsib.sib.core.medical.Courses
 import com.hsib.sib.core.model.Category
-import com.hsib.sib.data.ClassNote
 import com.hsib.sib.domain.AppState
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.UUID
 
 /** What a student or worker picks first: the phase or area, then the kind, then the subject or item. The title and the plan follow from it. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -117,59 +112,4 @@ fun StudySettings(st: AppState, ready: Ready, onBack: () -> Unit, onDiary: () ->
         }
         Spacer(Modifier.height(32.dp))
     }
-}
-
-/** A calendar of classes kept by the student: the day, the subject, the topic and the faculty. Stays on the phone. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun ClassDiaryScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
-    val course = st.settings.course
-    val c = SibTheme.colors
-    val fmt = rememberFmt()
-    val scope = rememberCoroutineScope()
-    val notes by ready.store.classNotes.collectAsState(initial = emptyList())
-    var day by remember { mutableStateOf(st.today) }
-    var pickDay by remember { mutableStateOf(false) }
-    var subject by remember { mutableStateOf("") }
-    var topic by remember { mutableStateOf("") }
-    var faculty by remember { mutableStateOf("") }
-    var kind by remember { mutableStateOf("Lecture") }
-    Page("Class diary", onBack) {
-        Explain("Write down each class: the subject, the topic and who taught it. It helps you see what was covered before a card, term or prof exam.")
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.raised).padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SibButton(fmt.dayLong(day), { pickDay = true }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Lecture", "Tutorial", "Ward").forEach { k -> SelectChip(k, kind == k, { kind = k }) }
-            }
-            val subjects = course.phases.flatMap { it.subjects }.distinct()
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                subjects.forEach { s -> SelectChip(s, subject == s, { subject = s }) }
-            }
-            Field("Subject", subject, { subject = it.take(60) })
-            Field("Topic", topic, { topic = it.take(160) })
-            Field("Faculty", faculty, { faculty = it.take(80) })
-            SibButton("Add to the diary", {
-                scope.launch { ready.store.addClassNote(ClassNote(UUID.randomUUID().toString(), day, subject.trim(), topic.trim(), faculty.trim(), kind)); topic = "" }
-            }, Modifier.fillMaxWidth(), enabled = subject.isNotBlank() && topic.isNotBlank())
-        }
-        Spacer(Modifier.height(16.dp))
-        if (notes.isEmpty()) Text("Nothing written yet.", style = SibType.body, color = c.inkSoft)
-        notes.groupBy { it.day }.forEach { (d, list) ->
-            SectionHeader(fmt.dayLong(d), count = list.size)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                list.forEach { n ->
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(c.raised).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(n.subject + " · " + n.kind, style = SibType.bodyStrong, color = c.ink)
-                            Text(n.topic, style = SibType.body, color = c.ink)
-                            if (n.faculty.isNotBlank()) Text(n.faculty, style = SibType.small, color = c.inkSoft)
-                        }
-                        SibButton("Delete", { scope.launch { ready.store.removeClassNote(n.id) } }, kind = ButtonKind.TEXT, compact = true)
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.height(32.dp))
-    }
-    if (pickDay) SibDatePicker(day, { day = it; pickDay = false }, { pickDay = false })
 }

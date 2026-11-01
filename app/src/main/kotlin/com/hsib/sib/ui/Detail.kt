@@ -153,7 +153,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             Text(
                 "Done", style = SibType.bodyStrong, color = c.paper,
                 modifier = Modifier.clip(RoundedCornerShape(50)).background(c.verdigris)
-                    .bounceClick { completing = true }.padding(horizontal = 22.dp, vertical = 11.dp),
+                    .bounceClick { completing = true }.padding(horizontal = if (LocalDensity.current.fontScale > 1.15f) 12.dp else 22.dp, vertical = 11.dp),
             )
         }
     }) {

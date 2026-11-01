@@ -231,7 +231,7 @@ fun SibButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, 
         modifier.heightIn(min = if (compact) 46.dp else 52.dp).clip(shape).background(fill).bounceClick(enabled = enabled, onClick = onClick).padding(horizontal = if (compact) 12.dp else if (kind == ButtonKind.TEXT) 8.dp else 24.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(tr(text), style = SibType.bodyStrong, color = fg, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        FitText(tr(text), SibType.bodyStrong, fg, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
@@ -321,7 +321,7 @@ fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boo
     ) {
         if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
-            Text(tr(title), style = SibType.bodyStrong, color = if (enabled) c.ink else c.inkSoft)
+            FitText(tr(title), SibType.bodyStrong, if (enabled) c.ink else c.inkSoft)
             if (subtitle != null) Text(tr(subtitle), style = SibType.small, color = c.inkSoft)
         }
         Spacer(Modifier.width(16.dp))
@@ -389,7 +389,7 @@ fun Page(
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
             if (onBack != null) BackArrow(onBack) else Spacer(Modifier.width(8.dp))
-            Text(tr(title), style = SibType.headline, color = c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp))
+            FitText(tr(title), SibType.headline, c.ink, modifier = Modifier.weight(1f).padding(start = 12.dp))
             action?.invoke()
         }
         Column(
@@ -440,3 +440,32 @@ fun ObligationRow(v: ObligationView, fmt: Fmt, today: java.time.LocalDate, zone:
 }
 
 val ScreenPadding = PaddingValues(horizontal = 20.dp)
+
+/** True when a line of this text ended inside a word (the word was split over two lines). */
+fun breaksWord(r: androidx.compose.ui.text.TextLayoutResult): Boolean {
+    val text = r.layoutInput.text.text
+    return (0 until r.lineCount - 1).any { i ->
+        val end = r.getLineEnd(i, visibleEnd = false)
+        end in 1 until text.length && !text[end - 1].isWhitespace() && !text[end].isWhitespace() && text[end - 1] != '-' && text[end - 1] != '/'
+    }
+}
+
+/**
+ * Text that never splits a word over two lines. When the phone's font size is large and a word does not fit, the letters are
+ * made a little smaller (down to 45 percent) until the whole word fits on one line. Normal text is not changed.
+ */
+@Composable
+fun FitText(
+    text: String,
+    style: androidx.compose.ui.text.TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier,
+    textAlign: androidx.compose.ui.text.style.TextAlign? = null,
+) {
+    var shrink by remember(text, style.fontSize) { androidx.compose.runtime.mutableFloatStateOf(1f) }
+    Text(
+        text, modifier = modifier, color = color, textAlign = textAlign,
+        style = if (shrink < 1f) style.copy(fontSize = style.fontSize * shrink, lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified) else style,
+        onTextLayout = { r -> if (shrink > 0.45f && breaksWord(r)) shrink = (shrink * 0.9f).coerceAtLeast(0.45f) },
+    )
+}

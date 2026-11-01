@@ -22,6 +22,15 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            7, "1.3.1",
+            listOf(
+                "Words no longer break in two when your phone uses a big font. The letters shrink a little to fit.",
+                "The class diary has charts by day, week, month and year, and tables of teachers and topics.",
+                "You can edit or delete a diary entry, and past teacher and topic names are offered as chips.",
+                "Lectures, tutorials and ward classes a day have no small limit: tap the number and type it.",
+            ),
+        ),
+        Entry(
             6, "1.3.0",
             listOf(
                 "Four new colour themes: Cosmos, Dune, Forest and Ocean. Choose a language and an easy mode that keeps only the basics.",

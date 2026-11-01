@@ -255,7 +255,7 @@ fun ActionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
             .background(if (enabled) c.action else c.lifted)
             .bounceClick(enabled = enabled, onClick = onClick).padding(horizontal = 28.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
-    ) { Text(text, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = if (enabled) c.onAction else c.inkSoft) }
+    ) { FitText(text, SibType.bodyStrong.copy(fontSize = 16.sp), if (enabled) c.onAction else c.inkSoft) }
 }
 
 /** Space that is meant to be empty. Named so the screens read as layout, not as magic numbers. */

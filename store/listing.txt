@@ -54,6 +54,8 @@ TAGS / CATEGORY
 Category: Productivity. Suggested tags: To-do list, Reminder, Planner, Productivity, Calendar.
 
 WHAT'S NEW (first release, max 500)
+1.3.1: no broken words with big phone fonts, class diary charts and tables by day, week, month and year, and any number of classes a day. Thank you to our testers.
+
 1.3.0: four new colour themes (Cosmos, Dune, Forest, Ocean), language choice, an easy mode, editable steps, a focus timer, greeting by name, a help hint when you are stuck, and switches to hide what you do not need. Thank you to our testers.
 
 1.2.0: make the app yours for study, work or daily life and share your setup, find friends by username to chat, your own plan and hours, four Today styles, a daily motivating line and a livelier look. Thank you to our testers.

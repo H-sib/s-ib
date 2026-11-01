@@ -303,7 +303,7 @@ private fun ThemeSwatch(mode: ThemeMode, selected: Boolean, onClick: () -> Unit,
             drawRoundRect(p.lifted, Offset(pad, size.height - pad - 22.dp.toPx()), Size(42.dp.toPx(), 22.dp.toPx()), CornerRadius(8.dp.toPx()))
         }
         Spacer(Modifier.height(10.dp))
-        Text(mode.label, style = SibType.title, color = ui.ink, modifier = Modifier.padding(horizontal = 6.dp))
+        FitText(mode.label, SibType.title, ui.ink, modifier = Modifier.padding(horizontal = 6.dp))
     }
 }
 

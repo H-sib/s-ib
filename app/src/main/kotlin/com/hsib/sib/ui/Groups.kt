@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -145,10 +146,11 @@ fun NavItem(title: String, subtitle: String? = null, onClick: () -> Unit, traili
     ) {
         if (icon != null) { IconBadge(icon); Spacer(Modifier.width(14.dp)) }
         Column(Modifier.weight(1f)) {
-            Text(title, style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink)
+            FitText(title, SibType.bodyStrong.copy(fontSize = 16.sp), c.ink)
             if (subtitle != null) Text(subtitle, style = SibType.small, color = c.inkSoft)
+            if (trailing != null && LocalDensity.current.fontScale > 1.15f) Text(trailing, style = SibType.small, color = c.violet)
         }
-        if (trailing != null) { Text(trailing, style = SibType.bodyStrong, color = c.violet); Spacer(Modifier.width(10.dp)) }
+        if (trailing != null && LocalDensity.current.fontScale <= 1.15f) { Text(trailing, style = SibType.bodyStrong, color = c.violet); Spacer(Modifier.width(10.dp)) }
         Canvas(Modifier.size(10.dp, 14.dp)) {
             val p = Path().apply { moveTo(1f, 1f); lineTo(size.width - 1f, size.height / 2); lineTo(1f, size.height - 1f) }
             drawPath(p, c.violet, style = Stroke(2.8f, cap = StrokeCap.Round, join = StrokeJoin.Round))
@@ -164,7 +166,7 @@ fun ExpandItem(title: String, body: String, icon: SibIcon? = iconFor(title)) {
     Column(Modifier.fillMaxWidth().animateContentSize().clickable(role = Role.Button) { open = !open }.padding(horizontal = 20.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) { IconBadge(icon, size = 36.dp); Spacer(Modifier.width(14.dp)) }
-            Text(tr(title), style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f))
+            FitText(tr(title), SibType.bodyStrong.copy(fontSize = 16.sp), c.ink, modifier = Modifier.weight(1f))
             Canvas(Modifier.size(14.dp, 10.dp)) {
                 val p = Path().apply {
                     if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }

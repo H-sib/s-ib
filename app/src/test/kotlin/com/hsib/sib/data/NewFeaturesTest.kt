@@ -74,6 +74,40 @@ class NewFeaturesTest {
         scope.cancel()
     }
 
+    @Test fun aBigDiaryIsKeptEditedAndSurvivesBackupWithNothingMissing() = runBlocking {
+        val scope = CoroutineScope(Job())
+        val ready = TestReady.create(context, scope)
+        val start = LocalDate.of(2026, 1, 1)
+        for (i in 0 until 300) {
+            ready.store.addClassNote(ClassNote("n$i", start.plusDays((i / 3).toLong()), "Subject ${i % 5}", "Topic ${i % 40} with a long name to be sure nothing is cut", "Dr. ${i % 7}", listOf("Lecture", "Tutorial", "Ward")[i % 3]))
+        }
+        assertEquals(300, ready.store.classNotes.first().size)
+        // Editing keeps the same id and changes the text; the count stays the same.
+        ready.store.addClassNote(ClassNote("n5", start, "Anatomy", "Edited topic", "Dr. New", "Lecture"))
+        val after = ready.store.classNotes.first()
+        assertEquals(300, after.size)
+        assertEquals("Edited topic", after.single { it.id == "n5" }.topic)
+        // A backup and a restore into a fresh database give back every row with every field.
+        val snap = ready.store.exportSnapshot(emptyMap())
+        assertEquals(300, snap.classNotes.size)
+        val other = TestReady.create(context, scope)
+        other.store.importSnapshot(snap, merge = false, localSettings = emptyMap())
+        val back = other.store.classNotes.first().sortedBy { it.id }
+        assertEquals(after.sortedBy { it.id }, back)
+        // A 160 letter topic and an 80 letter teacher are kept whole.
+        val topic = "t".repeat(160); val teacher = "f".repeat(80)
+        ready.store.addClassNote(ClassNote("long", start, "S", topic, teacher, "Lecture"))
+        val long = ready.store.classNotes.first().single { it.id == "long" }
+        assertEquals(topic, long.topic); assertEquals(teacher, long.faculty)
+        scope.cancel()
+    }
+
+    @Test fun anyNumberOfClassesADayIsKeptByTheSettingsCodec() {
+        val s = AppSettings(routineLectures = 100, routineTutorials = 25, routineWards = 12)
+        val back = SettingsCodec.decode(SettingsCodec.encode(s))
+        assertEquals(100, back.routineLectures); assertEquals(25, back.routineTutorials); assertEquals(12, back.routineWards)
+    }
+
     @Test fun theWeeklyRoutineIsKeptCopiedAndRemoved() = runBlocking {
         val scope = CoroutineScope(Job())
         val ready = TestReady.create(context, scope)

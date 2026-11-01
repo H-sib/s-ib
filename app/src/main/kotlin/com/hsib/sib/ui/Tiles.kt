@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -60,7 +61,7 @@ fun IconAction(icon: SibIcon, label: String, modifier: Modifier = Modifier, desc
             if (badge != null) Box(Modifier.align(Alignment.TopEnd).padding(9.dp).size(10.dp).clip(CircleShape).background(c.vermilion))
         }
         Spacer(Modifier.height(6.dp))
-        Text(tr(label), style = SibType.label.copy(fontWeight = FontWeight.Normal), color = c.inkSoft, textAlign = TextAlign.Center)
+        FitText(tr(label), SibType.label.copy(fontWeight = FontWeight.Normal), c.inkSoft, textAlign = TextAlign.Center)
     }
 }
 
@@ -81,13 +82,16 @@ fun FoldItem(icon: SibIcon, title: String, hint: String? = null, info: String? =
         ) {
             IconBadge(icon)
             Spacer(Modifier.width(14.dp))
-            Text(tr(title), style = SibType.bodyStrong.copy(fontSize = 16.sp), color = c.ink, modifier = Modifier.weight(1f, fill = false))
-            if (info != null) { Spacer(Modifier.width(6.dp)); InfoEye(showInfo, { showInfo = !showInfo }, title) }
-            Spacer(Modifier.weight(1f))
-            if (hint != null && !open) {
-                Text(hint, style = SibType.small, color = c.inkSoft, textAlign = TextAlign.End, modifier = Modifier.widthIn(max = 150.dp))
-                Spacer(Modifier.width(10.dp))
+            val roomy = LocalDensity.current.fontScale <= 1.15f
+            Column(Modifier.weight(1f)) {
+                FitText(tr(title), SibType.bodyStrong.copy(fontSize = 16.sp), c.ink)
+                if (hint != null && !open && !roomy) Text(hint, style = SibType.small, color = c.inkSoft)
             }
+            if (info != null) { Spacer(Modifier.width(6.dp)); InfoEye(showInfo, { showInfo = !showInfo }, title) }
+            if (hint != null && !open && roomy) {
+                Text(hint, style = SibType.small, color = c.inkSoft, textAlign = TextAlign.End, modifier = Modifier.widthIn(max = 120.dp))
+            }
+            Spacer(Modifier.width(10.dp))
             Canvas(Modifier.size(14.dp, 10.dp)) {
                 val p = Path().apply {
                     if (open) { moveTo(1f, size.height - 1f); lineTo(size.width / 2, 1f); lineTo(size.width - 1f, size.height - 1f) }

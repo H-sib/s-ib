@@ -693,14 +693,16 @@ private fun CandidateCard(
             More(warnings.joinToString("\n\n"), label = "Check this")
         }
         Gap(18.dp)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        val bigText = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.15f
+        val buttons: @Composable () -> Unit = {
             ActionButton(
                 when (cand.relation) { Relation.CANCEL -> "Cancel it"; Relation.UPDATE -> "Apply"; else -> "Confirm" },
                 { onConfirm(cand, CandidateEdit(title = title.trim().ifBlank { cand.title }, due = due, importance = importance, effort = effort, keepExcerpt = keep)) },
-                Modifier.weight(1f),
+                if (bigText) Modifier.fillMaxWidth() else Modifier.weight(1f),
             )
-            SibButton("Skip", { onDismiss(cand.id) }, kind = ButtonKind.QUIET)
+            SibButton("Skip", { onDismiss(cand.id) }, if (bigText) Modifier.fillMaxWidth() else Modifier, kind = ButtonKind.QUIET)
         }
+        if (bigText) Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { buttons() } else Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { buttons() }
         Gap(6.dp)
         Row(verticalAlignment = Alignment.CenterVertically) {
             SibButton("Later", { onSnooze(cand.id) }, kind = ButtonKind.TEXT)
