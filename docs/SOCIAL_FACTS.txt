@@ -1,0 +1,178 @@
+H-SIB REMINDER: FACTS FOR SOCIAL POSTS
+Written 2026-11-02 from the files in this repository. Nothing here was posted or sent. A fact that is not in the repo says "unknown".
+
+======================================================================================================================
+1. APP NAME, PACKAGE, VERSION, TEST STATUS
+======================================================================================================================
+App name:               H-sib Reminder   (app/src/main/res/values/strings.xml)
+Play Store title:       H-sib Reminder: Deadlines   (store/listing.txt)
+Package name:           com.hsib.sib   (app/build.gradle.kts)
+Current version:        1.3.1, version code 7   (app/build.gradle.kts)
+Platform:               Android only. Minimum Android 8.0 (API 26), built for Android 16 (API 36).
+Maker:                  H-sib (Chowdhury Hasibur Rahaman)
+Support email on Play:  chr.siam7@gmail.com   (docs/HANDOFF.txt)
+Test status:            Closed testing on Google Play, track "Alpha", email list "Closed testers".
+                        On 2026-10-31 the list had 28 people in 178 countries (docs/HANDOFF.txt).
+                        Play needs 12 or more testers opted in for 14 days in a row before production can be asked for
+                        (store/PLAY_CONSOLE_RELEASE_GUIDE.txt).
+                        Which day of the 14 it is today: unknown. The repo does not record the day the 14 days began.
+                        Whether versions 1.0.1 to 1.3.1 are uploaded to the track: unknown. The repo records only that
+                        1.0.0 went to closed testing.
+                        Public store status: not in production, per docs/HANDOFF.txt on 2026-10-31.
+
+======================================================================================================================
+2. PLAY STORE TEXT, COPIED EXACTLY FROM store/listing.txt
+======================================================================================================================
+Note: this is the text in the repo file. The live Play Console page was not checked, so it may differ from what is live.
+Note: the full description below says "Four themes: Light, Twilight, Black and Neon." The app now also has Cosmos, Dune,
+Forest and Ocean (see part 4). The store text was not updated for that.
+Note: the What's new block below keeps one entry per version. Play allows 500 characters for one release note.
+
+--- SHORT DESCRIPTION ---
+Finds your deadlines, plans when to start, and reminds you calmly. Private.
+
+--- FULL DESCRIPTION ---
+Dates get lost in the middle. You hear about a deadline in a notice, a group chat or a screenshot, and weeks later it arrives as a surprise.
+
+H-sib Reminder (say it "sib") helps you start before it is late.
+
+FIND THE DATE
+Type one line, paste a message, take a photo, scan a page, or share a PDF, a Word or Excel file, a calendar file or a chat export from any app. H-sib Reminder reads it on your phone, picks out the dates, and shows you the exact sentence and the reason for each one. Publication dates, history and sale offers are ignored. Nothing becomes a deadline until you confirm it.
+
+KNOW WHEN TO START
+Tell H-sib Reminder roughly how much work something is and how much time you have each day. It works backwards from the date to show the latest day you can start and still finish comfortably, spreads the work across the days you have, and learns from how long your past jobs really took. When it does not fit, it says by how much and offers real options: more time per day, a later date, or less to do.
+
+REMINDERS THAT EARN THEIR PLACE
+A few reminders, placed with care. Never inside your quiet hours. A daily limit so nothing nags. Done and Snooze right in the notification, a daily summary, a home-screen widget, a Quick Settings tile, and a built-in check that your phone is really letting reminders through.
+
+FIND DEADLINES IN YOUR CHATS
+Optional and off until you switch it on. Tick the chat and mail apps you want, allow H-sib Reminder in Android's notification access list, and it looks for dates in their notifications, on your phone. Suggestions wait in Review. Notification text is not saved.
+
+IN THE NOTIFICATION BAR
+Pin your next deadline as a card with a ring that fills as the date gets close, the next few deadlines, and Open and Done buttons. It appears only when something needs you.
+
+CLOSE ONES
+A private space with its own rose and plum look for the dates that matter to the people closest to you: anniversaries, birthdays, date nights, gifts and trips. Dates repeat without drifting, remind you early enough to plan something, and never show a name or a title on your lock screen. They are kept out of the widget, the summary, calendar export and sharing.
+
+SHARE WITHOUT AN ACCOUNT
+Send a deadline, or a whole weekly or monthly series, to friends as a calendar file with a readable list. No sign-up for anyone.
+
+SHARE AND CHAT WITH FRIENDS (OPTIONAL)
+Sign in with Google, then find a friend by username to chat, or share a deadline with an invite code, and everyone in it is reminded and can chat about it. Each person keeps their own plan. What you share is sealed on your phone before it is sent, so the service that stores it cannot read it. You can report or block anyone, and delete your account in the app.
+
+PRIVATE BY DESIGN
+No account is needed. No ads. No analytics. Your deadlines are stored in an encrypted database on your phone and stay there unless you choose to share one. Backups are end-to-end encrypted with a recovery key that only you hold, and are saved to any folder you choose, including a cloud drive. Every change to a deadline is chained to the one before it, so an unrecorded edit can be detected.
+
+DESIGNED TO BE CLEAR
+Urgency is shown with a word and a shape as well as a colour. Dates, times and clocks follow your phone's language and format. Four themes: Light, Twilight, Black and Neon. Large text is supported.
+
+WHY "H-sib Reminder"?
+In the name H-sib, the letters s, i and b stand for Start It Before, which is the whole idea. They are also the closing sound of its maker's name, Hasib, which can mean one who counts, and counting the days is what the app does. And in English a sib is a brother or sister, someone close, which is the spirit of the Close ones space.
+
+A NOTE ON RELIABILITY
+Android phone makers differ in how strictly they limit background apps. If reminders arrive late, open Settings, then Reminder health check, and H-sib Reminder will show you what to change on your phone.
+
+Made by H-sib.
+
+--- WHAT'S NEW ---
+1.3.1: no broken words with big phone fonts, class diary charts and tables by day, week, month and year, and any number of classes a day. Thank you to our testers.
+
+1.3.0: four new colour themes (Cosmos, Dune, Forest, Ocean), language choice, an easy mode, editable steps, a focus timer, greeting by name, a help hint when you are stuck, and switches to hide what you do not need. Thank you to our testers.
+
+1.2.0: make the app yours for study, work or daily life and share your setup, find friends by username to chat, your own plan and hours, four Today styles, a daily motivating line and a livelier look. Thank you to our testers.
+
+1.1.1: a weekly class routine for medical students, a light daily line to get you going that you can turn off, bigger checklists, hour steps for times, and optional calendar reading. Thank you to our testers.
+
+1.1.0: a version for medical students, your own hours and plan, four Today styles, Messages tab, files, voice and exam timetables. Thank you to our testers.
+
+1.0.1: a month calendar in Plan, deadlines split into parts with a battery that fills, more deadlines on Today, clearer wording, and Friend in Close ones. Thank you to our testers.
+
+First release. Find deadlines in what you already receive, see the latest safe day to start, get a few calm reminders, pin your next deadline in the notification bar, and keep personal dates private in Close ones. Sharing and chat with friends are optional; until you sign in, everything stays on your phone.
+
+GRAPHICS TO UPLOAD
+App icon 512 x 512 PNG (under 1 MB). Feature graphic 1024 x 500 PNG or JPEG. Phone screenshots: at least 2, up to 8,
+16:9 or 9:16, each side 320 to 3840 px. Suggested order: Today, Review with the reason shown, Plan with the load chart,
+a deadline with the latest safe start, Close ones, Backup and privacy.
+
+======================================================================================================================
+3. TRUE FEATURES (8 LINES)
+======================================================================================================================
+Built and covered by the repo's tests. Many screens were tested only in a simulator and not on a real phone
+(docs/HANDOFF.txt section 8, docs/RESUME.txt).
+1. Finds dates in typed or pasted text, photos, scanned pages, and shared PDF, Word, Excel, calendar and chat export files, on the phone.
+2. Works back from the date to show the latest day to start, and spreads the work over the days you have.
+3. A few reminders with quiet hours and a daily limit, Done and Snooze in the notification, a widget and a Quick Settings tile.
+4. A notification bar card with a ring that fills as the date gets close, with Open and Done buttons.
+5. Optional: finds dates in notifications of the chat and mail apps you tick, on the phone only. Off until you switch it on.
+6. Close ones: a private rose and plum space for anniversaries, birthdays and trips, with no titles on the lock screen.
+7. Share a deadline as a calendar file with no account. With Google sign in: chat by username and share by invite code, sealed on the phone.
+8. For study: class routine and class diary charts, checklists, month calendar, focus timer, backups with a recovery key, language choice.
+
+======================================================================================================================
+4. THEME COLOURS AND FONT
+======================================================================================================================
+Source: app/src/main/kotlin/com/hsib/sib/ui/Theme.kt and app/src/main/kotlin/com/hsib/sib/data/Settings.kt
+Theme choices in Settings: Follow my phone, Light, Twilight, Black, Neon, Cosmos, Dune, Forest, Ocean.
+Hex values are background (paper), text (ink), and the two glow colours used in the gradient (glow A, glow B).
+  Twilight (default dark)   paper 0D0B1F   ink F7F4FF   glow A 9B86FF (violet)   glow B FF8A70 (coral)
+  Light                     paper F3F0FF   ink 14112B   glow A 9B86FF            glow B FF8A70
+  Black                     paper 000000   ink FFFFFF   glow A FFFFFF            glow B C4C8D4
+  Neon                      paper 06060F   ink FFFFFF   glow A 00E5FF (cyan)     glow B FF3D9A (pink)
+  Cosmos                    paper 05060F   ink F2F5FF   glow A 6C7BFF            glow B B06BFF
+  Dune                      paper F6EBD9   ink 2E1D0F   glow A F2A65A            glow B EE7B6E
+  Forest                    paper 08130E   ink EEF8F0   glow A 3FBF7A            glow B E8C65A
+  Ocean                     paper 06121F   ink EEF7FF   glow A 2FA6FF            glow B 5FE6D0
+  Close ones, dark          paper 190E1C   ink F8E9F1   glow A C27BFF (plum)     glow B FF8FB0 (rose)
+  Close ones, light         paper FFF1F5   ink 2A1226   glow A C27BFF            glow B FF8FB0
+  Medical student, light    paper EEF9F7   ink 0A2A2B   glow A 2DD4BF (teal)     glow B 38BDF8
+  Medical student, dark     paper 061819   ink EAFBF9   glow A 2DD4BF            glow B 38BDF8
+The name "H-sib Reminder" is set with "H-" and "Reminder" faded and "sib" in the gradient, all the same size.
+Font: Sora, one variable font file, weights 400 to 800 (app/src/main/res/font/sora.ttf).
+Font licence: unknown. It is not recorded in the repo.
+
+======================================================================================================================
+5. FILE PATHS: ICON, FEATURE GRAPHIC, 4 SCREENSHOTS
+======================================================================================================================
+Icon (512 by 512):               store/graphics/icon-512.png
+Feature graphic (1024 by 500):   store/graphics/feature-1024x500.png
+Four screenshots, chosen as the core of the app:
+  store/graphics/screenshot-1-today.png
+  store/graphics/screenshot-2-review.png
+  store/graphics/screenshot-3-plan.png
+  store/graphics/screenshot-4-detail.png
+Three more exist: store/graphics/screenshot-5-chat.png, screenshot-6-close-home.png, screenshot-7-settings-home.png
+These images were made on 2026-10-30, before versions 1.1.0 to 1.3.1. Newer screens and the four new themes are not in them.
+The generator is tools/store-graphics.py.
+
+======================================================================================================================
+6. NEVER SAY THESE ABOUT THIS APP
+======================================================================================================================
+Each line is grounded in site/privacy.html, site/terms.html, store/data-safety-and-policy-answers.txt or docs/HANDOFF.txt.
+Health
+  Do not say it gives medical or health advice, treats anything, or is a medical product. The medical student mode is a class
+  timetable and diary only.
+  Do not say it can be the only way to meet a date where a miss could cause serious harm (legal, medical and similar). The terms say
+  do not rely on it for that. The terms call it "a helper, not a guarantee".
+  Do not promise that reminders always arrive. Phone makers limit background apps. The app has a health check that shows causes.
+Privacy
+  Do not say "no data ever leaves your phone". Without sign in that is true. After Google sign in and sharing, sealed text, an
+  account id, the chosen name and username go to Google Firebase. The email is held by the sign in service.
+  Do not say "we collect nothing". Say "no account needed, no ads, no analytics, no crash reporting", which the repo states.
+  Do not say the developer can never see anything. The developer cannot read sealed titles, dates, notes or chat, but a chat
+  message that is reported can be reviewed (site/terms.html).
+  Do not say the app never uses the internet. The release build has the internet permission for sharing, chat and the app check.
+  Do not say notification reading is on by default. It is optional, off until switched on, and the text is not saved.
+Security
+  Do not say "unhackable", "100 percent secure", "military grade" or "bank level".
+  Do not say it was audited or independently reviewed. Data safety answer: independent security review, No. A lawyer has not read
+  the terms and privacy page (docs/HANDOFF.txt section 8).
+  Do not say the server security rules were fully tested. The emulator test run is listed as not verified.
+  Do not say Play Integrity is enforced. Enforcement is off.
+Other
+  Do not say it is in the public Play Store for everyone. It is in closed testing.
+  Do not say it is for children. The target audience is 18 and over, and sharing is for 16 and over.
+  Do not say it is for iPhone. It is Android only.
+  Do not say it is AI powered. The repo describes no AI model. It names only on device text recognition (ML Kit).
+  Do not say it is fully accessible or works with screen readers. Screen reader and right to left checks are listed as not verified.
+  Do not quote a user count, rating, download count or review. Only the tester count above is in the repo.
+Style (owner rules): no exclamation marks, no dashes, and not the word "just".
