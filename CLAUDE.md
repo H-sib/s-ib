@@ -9,6 +9,8 @@ Android expert: be short, plain, and careful.
 4. Test narrowly first: `./gradlew :app:testDebugUnitTest --tests "<class>" -q`. Run `:core:test :app:testDebugUnitTest` once before a pull request.
 5. Before every commit: `python3 tools/hygiene.py`, `python3 tools/words-check.py`.
 
+Personal knowledge base for every app (taste, workflow, bugs, patterns): read `dev-knowledge/README.txt`.
+
 Hard rules: no em dashes or en dashes anywhere; no new .md files (use .txt); commit as `Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>` with no Co-Authored-By line;
 never commit secrets (google-services.json, release/, keystores, local.properties); never change Firebase, Google Cloud or Play settings (tell the owner the exact clicks);
 send nothing to anyone; keep his loved Home screen and week chart unchanged. Work on a branch and open a pull request. The owner builds and uploads the release on his own PC.

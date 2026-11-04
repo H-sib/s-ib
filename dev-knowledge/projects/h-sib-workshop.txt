@@ -1,0 +1,4 @@
+PROJECT: H-sib Workshop (app.hsib.workshop), repo H-sib/Create-APP-in-App (identity inferred, confirm with owner).
+ Build apps inside an app. Modules: formula, projectdef, bridge, templates, runtimecore, sqlstore, forge, renderer, gallery.
+ Records: HANDOFF.txt, decisions.txt (rules R1-R5, decisions D1-D17, facts V1-V27, open O1-O14), design/tokens-contract.txt, Bricolage Grotesque font.
+ Cloud blocked dl.google.com, so Compose and APK signing were unproven until a PC build. Phone scripts drive app.hsib.workshop on a Sony phone.

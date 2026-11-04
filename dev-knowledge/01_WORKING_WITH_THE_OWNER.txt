@@ -1,0 +1,40 @@
+01 WORKING WITH THE OWNER (recurring, true for every app unless a project file says otherwise)
+
+PERSON (READ: docs/HANDOFF.txt of H-sib Reminder)
+ - Chowdhury Hasibur Rahaman, goes by H-sib. Lives in Bangladesh. Security researcher, builds portfolio apps alone.
+ - Very small AI budget. Not an Android expert. Reads English; testers may write in Bangla, Hindi or English.
+ - Every app he makes lives under the H-sib name (READ: DECISIONS 2026-10-30, "H-sib Workshop", "H-sib Reminder").
+
+HOW TO TALK
+ - Short, plain, few words. 3 to 6 lines at the end of a task. No jargon. When he must act, give exact clicks in order.
+ - Say what was done, what needs his click, what is NOT proven. Never claim a test you did not run (READ: HANDOFF section 8).
+ - He sometimes changes his mind or adds a request mid-task. Finish the current edit safely, then fold the new request in.
+ - He often wants the END RESULT combined in one release, not split releases (READ: his messages in the 1.2.0 round). Work in parts, ship together.
+ - When he pastes a tester message, a screenshot or a video transcript: treat it as evidence, record it verbatim in the feedback log, then act.
+ - Ask only about genuinely new product decisions. Do not re-ask what is written in these files.
+
+HARD RULES (READ: repo CLAUDE.md, HANDOFF section 2)
+ 1. No em dashes and no en dashes anywhere (code comments, docs, UI, store text).
+ 2. No exclamation marks and not the word "just" in app and store text. No emoji, no "Simply".
+ 3. No new .md files. Use .txt or .html. (Only CLAUDE.md may be .md, because Claude Code needs that name.)
+ 4. Commit author: Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>. No Co-Authored-By line, no AI attribution in his repos.
+ 5. Never commit secrets: google-services.json, keystores, release folder, local.properties, signing passwords.
+ 6. Never change Firebase, Google Cloud, Play Console or phone security settings yourself. Tell him the exact clicks.
+ 7. Send nothing to anyone (email, messages, posts) unless he names who.
+ 8. Never tap terms or attestations for him on the phone (READ: RESUME.txt).
+ 9. Work on a branch and open a pull request only when he asks. He merges and builds the release on his own PC.
+ 10. Be honest about limits. A clearly written "not proven yet" list is valued (READ: Workshop handoff, S-IB HANDOFF section 8).
+
+TOKEN ECONOMY (READ: DECISIONS 2026-10-30 "Token economy")
+ - Short outputs. No polling loops. Batch builds. Read only what the task needs. Run narrow tests first.
+ - Do not read all screenshots; look at one image for one screen.
+
+THINGS HE LOVES (do not change unless asked)
+ - H-sib Reminder Home (Today) screen and the separated weeks load chart (READ: HANDOFF section 2).
+ Things he rejected: an editorial / magazine / newspaper look; dim grey text; many paragraphs (READ: docs/DESIGN_REDO.txt).
+
+WHAT HE EXPECTS WITHOUT BEING ASKED (pattern from many messages)
+ - Everything customisable and hideable (he said it more than once in the 1.2.0 round).
+ - Info icons next to features, a Guide with steps, honest wording about limits.
+ - Names of the person shown in a friendly way; help when the user looks lost (READ: his messages).
+ - A "what's new" card per release; Settings that can turn each added thing off.

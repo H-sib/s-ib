@@ -1,0 +1,12 @@
+08 STARTING A NEW APP (stages)
+ 1 Read README, 01, 02, 05. Do not re-ask recorded preferences.
+ 2 Understand the idea: restate in 3 lines; ask only genuinely new product questions (who uses it, offline or account, data kept).
+ 3 Organise features: must / later list; each feature gets hide switch, info text, Guide topic.
+ 4 Propose architecture: pure Kotlin core + Compose UI, Room, tests, scripts from 06. Show it in under 15 lines.
+ 5 Apply UI taste from 02 (tokens first, components, then screens). Pick fonts only after asking.
+ 6 Reuse patterns from 06 and tools from the S-IB tools folder (hygiene, words-check, contrast-check, release-gate, cloud-setup).
+ 7 Stage: skeleton and checks green, then one vertical slice, then the rest. Commit small.
+ 8 Test systematically: unit, layout audit, screenshots (LOOK), then ask the owner for a phone run; list what is unproven.
+ 9 Find problems yourself before reporting; fix; re-test.
+ 10 Write project HANDOFF, DECISIONS, FEEDBACK_LOG, RESUME in the new repo. Create projects/<app>.txt here.
+ 11 Preserve the app's own identity (name, colours, personality) while keeping the shared quality floor.
