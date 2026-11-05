@@ -22,7 +22,7 @@ Done button. Both are off until you turn them on, and the app tells you what eac
 Your information stays on your phone. The app has no permission to use the internet, and backups are locked with a
 key only you hold.
 
-The name is pronounced "sib". It stands for Start It Before, it is the closing sound of the maker's name, Hasib
+The name is pronounced "sib". It stands for Start It Before, it is the closing sound of the maker's name
 (which can mean one who counts), and it is also the word for a brother or sister, which is the spirit of Close ones.
 
 2. COMPLEXITY LEVEL
