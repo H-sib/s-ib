@@ -11,14 +11,14 @@ Version                  1.0.0, version code 1 (every new upload needs a higher 
 Category                 Productivity.  Free.  Language: English.
 Android                  minSdk 26 (Android 8), targetSdk 36 (Android 16)
 Upload bundle            release\h-sib-reminder-release.aab   (made by tools\offline-pipeline.ps1, signed with the upload key)
-Developer                H-sib (Chowdhury Hasibur Rahaman)
+Developer                H-sib
 Privacy policy URL       https://h-sib.github.io/s-ib/privacy.html
 Terms of use URL         https://h-sib.github.io/s-ib/terms.html
 Account deletion URL     https://h-sib.github.io/s-ib/delete-account.html
 Support email / website  YOU: your own email address (Play requires one and shows it publicly). Website can be https://github.com/H-sib
 Permissions in the build INTERNET and ACCESS_NETWORK_STATE (sharing and chat only), POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED,
                          USE_BIOMETRIC, USE_FINGERPRINT, WAKE_LOCK, plus the notification listener service (optional, off by default)
-Firebase project         h-sib-reminder (account chr.siam7@gmail.com). Package com.hsib.sib.
+Firebase project         h-sib-reminder (account [owner email]). Package com.hsib.sib.
 Upload key fingerprints  SHA-1  4F:3B:69:F1:AC:CE:6C:C5:15:C3:FB:E6:E6:F7:85:A8:B5:AC:49:A7
                          SHA-256 3D:94:8D:4F:1D:E6:59:83:DC:8F:AE:9B:F0:43:44:AC:28:DE:74:76:A5:D3:B3:60:9A:F4:29:A7:B3:21:12:D6
 
@@ -185,7 +185,7 @@ Not proven yet, and why it matters:
 12. STATE AFTER THE FIRST UPLOAD (checked 2026-10-30)
 =====================================================================================================================
 Live: closed test "Alpha", release 1.0.0 (1), available to the email list "Closed testers", 178 countries.
-Tester opt-in link (works): https://play.google.com/apps/testing/com.hsib.sib   Feedback contact shown to testers: chr.siam7@gmail.com
+Tester opt-in link (works): https://play.google.com/apps/testing/com.hsib.sib   Feedback contact shown to testers: [owner email]
 Play Integrity API is linked to the Cloud project H-sib Reminder (304248086) and enabled there. Protected with Play shows High protection.
 Firebase has all five fingerprints: upload SHA-1 and SHA-256, debug SHA-1 and SHA-256, Play app signing SHA-1 and SHA-256.
   Play app signing SHA-1    CE:E9:0B:13:2B:B1:41:9D:F0:96:ED:C9:1D:43:D9:E9:0F:23:35:5D
