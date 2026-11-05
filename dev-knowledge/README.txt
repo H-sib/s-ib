@@ -1,5 +1,5 @@
 H-SIB APP DEVELOPMENT KNOWLEDGE BASE (plain text on purpose, no .md files)
-Owner: Chowdhury Hasibur Rahaman ("H-sib"). Built 2026-11-01 from real project records. Read this file first, then only what the task needs.
+Owner: H-sib ("H-sib"). Built 2026-11-01 from real project records. Read this file first, then only what the task needs.
 
 WHAT THIS IS
 One place that holds how the owner likes to work, his design taste, the workflow that worked, how real-phone testing was done,
