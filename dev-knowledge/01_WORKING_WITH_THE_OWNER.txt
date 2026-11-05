@@ -1,7 +1,7 @@
 01 WORKING WITH THE OWNER (recurring, true for every app unless a project file says otherwise)
 
 PERSON (READ: docs/HANDOFF.txt of H-sib Reminder)
- - Chowdhury Hasibur Rahaman, goes by H-sib. Lives in Bangladesh. Security researcher, builds portfolio apps alone.
+ - H-sib, goes by H-sib. Lives in Bangladesh. Security researcher, builds portfolio apps alone.
  - Very small AI budget. Not an Android expert. Reads English; testers may write in Bangla, Hindi or English.
  - Every app he makes lives under the H-sib name (READ: DECISIONS 2026-10-30, "H-sib Workshop", "H-sib Reminder").
 
@@ -17,7 +17,7 @@ HARD RULES (READ: repo CLAUDE.md, HANDOFF section 2)
  1. No em dashes and no en dashes anywhere (code comments, docs, UI, store text).
  2. No exclamation marks and not the word "just" in app and store text. No emoji, no "Simply".
  3. No new .md files. Use .txt or .html. (Only CLAUDE.md may be .md, because Claude Code needs that name.)
- 4. Commit author: Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>. No Co-Authored-By line, no AI attribution in his repos.
+ 4. Commit author: H-sib <245578072+H-sib@users.noreply.github.com>. No Co-Authored-By line, no AI attribution in his repos.
  5. Never commit secrets: google-services.json, keystores, release folder, local.properties, signing passwords.
  6. Never change Firebase, Google Cloud, Play Console or phone security settings yourself. Tell him the exact clicks.
  7. Send nothing to anyone (email, messages, posts) unless he names who.

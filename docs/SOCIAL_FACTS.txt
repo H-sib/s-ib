@@ -9,8 +9,8 @@ Play Store title:       H-sib Reminder: Deadlines   (store/listing.txt)
 Package name:           com.hsib.sib   (app/build.gradle.kts)
 Current version:        1.3.1, version code 7   (app/build.gradle.kts)
 Platform:               Android only. Minimum Android 8.0 (API 26), built for Android 16 (API 36).
-Maker:                  H-sib (Chowdhury Hasibur Rahaman)
-Support email on Play:  chr.siam7@gmail.com   (docs/HANDOFF.txt)
+Maker:                  H-sib
+Support email on Play:  [owner email]   (docs/HANDOFF.txt)
 Test status:            Closed testing on Google Play, track "Alpha", email list "Closed testers".
                         On 2026-10-31 the list had 28 people in 178 countries (docs/HANDOFF.txt).
                         Play needs 12 or more testers opted in for 14 days in a row before production can be asked for

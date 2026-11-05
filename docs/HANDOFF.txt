@@ -5,7 +5,7 @@ docs\FRIENDS_AND_CHAT_DESIGN.txt, docs\SECURITY_REVIEW.txt and store\PLAY_CONSOL
 ======================================================================================================================
 1. WHO AND WHAT
 ======================================================================================================================
-Owner: Chowdhury Hasibur Rahaman, goes by H-sib (GitHub, Play, YouTube). Lives in Bangladesh. Security researcher building portfolio apps, works alone.
+Owner: H-sib, goes by H-sib (GitHub, Play, YouTube). Lives in Bangladesh. Security researcher building portfolio apps, works alone.
 He has very little AI budget: keep answers short, plain and few. He is not an Android expert. He reads English; testers may write feedback in Bangla, Hindi or English
 (you translate; the app UI stays English). Address him simply, no jargon, give exact clicks when he must do something.
 App: H-sib Reminder, package com.hsib.sib, store title "H-sib Reminder: Deadlines". "sib" means Start It Before, the main idea. Offline-first and privacy-first
@@ -13,14 +13,14 @@ Android deadline planner: finds dates in what you receive, works out the latest 
 (Google sign in, Firebase, end to end sealed). Version 1.0.0 (code 1). It is live in Google Play CLOSED TESTING (track "Alpha", email list "Closed testers",
 28 people, 178 countries). Next: testers give feedback, fix, release 1.0.1, keep 12 or more testers opted in for 14 days, then apply for production.
 Repository: https://github.com/H-sib/s-ib (public, branch main). Web pages (GitHub Pages from site\): https://h-sib.github.io/s-ib/ privacy.html, terms.html,
-delete-account.html. Support email shown on Play: chr.siam7@gmail.com.
+delete-account.html. Support email shown on Play: [owner email].
 
 ======================================================================================================================
 2. OWNER'S RULES AND TASTE (follow these every time)
 ======================================================================================================================
 Writing: no em dashes and no en dashes anywhere (code comments, docs, UI, store text). No exclamation marks or the word "just" in app and store text (tools\words-check.py
 enforces). No .md files except CLAUDE.md: use .txt or .html. Be honest: say what was never run on a real device. Short replies.
-Commits: author "Chowdhury Hasibur Rahaman <chr.siam7@gmail.com>", NO Co-Authored-By line, no AI attribution. Never push secrets. Do not send emails or messages
+Commits: author "H-sib <245578072+H-sib@users.noreply.github.com>", NO Co-Authored-By line, no AI attribution. Never push secrets. Do not send emails or messages
 to anyone unless he names who. Do not change Firebase, Google Cloud, Play Console or phone security settings yourself: tell him the exact clicks.
 Design (he is picky; he rejected an editorial look):
  - Bold tiles, little text, whitespace, layered screens, graded colour, a cool intro, Gen Z feel but usable by older and minimalist people.
@@ -68,7 +68,7 @@ So a cloud build works and tests pass without any secret.
  - When a room is re-found on a phone (new phone or restore) adoptRoom creates a NEW local deadline for it. Known, accepted.
 
 ======================================================================================================================
-5. GOOGLE SIDE STATE (only the owner can change these; he is signed in as chr.siam7@gmail.com, authuser=1)
+5. GOOGLE SIDE STATE (only the owner can change these; he is signed in as [owner email], authuser=1)
 ======================================================================================================================
 Firebase and Cloud project: h-sib-reminder (number 304248086). Firestore (default) rules in firebase\firestore.rules are PUBLISHED. If you change the rules file the owner must paste and publish it
 in Firebase console, Firestore, Rules. Authentication: Google enabled. App Check: Play Integrity registered, enforcement OFF on purpose (turn on only after the App Check page shows verified

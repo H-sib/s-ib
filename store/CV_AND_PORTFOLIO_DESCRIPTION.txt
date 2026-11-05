@@ -1,5 +1,5 @@
 H-sib Reminder: DESCRIPTION FOR YOUR CV AND PORTFOLIO
-Written for H-sib (Chowdhury Hasibur Rahaman). Every number below was measured from this project on 2026-10-14.
+Written for H-sib. Every number below was measured from this project on 2026-10-14.
 Copy what you need. Section 7 says what to be careful about when you speak about it.
 
 ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ AndroidX Biometric, Gradle 9 with Android Gradle Plugin 9, KSP, JUnit, Robolectr
 
 ------------------------------------------------------------------------
 6. THE NAME
-Say it as "sib". It is the closing sound of Hasib, a name that can mean one who counts or reckons, and counting the days
+Say it as "sib". It is the closing sound of the maker's name, a name that can mean one who counts or reckons, and counting the days
 is what the app does. It also stands for Start It Before, the whole idea of the product. In English a sib is a
 brother or sister, which is the spirit of the Close ones space and the sharing features planned for a later version.
 Before using the name publicly, check trademarks in your markets. The store title is "H-sib Reminder: Deadlines".
