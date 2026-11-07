@@ -54,6 +54,8 @@ TAGS / CATEGORY
 Category: Productivity. Suggested tags: To-do list, Reminder, Planner, Productivity, Calendar.
 
 WHAT'S NEW (first release, max 500)
+1.4.1: the class routine week map shows names and hours, and you can copy one class, or all classes of a kind, to the days you pick. Includes 1.4.0: Complete asks first with Undo, focus session fixes, checklist order and priority colours, and the class routine for every course. Thank you to our testers.
+
 1.4.0: Complete now asks first and has Undo, a forgotten focus session can be reset, a Classes button and routine for every course, checklist topics you can move, remove and colour by priority, and a pencil to change the date or time. Thank you to our testers.
 
 1.3.1: no broken words with big phone fonts, class diary charts and tables by day, week, month and year, and any number of classes a day. Thank you to our testers.

@@ -22,6 +22,14 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            9, "1.4.1",
+            listOf(
+                "The class routine week map now shows a short name in every block and the hours down the side.",
+                "Copy one class, or every class of a kind, to the days you pick, so a ward class can go to six days at once.",
+                "Hints on the class routine are always in view, and copying a whole day asks before it replaces a day.",
+            ),
+        ),
+        Entry(
             8, "1.4.0",
             listOf(
                 "Complete now asks you first, says where a repeating date will move to, and has an Undo for 30 days.",
