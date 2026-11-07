@@ -57,9 +57,9 @@ internal fun Notifier.dashboardViews(st: AppState): DashboardViews? {
         rv.setImageViewBitmap(R.id.card, DashboardArt.small(context, data))
         rv.setContentDescription(R.id.card, spoken)
         rv.setContentDescription(R.id.hit_open, "Open " + hero.o.title)
-        rv.setContentDescription(R.id.hit_done, "Mark " + hero.o.title + " done")
+        rv.setContentDescription(R.id.hit_done, "Complete " + hero.o.title + ". You will be asked to confirm.")
         rv.setOnClickPendingIntent(R.id.hit_open, openIntent("item/${hero.o.id}", Notifier.ID_TODAY))
-        rv.setOnClickPendingIntent(R.id.hit_done, actionIntent(Notifier.ACTION_DONE, hero.o.id))
+        rv.setOnClickPendingIntent(R.id.hit_done, openIntent("item/${hero.o.id}?complete=true", 4020))
     }
 
     val big = RemoteViews(context.packageName, R.layout.notif_dash_big).also { rv ->
@@ -76,9 +76,9 @@ internal fun Notifier.dashboardViews(st: AppState): DashboardViews? {
             }
         }
         rv.setContentDescription(R.id.hit_open, "Open " + hero.o.title)
-        rv.setContentDescription(R.id.hit_done, "Mark " + hero.o.title + " done")
+        rv.setContentDescription(R.id.hit_done, "Complete " + hero.o.title + ". You will be asked to confirm.")
         rv.setOnClickPendingIntent(R.id.hit_open, openIntent("item/${hero.o.id}", 4010))
-        rv.setOnClickPendingIntent(R.id.hit_done, actionIntent(Notifier.ACTION_DONE, hero.o.id))
+        rv.setOnClickPendingIntent(R.id.hit_done, openIntent("item/${hero.o.id}?complete=true", 4021))
     }
 
     // Swiping the card away hides it for this deadline at this level of urgency, until tomorrow or until it gets more urgent.

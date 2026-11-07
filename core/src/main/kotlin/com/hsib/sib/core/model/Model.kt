@@ -176,14 +176,41 @@ object ManualPlan {
         }.toMap()
 }
 
-/** One piece of a deadline, with a name the person can change and a done mark. */
-data class Part(val name: String, val done: Boolean = false) {
+/** How much a checklist topic matters. Shown as red, yellow and blue; green is kept for done. */
+enum class Priority(val code: Char, val label: String) {
+    HIGH('H', "High"), MEDIUM('M', "Medium"), LOW('L', "Low");
+
     companion object {
-        /** Stored as one line per part: 0 or 1 for done, a bar, then the name. */
-        fun encode(parts: List<Part>): String = parts.joinToString("\n") { (if (it.done) "1|" else "0|") + it.name.replace('\n', ' ') }
+        fun of(code: Char?): Priority? = values().firstOrNull { it.code == code }
+    }
+}
+
+/** One piece of a deadline, with a name the person can change, a done mark and an optional priority. */
+data class Part(val name: String, val done: Boolean = false, val priority: Priority? = null) {
+    companion object {
+        /**
+         * Stored as one line per part: 0 or 1 for done, then an optional letter for the priority (H, M or L), a bar, then the name.
+         * A line from before priorities existed ("1|name") still reads the same, and an older app reads a new line as a plain part.
+         */
+        fun encode(parts: List<Part>): String =
+            parts.joinToString("\n") { (if (it.done) "1" else "0") + (it.priority?.code ?: "") + "|" + it.name.replace('\n', ' ') }
 
         fun decode(text: String): List<Part> =
-            if (text.isEmpty()) emptyList() else text.split("\n").map { Part(it.substringAfter('|'), it.startsWith("1")) }
+            if (text.isEmpty()) emptyList() else text.split("\n").map {
+                val head = if ('|' in it) it.substringBefore('|') else ""
+                Part(it.substringAfter('|'), it.startsWith("1"), Priority.of(head.getOrNull(1)))
+            }
+
+        /** Moves the topic at [from] to place [to] (both clamped to the list). The list is returned unchanged for a bad [from]. */
+        fun move(parts: List<Part>, from: Int, to: Int): List<Part> {
+            if (from !in parts.indices) return parts
+            val target = to.coerceIn(0, parts.lastIndex)
+            if (target == from) return parts
+            return parts.toMutableList().also { it.add(target, it.removeAt(from)) }
+        }
+
+        /** Takes one topic out. The other topics keep their order and marks. */
+        fun remove(parts: List<Part>, index: Int): List<Part> = if (index in parts.indices) parts.filterIndexed { i, _ -> i != index } else parts
     }
 }
 

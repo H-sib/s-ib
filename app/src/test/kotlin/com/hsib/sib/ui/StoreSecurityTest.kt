@@ -69,7 +69,9 @@ class StoreSecurityTest {
         assertEquals("review", Notifier.safeRoute("review"))
         assertEquals("item/3f2a-11", Notifier.safeRoute("item/3f2a-11"))
         assertEquals("close/item/abc-123", Notifier.safeRoute("close/item/abc-123"))
-        for (bad in listOf("settings/backup", "restore", "item/", "item/../x", "item/a b", "close/edit?id=1", "home\nreview", "", "item/" + "a".repeat(65))) {
+        assertEquals("item/abc-123?complete=true", Notifier.safeRoute("item/abc-123?complete=true"))
+        assertEquals("close/item/abc-123?complete=true", Notifier.safeRoute("close/item/abc-123?complete=true"))
+        for (bad in listOf("settings/backup", "restore", "item/", "item/../x", "item/a b", "close/edit?id=1", "home\nreview", "", "item/" + "a".repeat(65), "item/abc?complete=false", "item/abc?complete=true&x=1", "review?complete=true", "item/abc?complete=true\n")) {
             assertNull("accepted: $bad", Notifier.safeRoute(bad))
         }
         assertNull(Notifier.safeRoute(null))

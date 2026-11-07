@@ -22,6 +22,16 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            8, "1.4.0",
+            listOf(
+                "Complete now asks you first, says where a repeating date will move to, and has an Undo for 30 days.",
+                "A forgotten focus session can be restarted or set to the minutes you really worked, and a timer shows in the notification bar while it runs.",
+                "The class routine is for every course, from Settings or the new Classes button on Today. Ward classes stay with medical and dental.",
+                "Checklist topics can move up and down, be removed one at a time, and show red, yellow or blue by how much they matter.",
+                "A pencil on the date changes the date or the time, Delete is easy to find, and the hours estimate tells you when you have gone past it.",
+            ),
+        ),
+        Entry(
             7, "1.3.1",
             listOf(
                 "Words no longer break in two when your phone uses a big font. The letters shrink a little to fit.",

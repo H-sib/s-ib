@@ -130,7 +130,7 @@ object Guide {
             "Choose a daily budget and quiet hours in Settings, Reminders.",
             "Every deadline gets a calm early reminder 7, 6 and 5 days ahead. Change the days in the deadline, [Reminder days].",
             "Open Reminder health check if a reminder ever comes late. Some phones hold back apps to save battery.",
-            "Done on a deadline can keep a note or a photo as proof.",
+            "Complete on a deadline asks you first, can keep a note or a photo as proof, and has an Undo on the page for 30 days.",
         )))
         add(GuideTopic("Close ones", "A private space for the dates that matter most.", listOf(
             "Anniversaries, birthdays and date nights live apart, with their own colours.",
@@ -143,7 +143,7 @@ object Guide {
             "Notification text is read on the phone and not kept. Suggestions still wait in Review.",
         )))
         add(GuideTopic("Card, widget and tile", "Your next deadline without opening the app.", listOf(
-            "Notification bar card: a colourful card with a ring and the next deadlines, and Open and Done. It is on by default and changes colour as the date nears. Settings lets you turn it off or keep it after Clear all.",
+            "Notification bar card: a colourful card with a ring and the next deadlines, and Open and Complete. It is on by default and changes colour as the date nears. Settings lets you turn it off or keep it after Clear all.",
             "Widget: long-press the home screen, choose Widgets, add Next up.",
             "Tile: pull the shade down twice, tap the pencil, drag the tile into your panel.",
         )))

@@ -31,22 +31,26 @@ class Notifier(internal val context: Context) {
         const val CH_REVIEW = "review"
         const val CH_CLOSE = "close_ones"
         const val CH_MOTIVATION = "motivation"
+        const val CH_FOCUS = "focus"
         const val ID_MOTIVATION = 1008
         const val ID_DIGEST = 1001
         const val ID_TODAY = 1002
         const val ID_REVIEW = 1003
         const val ID_TEST = 1004
-        const val ACTION_DONE = "com.hsib.sib.action.DONE"
         const val ACTION_SNOOZE = "com.hsib.sib.action.SNOOZE"
+        const val ACTION_FOCUS_STOP = "com.hsib.sib.action.FOCUS_STOP"
+        const val ACTION_FOCUS_RESTART = "com.hsib.sib.action.FOCUS_RESTART"
         const val ACTION_TODAY_DISMISSED = "com.hsib.sib.action.TODAY_DISMISSED"
         const val EXTRA_ID = "obligationId"
         const val EXTRA_ROUTE = "route"
-        private val SAFE_ROUTE = Regex("^(review|item/[A-Za-z0-9-]{1,64}|close/item/[A-Za-z0-9-]{1,64})$")
+        private val SAFE_ROUTE = Regex("^(review|item/[A-Za-z0-9-]{1,64}([?]complete=true)?|close/item/[A-Za-z0-9-]{1,64}([?]complete=true)?)$")
 
         /** Any app can send MainActivity an intent, so a requested screen is used only if it is one of ours. */
         fun safeRoute(route: String?): String? = route?.takeIf { SAFE_ROUTE.matches(it) }
 
         fun notificationId(obligationId: String) = 2000 + (obligationId.hashCode() and 0x3FFFFFFF) % 900_000
+
+        fun focusId(obligationId: String) = 3_000_000 + (obligationId.hashCode() and 0x3FFFFFFF) % 900_000
     }
 
     private val fmt get() = Fmt(context)
@@ -62,6 +66,7 @@ class Notifier(internal val context: Context) {
                 ch(CH_URGENT, "Due today and past due", "Deadlines that need attention now.", NotificationManager.IMPORTANCE_HIGH),
                 ch(CH_DIGEST, "Daily summary", "One quiet summary of today.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_TODAY, "Dashboard", "Your next deadlines as a card in the notification bar, shown only when something needs you.", NotificationManager.IMPORTANCE_LOW),
+                ch(CH_FOCUS, "Focus session", "A quiet timer while a focus session runs, with Stop and Restart. Never makes a sound.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_MOTIVATION, "A little push", "One quiet line a day to get you going. Never makes a sound. Turn it off in Settings, Motivation.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_REVIEW, "New suggestions", "Possible deadlines found in what you shared.", NotificationManager.IMPORTANCE_LOW),
                 ch(CH_CLOSE, "Close ones", "Gentle reminders for anniversaries, birthdays and other occasions. Never shows details on the lock screen.", NotificationManager.IMPORTANCE_DEFAULT),
@@ -109,7 +114,7 @@ class Notifier(internal val context: Context) {
             ReminderKind.DUE_SOON.name -> Triple("Due soon: ${o.title}", "Due $dueText.$work", CH_URGENT)
             ReminderKind.DUE_MORNING.name -> Triple("Due today: ${o.title}", (due?.let { "Due at " + fmt.time(it.atZone(st.zone).toLocalTime()) + "." } ?: "") + work, CH_URGENT)
             ReminderKind.DUE_FINAL.name -> Triple("${o.title} is due $dueText", "Last reminder before the deadline.$work", CH_URGENT)
-            ReminderKind.OVERDUE_CHECK.name -> Triple("${o.title} is past due", "Mark it done, or move the date if it changed.", CH_URGENT)
+            ReminderKind.OVERDUE_CHECK.name -> Triple("${o.title} is past due", "Mark it complete, or move the date if it changed.", CH_URGENT)
             else -> Triple("Reminder: ${o.title}", "Due $dueText.$work", CH_REMINDERS)
         }
         val showTitles = s.lockScreenDetail == LockScreenDetail.TITLES
@@ -121,7 +126,7 @@ class Notifier(internal val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(openIntent("item/${o.id}", notificationId(o.id)))
-            .addAction(0, "Done", actionIntent(ACTION_DONE, o.id))
+            .addAction(0, "Complete", openIntent("item/${o.id}?complete=true", notificationId(o.id) + 1))
             .addAction(0, "Snooze 1 h", actionIntent(ACTION_SNOOZE, o.id))
             .setVisibility(if (showTitles) NotificationCompat.VISIBILITY_PUBLIC else NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(publicVersion(channel, "A deadline reminder"))
@@ -153,7 +158,7 @@ class Notifier(internal val context: Context) {
             .setColor(0xFF9C3D5A.toInt())
             .setAutoCancel(true)
             .setContentIntent(openIntent("close/item/${o.id}", notificationId(o.id)))
-            .addAction(0, "Done", actionIntent(ACTION_DONE, o.id))
+            .addAction(0, "Complete", openIntent("close/item/${o.id}?complete=true", notificationId(o.id) + 1))
             .addAction(0, "Snooze 1 h", actionIntent(ACTION_SNOOZE, o.id))
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(publicVersion(CH_CLOSE, "A reminder"))
@@ -173,6 +178,30 @@ class Notifier(internal val context: Context) {
             .setContentIntent(openIntent(null, ID_MOTIVATION))
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .build()
+
+    /** A quiet, ongoing card with Android's own live timer, so a forgotten focus session is hard to miss. [long] is set once it has run for hours. */
+    fun focus(obligationId: String, title: String, startedAt: Long, long: Boolean): Notification =
+        NotificationCompat.Builder(context, CH_FOCUS)
+            .setSmallIcon(R.drawable.ic_stat_sib)
+            .setContentTitle(if (long) "Focus session still running" else "Focus session ongoing")
+            .setContentText(if (long) "It has run for hours. Tap to set the minutes you really worked." else title)
+            .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setUsesChronometer(true)
+            .setShowWhen(true)
+            .setWhen(startedAt)
+            .setContentIntent(openIntent("item/$obligationId", focusId(obligationId)))
+            .addAction(0, "Stop", actionIntent(ACTION_FOCUS_STOP, obligationId))
+            .addAction(0, "Restart", actionIntent(ACTION_FOCUS_RESTART, obligationId))
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(publicVersion(CH_FOCUS, "Focus session ongoing"))
+            .build()
+
+    fun showFocus(obligationId: String, title: String, startedAt: Long, long: Boolean = false) = post(focusId(obligationId), focus(obligationId, title, startedAt, long))
+
+    fun hideFocus(obligationId: String) = cancel(focusId(obligationId))
 
     fun digest(st: AppState, extraDigestOnly: Int): Notification? {
         val active = st.active

@@ -110,3 +110,24 @@ STATUS 2026-11-01 (version 1.3.0, code 6, branch feature/1.3.0; 1.2.0 was releas
  - Class counts a day: ceiling raised from 8, 2, 2 to 999 and the number can be typed. The settings codec accepts the new range.
  - NOT proven on a real phone: all of the above, only Robolectric. Weeks in the diary chart start on Saturday like the routine.
  - Release is the owner's step after PR for 1.3.0 and 1.3.1 are merged (1.3.1 branch contains 1.3.0).
+
+2026-11-07 1.4.0 (versionCode 8, branch feature/1.4.0 cut from main; plan and tester input are in Android Apps\_updates\reminder):
+ - Complete (was Done): the button is "Complete" and always asks first (ui/Complete.kt CompleteConfirm). The question says what happens: a repeating
+   deadline is not closed, it moves to its next date (named, for example a year away). Undo for 30 days: Store.complete keeps a small record in the
+   settings table (key undo.<id>, core/model/Completion.kt UndoRecord); Store.undoComplete puts the old date back (or reopens a closed one) and refuses
+   if the person changed the date since. UndoBanner shows on the deadline page and in Close ones. The notification Complete button and the
+   notification bar card open the deadline with the question (route item/<id>?complete=true); ActionReceiver no longer completes by itself.
+ - Focus session (ui/Focus.kt, core/focus/FocusRules.kt): Restart, Discard, a session over 3 hours asks for the real minutes, optional ongoing
+   notification with a live timer and Stop and Restart (Notifier.focus, channel focus, setting focusNotification, on by default). No new permission.
+ - Hours estimate past the estimate says "over your estimate" and offers Raise the estimate. Delete this deadline is shown directly. A pencil on the
+   date changes the date, or the time of a deadline that has one.
+ - Checklist (ui/Parts.kt, Part.priority, Part.move, Part.remove): tap a topic to rename, set High, Medium or Low (red, yellow, blue; setting priorityColors),
+   move up or down, or remove only that topic. Removing the whole checklist asks first. Stored as "0H|name"; old lines and old apps still read it.
+ - Class routine for every course (ui/Routine.kt): Settings has a Class routine row for everyone, Today gets a Classes chip once a class is saved,
+   Today's classes shows in every mode, ward classes only for medical, dental and nursing setups (or when ward classes already exist). Show or hide has
+   three more rows: Classes button, Checklist, Files. The screen was redesigned at the owner's request: a glowing day header with the next class,
+   a strip of day tiles, a timeline of colour washed class cards with break labels, a Week map (core/medical/RoutineTimeline.kt), add buttons with
+   icons. The per-day count steppers are gone (the settings fields stay for old backups). Seen on the Sony phone: Day and Week views.
+ - Waits for 1.5.0 with a one page spec first: loud full screen alarm, one day change of a repeating reminder, one-off reminders that clear themselves.
+ - Gradle on this PC needs JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Users\Public (the Java selector fails in a long temp path), then tools\gw.ps1.
+ - NOT proven on a real phone: everything above (Robolectric and unit tests only until the phone test).

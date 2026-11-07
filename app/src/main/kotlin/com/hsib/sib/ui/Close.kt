@@ -55,13 +55,13 @@ import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Obligation
 import com.hsib.sib.core.model.Precision
 import com.hsib.sib.core.model.Recurrence
+import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Repeat
 import com.hsib.sib.core.model.Space
 import com.hsib.sib.core.plan.Defaults
 import com.hsib.sib.domain.AppState
 import com.hsib.sib.domain.Fmt
 import com.hsib.sib.domain.ObligationView
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -362,7 +362,7 @@ private enum class CloseTab { IDEAS, NOTES, REMINDERS }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CloseDetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onEdit: (String) -> Unit, onDeleted: () -> Unit) {
+fun CloseDetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onEdit: (String) -> Unit, onDeleted: () -> Unit, askComplete: Boolean = false) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
     val scope = rememberCoroutineScope()
@@ -378,26 +378,17 @@ fun CloseDetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit
     val away = ChronoUnit.DAYS.between(st.today, day)
     var notes by remember(id, o.notes) { mutableStateOf(o.notes) }
     var confirmDelete by remember { mutableStateOf(false) }
-    var doneMessage by remember { mutableStateOf<String?>(null) }
+    var completing by remember { mutableStateOf(false) }
     var tab by rememberSaveable(id) { mutableStateOf(CloseTab.IDEAS) }
 
-    LaunchedEffect(doneMessage) { if (doneMessage != null) { delay(5000); doneMessage = null } }
+    // Also opened from the notification's Complete button, so a press there is never final.
+    var askedOnce by rememberSaveable(id) { mutableStateOf(false) }
+    LaunchedEffect(askComplete, o.lifecycle) { if (askComplete && !askedOnce && o.lifecycle == Lifecycle.ACTIVE) { askedOnce = true; completing = true } }
 
     Page(o.category.label, onBack, action = {
-        Text(
-            "Done", style = SibType.bodyStrong, color = c.paper,
-            modifier = Modifier.clip(RoundedCornerShape(50)).background(c.verdigris)
-                .bounceClick {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val repeating = o.repeat != Repeat.NONE
-                    scope.launch {
-                        ready.store.complete(id, null, null)
-                        if (repeating) doneMessage = "Done. The next one is already waiting." else onBack()
-                    }
-                }.padding(horizontal = 22.dp, vertical = 11.dp),
-        )
+        CompleteButton { completing = true }
     }) {
-        doneMessage?.let { Chip(it, Tone.GOOD); Spacer(Modifier.height(8.dp)) }
+        UndoBanner(o, ready, fmt, Modifier.padding(bottom = 8.dp))
         Text(o.title, style = SibType.display, color = c.ink)
         val who = listOfNotNull(o.person.takeIf { it.isNotBlank() }, o.relation.takeIf { it.isNotBlank() }).joinToString("  ·  ")
         if (who.isNotEmpty()) Text(who, style = SibType.body, color = c.inkSoft)
@@ -454,6 +445,12 @@ fun CloseDetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit
         Spacer(Modifier.height(8.dp))
         SibButton("Delete this date", { confirmDelete = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER)
         Spacer(Modifier.height(40.dp))
+    }
+
+    if (completing) CompleteConfirm(o, st.today, fmt, proof = false, onCancel = { completing = false }) { _, _ ->
+        completing = false
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        scope.launch { ready.store.complete(id, null, null) }
     }
 
     if (confirmDelete) {

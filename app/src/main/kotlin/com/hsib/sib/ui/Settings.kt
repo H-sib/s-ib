@@ -136,6 +136,8 @@ fun SettingsHome(st: AppState, social: SocialState? = null, onEasy: (Boolean) ->
             GroupDivider()
             NavItem("Language", st.settings.language.native, { onNav("settings/language") }, icon = SibIcon.GLOBE)
             GroupDivider()
+            NavItem("Class routine", "Your week of classes, for any course", { onNav("study/routine") }, icon = SibIcon.BOOK)
+            GroupDivider()
             if (!easy) {
             NavItem("Chats and notifications", if (st.settings.notificationReaderApps.isEmpty()) "Find deadlines in your chats" else "Reading ${st.settings.notificationReaderApps.size} apps", { onNav("settings/reader") })
             GroupDivider()
@@ -259,6 +261,7 @@ fun AppearanceSettings(st: AppState, ready: Ready, onBack: () -> Unit) {
         listOf(
             "also" to "Also coming up", "classes" to "Today's classes", "shortfall" to "Needs more time", "counts" to "Day counts",
             "friends" to "Friends row", "review" to "To review row", "makeit" to "Make it yours card", "focus" to "Focus session",
+            "routinechip" to "Classes button on Today", "checklist" to "Checklist on a deadline", "files" to "Files on a deadline",
         ).forEach { (key, label) ->
             ToggleRow(label, null, key !in st.settings.uiHidden, { on -> scope.launch { ready.settings.update { it.copy(uiHidden = if (on) it.uiHidden - key else it.uiHidden + key) } } })
         }
