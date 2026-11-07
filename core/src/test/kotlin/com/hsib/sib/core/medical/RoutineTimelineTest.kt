@@ -45,4 +45,13 @@ class RoutineTimelineTest {
         assertEquals(9..15, RoutineTimeline.mapHours(listOf(9 * 60 to 10 * 60), 6))
         assertEquals(18..24, RoutineTimeline.mapHours(listOf(23 * 60 to 23 * 60 + 50), 6))
     }
+
+    @Test fun blocksInTheWeekMapGetAShortName() {
+        assertEquals("PHY", RoutineTimeline.tag("Physics", "Lecture"))
+        assertEquals("CHE", RoutineTimeline.tag("  chemistry ", "Lecture"))
+        assertEquals("PHA", RoutineTimeline.tag("Pharmacology & Therapeutics", "Lecture"))
+        assertEquals("WAR", RoutineTimeline.tag("", "Ward"))
+        assertEquals("MAT", RoutineTimeline.tag("", "Math"))
+        assertEquals("AB", RoutineTimeline.tag("a b", "Lecture"))
+    }
 }

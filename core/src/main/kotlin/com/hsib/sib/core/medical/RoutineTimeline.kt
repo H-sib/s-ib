@@ -39,4 +39,8 @@ object RoutineTimeline {
         }
         return from..to
     }
+
+    /** A short name for a block in the week map: the first three letters of the subject, or of the kind of class when there is no subject. */
+    fun tag(subject: String, kind: String): String =
+        subject.trim().filter { it.isLetterOrDigit() }.take(3).ifBlank { kind.filter { it.isLetter() }.take(3) }.uppercase()
 }

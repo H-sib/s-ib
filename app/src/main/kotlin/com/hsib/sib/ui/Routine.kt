@@ -1,6 +1,5 @@
 package com.hsib.sib.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,9 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
@@ -107,6 +106,7 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
     var dayIndex by rememberSaveable { mutableStateOf(days.indexOf(st.today.dayOfWeek).coerceAtLeast(0)) }
     var weekMap by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<RoutineSlot?>(null) }
+    var copyTo by remember { mutableStateOf<DayOfWeek?>(null) }
     val day = days[dayIndex.coerceIn(0, days.lastIndex)]
     val ofDay = all.filter { it.day == day.value }.sortedBy { it.startMin }
     // The built in medical course is only a starting point for people who chose a setup; a plain app suggests no subjects.
@@ -128,12 +128,16 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
 
     Page("Class routine", onBack) {
         Gap(8.dp)
-        RoutineHero(day, ofDay, st, fmt)
-        Gap(16.dp)
-        DayStrip(days, day, all, st.today.dayOfWeek) { dayIndex = it }
-        Gap(14.dp)
+        if (!weekMap) {
+            RoutineHero(day, ofDay, st, fmt)
+            Gap(16.dp)
+            DayStrip(days, day, all, st.today.dayOfWeek) { dayIndex = it }
+            Gap(14.dp)
+        }
         Choice(listOf(false to "Day", true to "Week"), weekMap, { weekMap = it })
-        Gap(18.dp)
+        val hint = if (weekMap) "Tap a day to open it." else if (ofDay.isNotEmpty()) "Tap a class to change it." else null
+        if (hint != null) Text(hint, style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(top = 8.dp, start = 8.dp))
+        Gap(14.dp)
         if (weekMap) {
             WeekMap(days, all, st.today.dayOfWeek, fmt) { i -> dayIndex = i; weekMap = false }
         } else if (ofDay.isEmpty()) {
@@ -149,6 +153,19 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
                     AddKindPill(kindIcon(kind), "Add " + (if (kind == "Ward") "ward" else kind.lowercase()), n < limitFor(kind)) { editing = newSlot(day, kind) }
                 }
             }
+            if (ofDay.isNotEmpty() && days.size > 1) {
+                Gap(22.dp)
+                Text("Copy " + day.name.lowercase().replaceFirstChar { it.uppercase() } + " to", style = SibType.bodyStrong, color = c.ink, modifier = Modifier.padding(start = 4.dp))
+                Spacer(Modifier.height(8.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    days.filter { it != day }.forEach { d ->
+                        SelectChip(shortDay(d), false, {
+                            if (all.any { it.day == d.value }) copyTo = d else scope.launch { ready.store.replaceRoutineDay(d.value, ofDay) }
+                        })
+                    }
+                }
+                Text("Copying replaces what is already on that day.", style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(top = 8.dp, start = 4.dp))
+            }
         }
 
         Group(null) {
@@ -161,19 +178,19 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
                     }
                 }
             }
-            if (ofDay.isNotEmpty() && days.size > 1) {
-                GroupDivider()
-                FoldItem(SibIcon.MOVE, "Copy this day", info = "Copies every class of ${day.name.lowercase().replaceFirstChar { it.uppercase() }} to the days you pick. It replaces what is already on those days.") {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        days.filter { it != day }.forEach { d ->
-                            SelectChip(shortDay(d), false, { scope.launch { ready.store.replaceRoutineDay(d.value, ofDay) } })
-                        }
-                    }
-                }
-            }
         }
-        Text("Colours follow the subject. Tap a class to change it.", style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(top = 16.dp, start = 8.dp))
         Spacer(Modifier.height(32.dp))
+    }
+
+    copyTo?.let { target ->
+        val n = all.count { it.day == target.value }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { copyTo = null }, containerColor = c.raised,
+            title = { Text("Replace " + target.name.lowercase().replaceFirstChar { it.uppercase() } + "?", style = SibType.title, color = c.ink) },
+            text = { Text((if (n == 1) "Its 1 class" else "Its $n classes") + " will be replaced by the classes of " + day.name.lowercase().replaceFirstChar { it.uppercase() } + ".", style = SibType.body, color = c.inkSoft) },
+            confirmButton = { androidx.compose.material3.TextButton({ scope.launch { ready.store.replaceRoutineDay(target.value, ofDay) }; copyTo = null }) { Text("Replace", style = SibType.bodyStrong, color = c.vermilion) } },
+            dismissButton = { androidx.compose.material3.TextButton({ copyTo = null }) { Text("Cancel", style = SibType.body, color = c.inkSoft) } },
+        )
     }
 
     editing?.let { s ->
@@ -312,41 +329,48 @@ private fun Timeline(slots: List<RoutineSlot>, st: AppState, day: DayOfWeek, fmt
     }
 }
 
-/** The whole week at once: a column for each day and a coloured block for every class, placed by its time. Tap a day to open it. */
+/** The whole week at once: hour labels down the side, a column for each day, and a block for every class with a short name, placed by its time. Tap a day to open it. */
 @Composable
 private fun WeekMap(days: List<DayOfWeek>, all: List<RoutineSlot>, today: DayOfWeek, fmt: Fmt, onDay: (Int) -> Unit) {
     val c = SibTheme.colors
     val hours = RoutineTimeline.mapHours(all.filter { r -> days.any { it.value == r.day } }.map { it.startMin to it.endMin })
-    val range = (hours.last - hours.first) * 60f
+    val span = (hours.last - hours.first).toFloat()
     val mapHeight = 340.dp
-    Column {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            days.forEachIndexed { i, d ->
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    FitText(shortDay(d), SibType.label, if (d == today) c.violet else c.inkSoft, modifier = Modifier.padding(bottom = 6.dp))
-                    Canvas(
-                        Modifier.fillMaxWidth().height(mapHeight).clip(RoundedCornerShape(16.dp)).background(c.lifted).bounceClick { onDay(i) }
-                            .semantics { contentDescription = d.name.lowercase().replaceFirstChar { it.uppercase() } + ", open the day" },
-                    ) {
-                        val h = size.height
-                        for (hr in 1 until (hours.last - hours.first)) {
-                            val y = h * hr * 60f / range
-                            drawLine(c.ink.copy(alpha = 0.07f), Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
-                        }
-                        all.filter { it.day == d.value }.forEach { s ->
-                            val top = h * (s.startMin - hours.first * 60) / range
-                            val bottom = h * (s.endMin - hours.first * 60) / range
-                            drawRoundRect(
-                                subjectColor(s.subject).copy(alpha = 0.92f), Offset(3.dp.toPx(), top.coerceAtLeast(0f) + 1.dp.toPx()),
-                                Size(size.width - 6.dp.toPx(), (bottom - top - 2.dp.toPx()).coerceAtLeast(4.dp.toPx())), CornerRadius(8.dp.toPx()),
-                            )
-                        }
+    val headerHeight = 30.dp
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.width(40.dp)) {
+            Spacer(Modifier.height(headerHeight))
+            Box(Modifier.fillMaxWidth().height(mapHeight)) {
+                for (hr in hours.first..hours.last step (if (span > 8f) 2 else 1)) {
+                    Box(Modifier.offset(y = (mapHeight * ((hr - hours.first) / span) - 8.dp).coerceAtLeast(0.dp))) {
+                        FitText(fmt.time(LocalTime.of(hr.coerceAtMost(23), 0)).replace(":00", ""), SibType.small, c.inkSoft)
                     }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Text(fmt.time(minutesToTime(hours.first * 60)) + " to " + fmt.time(minutesToTime((hours.last * 60).coerceAtMost(1439))), style = SibType.small, color = c.inkSoft, modifier = Modifier.padding(start = 4.dp))
+        days.forEachIndexed { i, d ->
+            Column(Modifier.weight(1f)) {
+                Box(Modifier.fillMaxWidth().height(headerHeight), contentAlignment = Alignment.Center) { FitText(shortDay(d), SibType.label, if (d == today) c.violet else c.inkSoft) }
+                Box(
+                    Modifier.fillMaxWidth().height(mapHeight).clip(RoundedCornerShape(16.dp)).background(c.lifted)
+                        .drawBehind {
+                            for (k in 1 until span.toInt()) drawLine(c.ink.copy(alpha = 0.07f), Offset(0f, size.height * k / span), Offset(size.width, size.height * k / span), 1.dp.toPx())
+                        }
+                        .bounceClick { onDay(i) }
+                        .semantics { contentDescription = d.name.lowercase().replaceFirstChar { it.uppercase() } + ", open the day" },
+                ) {
+                    all.filter { it.day == d.value }.forEach { s ->
+                        val top = ((s.startMin - hours.first * 60) / (span * 60f)).coerceIn(0f, 1f)
+                        val bottom = ((s.endMin - hours.first * 60) / (span * 60f)).coerceIn(0f, 1f)
+                        Box(
+                            Modifier.offset(y = mapHeight * top).fillMaxWidth().height((mapHeight * (bottom - top)).coerceAtLeast(16.dp)).padding(horizontal = 3.dp, vertical = 1.dp)
+                                .clip(RoundedCornerShape(8.dp)).background(subjectColor(s.subject).copy(alpha = 0.92f)),
+                            contentAlignment = Alignment.TopCenter,
+                        ) { FitText(RoutineTimeline.tag(s.subject, s.kind), SibType.label, Color.White, modifier = Modifier.padding(top = 3.dp)) }
+                    }
+                }
+            }
+        }
     }
 }
 
