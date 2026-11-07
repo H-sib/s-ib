@@ -1,5 +1,5 @@
 H-SIB REMINDER: WHERE THINGS STAND (rewritten 2026-10-30). Plain text on purpose, no .md files.
-Read first: C:\Users\lordhasib\Desktop\Projects\Create An App H-sib\APP_QUALITY_STANDARD.txt, docs\QUALITY_GAP_REPORT.txt,
+Read first: C:\Users\lordhasib\Desktop\Android Apps\Create An App H-sib\APP_QUALITY_STANDARD.txt, docs\QUALITY_GAP_REPORT.txt,
 docs\DECISIONS.txt, memory notes. Maker's rule: keep tokens low (short output, no polling, batch builds).
 
 ONE COMMAND:  powershell -ExecutionPolicy Bypass -File .\tools\offline-pipeline.ps1   then read offline-report.txt
