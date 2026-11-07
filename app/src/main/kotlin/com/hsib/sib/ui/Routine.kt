@@ -220,6 +220,34 @@ fun ClassRoutineScreen(st: AppState, ready: Ready, onBack: () -> Unit) {
                     TimePick(start, fmt) { start = it }
                     Text("Ends", style = SibType.bodyStrong, color = c.ink)
                     TimePick(end, fmt) { end = it }
+                    // Copy this class, or every class of its kind on this day, to the days you pick. Nothing is copied twice.
+                    if (s.id.isNotEmpty() && days.size > 1) {
+                        var copyDays by remember(s.id) { mutableStateOf(setOf<Int>()) }
+                        var copyKind by remember(s.id) { mutableStateOf(false) }
+                        val others = days.filter { it.value != s.day }
+                        val kindWord = if (s.kind == "Ward") "ward" else s.kind.lowercase()
+                        Text("Copy to other days", style = SibType.bodyStrong, color = c.ink)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SelectChip("All days", copyDays.size == others.size, { copyDays = if (copyDays.size == others.size) emptySet() else others.map { it.value }.toSet() })
+                            others.forEach { d -> SelectChip(shortDay(d), d.value in copyDays, { copyDays = if (d.value in copyDays) copyDays - d.value else copyDays + d.value }) }
+                        }
+                        if (copyDays.isNotEmpty()) {
+                            Choice(listOf(false to "This class", true to "All ${kindWord}s of this day"), copyKind, { copyKind = it })
+                            SibButton("Copy to " + copyDays.size + (if (copyDays.size == 1) " day" else " days"), {
+                                val a = start.hour * 60 + start.minute
+                                val z = (end.hour * 60 + end.minute).let { if (it <= a) (a + 30).coerceAtMost(1439) else it }
+                                val here = RoutineSlot(s.id, s.day, s.kind, shift, subject.trim(), room.trim(), a, z)
+                                val source = if (copyKind) all.filter { it.day == s.day && it.kind == s.kind } else listOf(here)
+                                scope.launch {
+                                    for (dv in copyDays) for (x in source) {
+                                        val twin = all.any { it.day == dv && it.kind == x.kind && it.startMin == x.startMin && it.endMin == x.endMin && it.subject == x.subject }
+                                        if (!twin) ready.store.saveRoutineSlot(x.copy(id = UUID.randomUUID().toString(), day = dv))
+                                    }
+                                }
+                                editing = null
+                            }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                        }
+                    }
                 }
             },
             confirmButton = {
