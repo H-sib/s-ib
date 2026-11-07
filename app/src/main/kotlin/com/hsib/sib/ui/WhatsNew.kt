@@ -22,6 +22,24 @@ object WhatsNew {
 
     val entries = listOf(
         Entry(
+            9, "1.4.1",
+            listOf(
+                "The class routine week map now shows a short name in every block and the hours down the side.",
+                "Copy one class, or every class of a kind, to the days you pick, so a ward class can go to six days at once.",
+                "Hints on the class routine are always in view, and copying a whole day asks before it replaces a day.",
+            ),
+        ),
+        Entry(
+            8, "1.4.0",
+            listOf(
+                "Complete now asks you first, says where a repeating date will move to, and has an Undo for 30 days.",
+                "A forgotten focus session can be restarted or set to the minutes you really worked, and a timer shows in the notification bar while it runs.",
+                "The class routine is for every course, from Settings or the new Classes button on Today. Ward classes stay with medical and dental.",
+                "Checklist topics can move up and down, be removed one at a time, and show red, yellow or blue by how much they matter.",
+                "A pencil on the date changes the date or the time, Delete is easy to find, and the hours estimate tells you when you have gone past it.",
+            ),
+        ),
+        Entry(
             7, "1.3.1",
             listOf(
                 "Words no longer break in two when your phone uses a big font. The letters shrink a little to fit.",

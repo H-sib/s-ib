@@ -79,6 +79,10 @@ data class AppSettings(
     val routineWards: Int = 1,
     /** Parts of Today, Plan and More that this person chose to hide. Nothing is hidden by default. */
     val uiHidden: Set<String> = emptySet(),
+    /** While a focus session runs, a quiet notification shows a live timer with a Stop button. */
+    val focusNotification: Boolean = true,
+    /** Checklist topics show red, yellow or blue by priority. Off keeps them plain. */
+    val priorityColors: Boolean = true,
     val language: Lang = Lang.EN,
     val languageChosen: Boolean = false,
     /** Easy mode: only the basics are shown. Everything else is one switch away in Settings. */
@@ -144,7 +148,7 @@ object SettingsCodec {
         put("courses", com.hsib.sib.core.medical.Courses.listToJson(s.courses)); put("courseActive", s.courseActive); put("courseCount", s.courseCount.toString())
         put("medicalMode", s.medicalMode.toString()); put("medicalAsked", s.medicalAsked.toString()); put("homeStyle", s.homeStyle.name)
         put("routineDays", s.routineDays.sorted().joinToString(",")); put("routineLectures", s.routineLectures.toString()); put("routineTutorials", s.routineTutorials.toString()); put("routineWards", s.routineWards.toString())
-        put("uiHidden", s.uiHidden.sorted().joinToString(",")); put("language", s.language.name); put("languageChosen", s.languageChosen.toString()); put("easyMode", s.easyMode.toString()); put("userName", s.userName); put("useName", s.useName.toString()); put("helpHints", s.helpHints.toString()); put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
+        put("uiHidden", s.uiHidden.sorted().joinToString(",")); put("focusNotification", s.focusNotification.toString()); put("priorityColors", s.priorityColors.toString()); put("language", s.language.name); put("languageChosen", s.languageChosen.toString()); put("easyMode", s.easyMode.toString()); put("userName", s.userName); put("useName", s.useName.toString()); put("helpHints", s.helpHints.toString()); put("motivationOn", s.motivationOn.toString()); put("motivationShow", s.motivationShow.toString()); put("motivationNotify", s.motivationNotify.toString()); put("motivationOff", s.motivationOff.sorted().joinToString(","))
         put("notificationReaderApps", s.notificationReaderApps.sorted().joinToString(","))
         put("readerPromptDismissed", s.readerPromptDismissed.toString())
         put("dashboardPromptDismissed", s.dashboardPromptDismissed.toString())
@@ -209,6 +213,8 @@ object SettingsCodec {
             language = m.enum("language", d.language),
             languageChosen = m.bool("languageChosen", d.languageChosen),
             easyMode = m.bool("easyMode", d.easyMode),
+            focusNotification = m.bool("focusNotification", d.focusNotification),
+            priorityColors = m.bool("priorityColors", d.priorityColors),
             uiHidden = m["uiHidden"]?.split(",")?.map { it.trim() }?.filter { it.length in 3..20 }?.take(20)?.toSet() ?: d.uiHidden,
             motivationOn = m.bool("motivationOn", d.motivationOn),
             motivationShow = m.bool("motivationShow", d.motivationShow),

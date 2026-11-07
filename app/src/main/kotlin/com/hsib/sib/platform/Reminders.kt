@@ -9,6 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import com.hsib.sib.SibApp
+import com.hsib.sib.core.focus.FocusRules
 import com.hsib.sib.core.model.Lifecycle
 import com.hsib.sib.core.model.Space
 import com.hsib.sib.core.urgency.ReminderPlanner
@@ -269,12 +270,26 @@ class ActionReceiver : BroadcastReceiver() {
         val action = intent.action ?: return
         runAsync(context) { ready ->
             when (action) {
-                Notifier.ACTION_DONE -> if (id != null) {
-                    ready.store.complete(id, null, null)
-                    ready.engine.refreshCalibration()
-                    ready.notifier.cancel(Notifier.notificationId(id))
-                }
                 Notifier.ACTION_SNOOZE -> if (id != null) ready.reminders.snooze(id, 60)
+                Notifier.ACTION_FOCUS_STOP -> if (id != null) {
+                    val started = ready.settings.raw("focus.$id")?.toLongOrNull()
+                    val minutes = started?.let { FocusRules.elapsedMin(it, System.currentTimeMillis()) } ?: 0
+                    when {
+                        started == null -> ready.notifier.hideFocus(id)
+                        // A session that ran for hours was probably forgotten: never add it unasked. The page asks what was really worked.
+                        FocusRules.isLong(minutes) -> ready.notifier.showFocus(id, ready.store.obligation(id)?.title.orEmpty(), started, long = true)
+                        else -> {
+                            if (minutes >= 1) ready.store.addProgress(id, minutes)
+                            ready.settings.removeRaw("focus.$id")
+                            ready.notifier.hideFocus(id)
+                        }
+                    }
+                }
+                Notifier.ACTION_FOCUS_RESTART -> if (id != null && ready.settings.raw("focus.$id") != null) {
+                    val now = System.currentTimeMillis()
+                    ready.settings.putRaw("focus.$id", now.toString())
+                    ready.notifier.showFocus(id, ready.store.obligation(id)?.title.orEmpty(), now)
+                }
                 Notifier.ACTION_TODAY_DISMISSED -> intent.getStringExtra("key")?.let { key -> ready.settings.update { it.copy(dashboardHidden = key) } }
             }
         }

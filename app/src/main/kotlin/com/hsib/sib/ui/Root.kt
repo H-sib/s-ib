@@ -358,7 +358,9 @@ private fun Running(
     ) {
         composable("home") { HomeTabs(tab, { tab = it }, st, nav, ready, importActions, afterSave) }
         composable("all") { AllScreen(st, onOpen = { nav.navigate("item/$it") }, onBack = back, sharedIds = socialState.rooms.keys) }
-        composable("item/{id}") { e -> DetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, back, onPeople = { nav.navigate("room/$it") }) }
+        composable("item/{id}?complete={complete}", arguments = listOf(navArgument("complete") { type = NavType.BoolType; defaultValue = false })) { e ->
+            DetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, back, onPeople = { nav.navigate("room/$it") }, askComplete = e.arguments?.getBoolean("complete") == true)
+        }
         composable("add") {
             AddScreen(st, ready, importActions, back, onJoin = if (ready.social != null) ({ nav.navigate("friends/join") }) else null, onSaved = { id ->
                 afterSave()
@@ -425,9 +427,9 @@ private fun Running(
                 )
             }
         }
-        composable("close/item/{id}") { e ->
+        composable("close/item/{id}?complete={complete}", arguments = listOf(navArgument("complete") { type = NavType.BoolType; defaultValue = false })) { e ->
             Themed(mode, Space.CLOSE, reduce) {
-                CloseDetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, onEdit = { nav.navigate("close/edit?id=$it") }, onDeleted = back)
+                CloseDetailScreen(e.arguments?.getString("id").orEmpty(), st, ready, back, onEdit = { nav.navigate("close/edit?id=$it") }, onDeleted = back, askComplete = e.arguments?.getBoolean("complete") == true)
             }
         }
         composable(
@@ -510,6 +512,7 @@ private fun HomeTabs(tab: Tab, onTab: (Tab) -> Unit, st: AppState, nav: NavContr
                         social = social,
                         onFriends = { nav.navigate("friends") },
                         classes = classes,
+                        onRoutine = { nav.navigate("study/routine") },
                         whatsNew = WhatsNew.unseen(st.settings.lastSeenVersion, BuildConfig.VERSION_CODE),
                         onWhatsNewSeen = { scope.launch { ready.settings.update { it.copy(lastSeenVersion = BuildConfig.VERSION_CODE) } } },
                         onPrompt = { p ->

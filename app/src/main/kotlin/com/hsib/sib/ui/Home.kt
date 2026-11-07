@@ -202,6 +202,7 @@ fun TodayScreen(
     whatsNew: List<WhatsNew.Entry> = emptyList(),
     onWhatsNewSeen: () -> Unit = {},
     classes: List<com.hsib.sib.data.RoutineSlot> = emptyList(),
+    onRoutine: () -> Unit = {},
 ) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
@@ -213,8 +214,22 @@ fun TodayScreen(
 
     Column(Modifier.fillMaxSize().cuedVerticalScroll().padding(horizontal = 24.dp)) {
         Gap(20.dp)
-        Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink)
+        // The class routine chip only appears once a class is saved, so a Home without classes stays exactly as it was. It can be hidden.
+        val routineChip = classes.isNotEmpty() && "routinechip" !in st.settings.uiHidden
+        val bigText = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.15f
+        if (routineChip && !bigText) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink, modifier = Modifier.weight(1f))
+                RoutineChip(onRoutine)
+            }
+        } else {
+            Text(fmt.dayShort(st.today), style = SibType.display, color = c.ink)
+        }
         Text(greeting(st) + weekPhrase(st, fmt), style = SibType.body, color = if (st.plan.shortfall != null) c.vermilion else c.inkSoft)
+        if (routineChip && bigText) {
+            Gap(10.dp)
+            RoutineChip(onRoutine)
+        }
 
         Gap(24.dp)
         DeadlineDeck(st.settings.homeStyle, items, next, st, fmt, onOpen, onAdd, nextStep(st), onLog, social)
@@ -238,7 +253,7 @@ fun TodayScreen(
             }
         }
 
-        if (st.settings.medicalMode && "classes" !in st.settings.uiHidden && classes.any { it.day == st.today.dayOfWeek.value }) {
+        if ("classes" !in st.settings.uiHidden && classes.any { it.day == st.today.dayOfWeek.value }) {
             Gap(16.dp)
             TodayClasses(classes, st.today, fmt)
         }

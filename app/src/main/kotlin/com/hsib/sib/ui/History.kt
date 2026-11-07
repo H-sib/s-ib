@@ -64,7 +64,7 @@ private fun title(field: String, newValue: String): String = when (field) {
     "category" -> "Kind changed"
     "importance" -> "Importance changed"
     "effort" -> "Estimate changed"
-    "status" -> when (newValue) { "COMPLETED" -> "Marked done"; "ACTIVE" -> "Reopened"; "CANCELLED" -> "Cancelled"; else -> "Status changed" }
+    "status" -> when (newValue) { "COMPLETED" -> "Marked complete"; "ACTIVE" -> "Reopened"; "CANCELLED" -> "Cancelled"; else -> "Status changed" }
     "postponed" -> if (newValue == "none") "Resumed" else "Paused"
     "repeat" -> "Repeat changed"
     "person" -> "Person changed"
@@ -76,7 +76,7 @@ private fun title(field: String, newValue: String): String = when (field) {
 
 /** Reasons that only repeat the title of the entry, so showing them would say the same thing twice. */
 private val quietReasons = setOf(
-    "edited", "created", "created by typing", "marked done", "reopened", "postponed", "renamed", "date changed", "date confirmed", "joined a shared deadline",
+    "edited", "created", "created by typing", "marked done", "marked complete", "undid marking complete", "reopened", "postponed", "renamed", "date changed", "date confirmed", "joined a shared deadline",
     "importance changed", "estimate changed", "notes changed",
 )
 

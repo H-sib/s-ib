@@ -2,11 +2,7 @@ package com.hsib.sib.ui
 
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.provider.CalendarContract
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -107,7 +104,7 @@ fun SibDatePicker(initial: LocalDate, onPick: (LocalDate) -> Unit, onCancel: () 
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onDeleted: () -> Unit, onPeople: (String) -> Unit = {}) {
+fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onDeleted: () -> Unit, onPeople: (String) -> Unit = {}, askComplete: Boolean = false) {
     val c = SibTheme.colors
     val fmt = rememberFmt()
     val context = LocalContext.current
@@ -131,6 +128,8 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
     var editingTitle by remember(id) { mutableStateOf(false) }
     var title by remember(id, o.title) { mutableStateOf(o.title) }
     var pickDate by remember { mutableStateOf<String?>(null) }
+    var editWhen by remember { mutableStateOf(false) }
+    var pickTime by remember { mutableStateOf(false) }
     var completing by remember { mutableStateOf(false) }
     var celebrate by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -142,6 +141,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
         // If this is the owner's shared deadline, everyone gets the new title or date. Personal changes send nothing.
         val note = when (reason) {
             "date changed", "date confirmed" -> new.due?.let { "moved the date to " + fmt.dayShort(it.dayIn(st.zone)) }
+            "time changed" -> new.due?.let { "changed the time to " + fmt.time(it.local.toLocalTime()) }
             "renamed" -> "renamed this to \"${new.title}\""
             else -> null
         }
@@ -150,11 +150,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
 
     Page(o.category.label, onBack, action = {
         if (o.lifecycle == Lifecycle.ACTIVE) {
-            Text(
-                "Done", style = SibType.bodyStrong, color = c.paper,
-                modifier = Modifier.clip(RoundedCornerShape(50)).background(c.verdigris)
-                    .bounceClick { completing = true }.padding(horizontal = if (LocalDensity.current.fontScale > 1.15f) 12.dp else 22.dp, vertical = 11.dp),
-            )
+            CompleteButton { completing = true }
         }
     }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -178,6 +174,7 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
         Choice(listOf(DetailTab.OVERVIEW to "Overview", DetailTab.STEPS to "Steps", DetailTab.HISTORY to "History"), tab, { tab = it })
 
         if (tab == DetailTab.OVERVIEW) {
+            UndoBanner(o, ready, fmt, Modifier.padding(top = 16.dp))
             val fog = o.fog
             val due = o.due
             val effort = o.effort
@@ -204,7 +201,16 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SibIconView(SibIcon.CALENDAR, size = 20.dp, tint = tone, accent = tone)
                         Spacer(Modifier.width(8.dp))
-                        Text(fmt.due(mine, dateOnly), style = SibType.bodyStrong, color = c.ink)
+                        Text(fmt.due(mine, dateOnly), style = SibType.bodyStrong, color = c.ink, modifier = Modifier.weight(1f, fill = false))
+                        if (active && !locked) {
+                            Spacer(Modifier.width(8.dp))
+                            Box(
+                                Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(tone.copy(alpha = 0.14f))
+                                    .clickable(role = Role.Button) { if (dateOnly) pickDate = "move" else editWhen = true }
+                                    .semantics { contentDescription = if (dateOnly) "Change the date" else "Change the date or the time" },
+                                contentAlignment = Alignment.Center,
+                            ) { SibIconView(SibIcon.PENCIL, size = 20.dp, tint = tone, accent = tone) }
+                        }
                     }
                     v.dueInstant?.let {
                         Spacer(Modifier.height(8.dp))
@@ -268,15 +274,15 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             }
 
             // ---- parts: several pieces due together ----
-            if (active && o.space == Space.WORK && !st.settings.easyMode) {
+            if (active && o.space == Space.WORK && !st.settings.easyMode && ("checklist" !in st.settings.uiHidden || o.parts.isNotEmpty())) {
                 Gap(12.dp)
-                PartsTile(o.parts) { scope.launch { save(o.copy(parts = it), "parts changed") } }
+                PartsTile(o.parts, st.settings.priorityColors) { scope.launch { save(o.copy(parts = it), "parts changed") } }
             }
 
             // ---- a focus session that adds the real time ----
             if (active && effort != null && "focus" !in st.settings.uiHidden && !st.settings.easyMode) {
                 Gap(12.dp)
-                FocusTile(id, ready, st.settings.callName)
+                FocusTile(id, ready, st.settings.callName, o.title, st.settings.focusNotification)
             }
 
             // ---- progress ----
@@ -287,7 +293,16 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconBadge(SibIcon.CLOCK, size = 36.dp)
                         Spacer(Modifier.width(12.dp))
-                        InfoTitle("${fmt.minutes(o.progressMin)} done, about ${fmt.minutes(total)} needed", "Add the time you really worked with the buttons below. The bar shows how much of your estimate is done. Change the estimate under Hours and importance.", style = SibType.bodyStrong)
+                        val over = o.progressMin > total
+                        InfoTitle(
+                            if (over) "${fmt.minutes(o.progressMin)} done, ${fmt.minutes(o.progressMin - total)} over your ${fmt.minutes(total)} estimate" else "${fmt.minutes(o.progressMin)} done, about ${fmt.minutes(total)} needed",
+                            "Add the time you really worked with the buttons below. The bar shows how much of your estimate is done. The estimate is your own number, so it stays as you set it until you change it under Hours and importance, or raise it here once you have gone past it.",
+                            style = SibType.bodyStrong,
+                        )
+                    }
+                    if (o.progressMin > total) {
+                        Spacer(Modifier.height(10.dp))
+                        SibButton("Raise the estimate to ${fmt.minutes(o.progressMin)}", { scope.launch { save(o.copy(effort = Effort.fromLikely(o.progressMin)), "estimate changed") } }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
                     }
                     Spacer(Modifier.height(12.dp))
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(c.ink.copy(alpha = 0.08f))) {
@@ -308,13 +323,13 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
             }
 
             // ---- files: only remembered, never copied ----
-            if (active && o.space == Space.WORK && !st.settings.easyMode) {
+            if (active && o.space == Space.WORK && !st.settings.easyMode && ("files" !in st.settings.uiHidden || o.links.isNotEmpty())) {
                 Gap(12.dp)
                 FilesTile(o.links) { scope.launch { save(o.copy(links = it), "files changed") } }
             }
 
             // ---- everything else stays folded until asked for ----
-            Group(null) {
+            if (active) Group(null) {
                 if (active && effort != null) {
                     FoldItem(
                         SibIcon.GAUGE, "Plan", hint = if (o.manualPlan.isNotEmpty()) "Your own" else v.latestStart?.let { "Start by " + fmt.dayShort(it) } ?: "Automatic",
@@ -376,13 +391,15 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
                             SibButton("Pause until a date", { pickDate = "pause" }, kind = ButtonKind.QUIET)
                         }
                     }
-                    GroupDivider()
-                }
-                FoldItem(SibIcon.MORE, "More") {
-                    if (!active) SibButton("Reopen", { scope.launch { ready.store.reopen(id); ready.social?.markDone(id, false) } }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
-                    SibButton("Delete this deadline", { confirmDelete = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER)
                 }
             }
+            // Delete is shown directly, not folded away. It still asks before it deletes.
+            Gap(16.dp)
+            if (!active) {
+                SibButton("Undo, make it active again", { scope.launch { ready.store.reopen(id); ready.social?.markDone(id, false) } }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                Spacer(Modifier.height(8.dp))
+            }
+            SibButton("Delete this deadline", { confirmDelete = true }, Modifier.fillMaxWidth(), ButtonKind.DANGER)
         }
         if (tab == DetailTab.STEPS) {
         // ---- steps ----
@@ -512,7 +529,43 @@ fun DetailScreen(id: String, st: AppState, ready: Ready, onBack: () -> Unit, onD
         }, { pickDate = null })
     }
 
-    if (completing) CompleteDialog(o.title, onCancel = { completing = false }) { note, image ->
+    // The pencil on the date: change only the date, or only the time of a deadline that has one.
+    if (editWhen) {
+        AlertDialog(
+            onDismissRequest = { editWhen = false }, containerColor = c.raised,
+            title = { Text("Change what?", style = SibType.title, color = c.ink) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SibButton("The date", { editWhen = false; pickDate = "move" }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                    SibButton("The time", { editWhen = false; pickTime = true }, Modifier.fillMaxWidth(), ButtonKind.QUIET)
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton({ editWhen = false }) { Text("Cancel", style = SibType.body, color = c.inkSoft) } },
+        )
+    }
+    if (pickTime) {
+        val old = o.due
+        var time by remember { mutableStateOf(old?.local?.toLocalTime() ?: LocalTime.of(9, 0)) }
+        AlertDialog(
+            onDismissRequest = { pickTime = false }, containerColor = c.raised,
+            title = { Text("New time", style = SibType.title, color = c.ink) },
+            text = { TimePick(time, fmt) { time = it } },
+            confirmButton = {
+                TextButton({
+                    pickTime = false
+                    if (old != null) scope.launch { save(o.copy(due = old.copy(local = LocalDateTime.of(old.local.toLocalDate(), time), precision = Precision.DATE_TIME)), "time changed") }
+                }) { Text("Use this time", style = SibType.bodyStrong, color = c.ink) }
+            },
+            dismissButton = { TextButton({ pickTime = false }) { Text("Cancel", style = SibType.body, color = c.inkSoft) } },
+        )
+    }
+
+    // Opened from the notification's Complete button as well, so a press in the notification is never final either.
+    var askedOnce by rememberSaveable(id) { mutableStateOf(false) }
+    LaunchedEffect(askComplete, o.lifecycle) { if (askComplete && !askedOnce && o.lifecycle == Lifecycle.ACTIVE) { askedOnce = true; completing = true } }
+
+    if (completing) CompleteConfirm(o, st.today, fmt, proof = true, onCancel = { completing = false }) { note, image ->
         completing = false
         scope.launch(Dispatchers.IO) {
             val bytes = image?.let { readScaledJpeg(context, it) }
@@ -573,28 +626,4 @@ private fun SuggestedStepRow(s: Step, fmt: Fmt) {
             Text("by " + fmt.dayShort(s.targetDay) + "  ·  " + fmt.minutes(s.minutes), style = SibType.small, color = c.inkSoft)
         }
     }
-}
-
-@Composable
-private fun CompleteDialog(title: String, onCancel: () -> Unit, onDone: (String?, Uri?) -> Unit) {
-    val c = SibTheme.colors
-    var note by remember { mutableStateOf("") }
-    var photo by remember { mutableStateOf<Uri?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { photo = it }
-    AlertDialog(
-        onDismissRequest = onCancel,
-        containerColor = c.raised,
-        title = { Text("Finished: $title", style = SibType.title, color = c.ink) },
-        text = {
-            Column {
-                Text("Optionally keep proof, such as a confirmation number or a screenshot of the receipt. It stays encrypted on this phone.", style = SibType.small, color = c.inkSoft)
-                Spacer(Modifier.height(10.dp))
-                Field("Note (optional)", note, { note = it }, singleLine = false, minLines = 2)
-                Spacer(Modifier.height(10.dp))
-                SibButton(if (photo == null) "Add a photo" else "Photo added, change", { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, kind = ButtonKind.QUIET, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = { TextButton({ onDone(note.trim().ifEmpty { null }, photo) }) { Text("Mark done", style = SibType.bodyStrong, color = c.ink) } },
-        dismissButton = { TextButton(onCancel) { Text("Cancel", style = SibType.body, color = c.inkSoft) } },
-    )
 }

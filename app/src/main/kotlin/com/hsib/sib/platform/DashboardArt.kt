@@ -41,8 +41,8 @@ internal class CardData(
 
 /**
  * Draws the notification bar card as a picture, so it can use the app's own typeface and shapes, which the notification shade's
- * text views cannot. The collapsed card is one row: a ring with the days left, the title, and a Done pill. The expanded card adds a
- * row of dots counting down to the date, the next few deadlines, and Open and Done. The colour runs from violet through amber to
+ * text views cannot. The collapsed card is one row: a ring with the days left, the title, and a Complete pill. The expanded card adds a
+ * row of dots counting down to the date, the next few deadlines, and Open and Complete. The colour runs from violet through amber to
  * coral as the date gets close. The areas that can be tapped sit over the picture as plain views, in the same proportions.
  */
 internal object DashboardArt {
@@ -172,7 +172,7 @@ internal object DashboardArt {
         write(d.count, cx, cy + numberSize * den * 0.36f, numberSize, 800, ink, Paint.Align.CENTER)
 
         val textX = pad + ring + 13f * den
-        val rightEdge = if (expanded) w - pad else w - pad - 78f * den
+        val rightEdge = if (expanded) w - pad else w - pad - 94f * den
         val titleSize = 16f
         if (expanded) {
             write(d.title, textX, cy - 11f * den, titleSize, 700, ink, maxWidth = rightEdge - textX)
@@ -205,7 +205,7 @@ internal object DashboardArt {
         } else {
             write(d.title, textX, cy - 3f * den, titleSize, 700, ink, maxWidth = rightEdge - textX)
             write(d.sub, textX, cy + 15f * den, 12f, 500, soft, maxWidth = rightEdge - textX)
-            pill(w - pad - 70f * den, cy - 18f * den, w - pad, cy + 18f * den, "Done", filled = true)
+            pill(w - pad - 84f * den, cy - 18f * den, w - pad, cy + 18f * den, "Complete", filled = true)
         }
 
         // ---- the expanded card's list and buttons ----
@@ -231,7 +231,7 @@ internal object DashboardArt {
             val each = (w - 2 * pad - gap) / 2f
             val top = buttonsTop + (buttonsH - 36f * den) / 2f - 2f * den
             pill(pad, top, pad + each, top + 36f * den, "Open", filled = false)
-            pill(pad + each + gap, top, w - pad, top + 36f * den, "Done", filled = true)
+            pill(pad + each + gap, top, w - pad, top + 36f * den, "Complete", filled = true)
         }
         return bitmap
     }

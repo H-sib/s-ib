@@ -98,7 +98,7 @@ class ReaderAndDashboardTest {
     @Test
     fun statusEffortAndPauseUseWords() {
         val fmt = Fmt(context)
-        assertEquals("Marked done", describeHistory(entry("status", "ACTIVE", "COMPLETED"), fmt).title)
+        assertEquals("Marked complete", describeHistory(entry("status", "ACTIVE", "COMPLETED"), fmt).title)
         assertEquals("Reopened", describeHistory(entry("status", "COMPLETED", "ACTIVE"), fmt).title)
         val effort = describeHistory(entry("effort", "168/240/384", "300/420/660"), fmt)
         assertEquals("Estimate changed", effort.title)

@@ -1,6 +1,7 @@
 package com.hsib.sib.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,15 +21,29 @@ import java.time.LocalTime
 fun TimePick(time: LocalTime, fmt: com.hsib.sib.domain.Fmt, onChange: (LocalTime) -> Unit) {
     val c = SibTheme.colors
     val big = LocalDensity.current.fontScale > 1.15f
-    val hourButtons: @Composable () -> Unit = {
-        SibButton("- 1 hour", { onChange(time.minusHours(1)) }, kind = ButtonKind.QUIET)
-        Text(fmt.time(time), style = SibType.headline, color = c.ink, modifier = Modifier.padding(horizontal = 12.dp))
-        SibButton("+ 1 hour", { onChange(time.plusHours(1)) }, kind = ButtonKind.QUIET)
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (big) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { hourButtons() } else Row(verticalAlignment = Alignment.CenterVertically) { hourButtons() }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (m in listOf(0, 15, 30, 45)) SelectChip(":%02d".format(m), time.minute == m, { onChange(time.withMinute(m)) })
+    // In a narrow place such as a dialog the three parts would not fit on one line, so the buttons share a row under the time.
+    BoxWithConstraints {
+        val narrow = big || maxWidth < 380.dp
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (narrow) {
+                Text(fmt.time(time), style = SibType.headline, color = c.ink)
+                if (big) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SibButton("- 1 hour", { onChange(time.minusHours(1)) }, kind = ButtonKind.QUIET)
+                    SibButton("+ 1 hour", { onChange(time.plusHours(1)) }, kind = ButtonKind.QUIET)
+                } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SibButton("- 1 hour", { onChange(time.minusHours(1)) }, Modifier.weight(1f), ButtonKind.QUIET)
+                    SibButton("+ 1 hour", { onChange(time.plusHours(1)) }, Modifier.weight(1f), ButtonKind.QUIET)
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SibButton("- 1 hour", { onChange(time.minusHours(1)) }, kind = ButtonKind.QUIET)
+                    Text(fmt.time(time), style = SibType.headline, color = c.ink, modifier = Modifier.padding(horizontal = 12.dp))
+                    SibButton("+ 1 hour", { onChange(time.plusHours(1)) }, kind = ButtonKind.QUIET)
+                }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (m in listOf(0, 15, 30, 45)) SelectChip(":%02d".format(m), time.minute == m, { onChange(time.withMinute(m)) })
+            }
         }
     }
 }

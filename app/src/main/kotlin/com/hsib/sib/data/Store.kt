@@ -13,6 +13,7 @@ import com.hsib.sib.core.backup.SealDto
 import com.hsib.sib.core.backup.SnapshotMerge
 import com.hsib.sib.core.backup.StepDto
 import com.hsib.sib.core.model.Candidate
+import com.hsib.sib.core.model.Completion
 import com.hsib.sib.core.model.DueSpec
 import com.hsib.sib.core.model.Effort
 import com.hsib.sib.core.model.Importance
@@ -24,6 +25,7 @@ import com.hsib.sib.core.model.Kind
 import com.hsib.sib.core.model.Part
 import com.hsib.sib.core.model.Relation
 import com.hsib.sib.core.model.Repeat
+import com.hsib.sib.core.model.UndoRecord
 import com.hsib.sib.core.model.clamped
 import com.hsib.sib.core.plan.Defaults
 import com.hsib.sib.core.seal.Seal
@@ -221,14 +223,16 @@ class Store(
     suspend fun complete(id: String, note: String?, image: ByteArray?) = db.withTransaction {
         val o = db.obligations().get(id)?.toModel() ?: return@withTransaction
         val ts = now()
+        // What is needed to put it back is kept for a while, so a press by mistake is never final.
+        db.settings().upsert(SettingEntity(undoKey(id), Completion.recordFor(o, ts.toEpochMilli()).encode()))
         // A repeating occasion is never finished, it just moves on: you did this year's, next year's is already waiting.
         val next = o.due?.let { d -> advanced(o, d.local.toLocalDate().plusDays(1)) }
         if (next != null) {
-            save(next, "USER", "marked done, moved to the next date")
+            save(next, "USER", "marked complete, moved to the next date")
             return@withTransaction
         }
         db.obligations().upsert(o.copy(lifecycle = Lifecycle.COMPLETED, completedAt = ts, updatedAt = ts).toEntity())
-        appendSeal(id, "status", o.lifecycle.name, Lifecycle.COMPLETED.name, "USER", "marked done")
+        appendSeal(id, "status", o.lifecycle.name, Lifecycle.COMPLETED.name, "USER", "marked complete")
         if (!note.isNullOrBlank() || image != null) {
             val file = image?.let { blobs.write(it) }
             db.receipts().upsert(ReceiptEntity(newId(), id, note.orEmpty().take(2000), file, ts.toEpochMilli()))
@@ -239,6 +243,32 @@ class Store(
         val o = db.obligations().get(id)?.toModel() ?: return@withTransaction
         db.obligations().upsert(o.copy(lifecycle = Lifecycle.ACTIVE, completedAt = null, updatedAt = now()).toEntity())
         appendSeal(id, "status", o.lifecycle.name, Lifecycle.ACTIVE.name, "USER", "reopened")
+        db.settings().delete(undoKey(id))
+    }
+
+    private fun undoKey(id: String) = "undo.$id"
+
+    /** The record that lets the last "mark complete" be put back, or null when there is none (or it is damaged). */
+    suspend fun undoRecord(id: String): UndoRecord? = UndoRecord.decode(db.settings().all().firstOrNull { it.key == undoKey(id) }?.value)
+
+    /**
+     * Puts a deadline back as it was before it was marked complete. A deadline that was closed is opened again. A repeating one gets its old date
+     * back, unless the person has changed the date since, in which case nothing is overwritten. Returns true when something was put back.
+     */
+    suspend fun undoComplete(id: String): Boolean = db.withTransaction {
+        val o = db.obligations().get(id)?.toModel() ?: return@withTransaction false
+        val r = undoRecord(id) ?: return@withTransaction false
+        if (r.advanced) {
+            val prev = r.previousDue ?: return@withTransaction false
+            if (o.due?.local != r.newDue) return@withTransaction false
+            save(o.copy(due = prev, postponedUntil = r.previousPostponed), "USER", "undid marking complete")
+        } else {
+            if (o.lifecycle != Lifecycle.COMPLETED) return@withTransaction false
+            db.obligations().upsert(o.copy(lifecycle = Lifecycle.ACTIVE, completedAt = null, updatedAt = now()).toEntity())
+            appendSeal(id, "status", o.lifecycle.name, Lifecycle.ACTIVE.name, "USER", "undid marking complete")
+        }
+        db.settings().delete(undoKey(id))
+        true
     }
 
     suspend fun postpone(id: String, until: LocalDate?) = db.withTransaction {
@@ -251,6 +281,7 @@ class Store(
         db.receipts().all().filter { it.obligationId == id }.forEach { r -> r.imageFile?.let(blobs::delete) }
         db.receipts().deleteFor(id); db.evidence().deleteFor(id); db.steps().deleteFor(id)
         db.reminders().deleteFor(id); db.seals().deleteFor(id); db.obligations().delete(id)
+        db.settings().delete(undoKey(id))
     }
 
     suspend fun completedEstimates(): List<Pair<Int, Int>> =
